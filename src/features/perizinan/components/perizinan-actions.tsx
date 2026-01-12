@@ -102,7 +102,7 @@ export default function PerizinanActions({ perizinanId, status }: PerizinanActio
         variant="outline"
         onClick={handleGenerateLink}
         disabled={isGeneratingLink}
-        className="h-7 text-xs border-neutral-700"
+        className="h-7 text-xs border-border"
         title="Salin link approval untuk WhatsApp"
       >
         {isGeneratingLink ? <Loader2 className="h-3 w-3 animate-spin" /> : <Link2 className="h-3 w-3" />}

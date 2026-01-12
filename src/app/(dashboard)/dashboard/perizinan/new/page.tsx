@@ -82,20 +82,20 @@ export default function NewPerizinanPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/dashboard/perizinan">
-          <Button variant="ghost" size="icon" className="text-neutral-400">
+          <Button variant="ghost" size="icon" className="text-muted-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-white">Buat Perizinan</h1>
-          <p className="text-neutral-400">Ajukan izin penggunaan kendaraan</p>
+          <h1 className="text-2xl font-bold text-foreground">Buat Perizinan</h1>
+          <p className="text-muted-foreground">Ajukan izin penggunaan kendaraan</p>
         </div>
       </div>
 
       {/* Form */}
-      <Card className="border-neutral-800 bg-neutral-900/50">
+      <Card className="border-border bg-card/60">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <Shield className="h-5 w-5" />
             Data Perizinan
           </CardTitle>
@@ -104,14 +104,14 @@ export default function NewPerizinanPage() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-neutral-300">
+                <Label htmlFor="name" className="text-foreground">
                   Nama Pemohon
                 </Label>
                 <Input
                   id="name"
                   {...form.register('name')}
                   placeholder="Nama lengkap"
-                  className="border-neutral-700 bg-neutral-800/50 text-white"
+                  className="border-border bg-muted/60 text-foreground"
                 />
                 {form.formState.errors.name && (
                   <p className="text-sm text-red-400">{form.formState.errors.name.message}</p>
@@ -119,12 +119,12 @@ export default function NewPerizinanPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-neutral-300">Kendaraan</Label>
+                <Label className="text-foreground">Kendaraan</Label>
                 <Select onValueChange={(v) => form.setValue('carId', v)}>
-                  <SelectTrigger className="border-neutral-700 bg-neutral-800/50 text-white">
+                  <SelectTrigger className="border-border bg-muted/60 text-foreground">
                     <SelectValue placeholder="Pilih kendaraan" />
                   </SelectTrigger>
-                  <SelectContent className="border-neutral-700 bg-neutral-900">
+                  <SelectContent className="border-border bg-card">
                     {cars.map((car) => (
                       <SelectItem key={car.id} value={car.id}>
                         {car.name} - {car.licensePlate}
@@ -138,14 +138,14 @@ export default function NewPerizinanPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="purpose" className="text-neutral-300">
+                <Label htmlFor="purpose" className="text-foreground">
                   Tujuan Penggunaan
                 </Label>
                 <Input
                   id="purpose"
                   {...form.register('purpose')}
                   placeholder="Antar jemput, dinas, dll"
-                  className="border-neutral-700 bg-neutral-800/50 text-white"
+                  className="border-border bg-muted/60 text-foreground"
                 />
                 {form.formState.errors.purpose && (
                   <p className="text-sm text-red-400">{form.formState.errors.purpose.message}</p>
@@ -153,14 +153,14 @@ export default function NewPerizinanPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="destination" className="text-neutral-300">
+                <Label htmlFor="destination" className="text-foreground">
                   Tempat Tujuan
                 </Label>
                 <Input
                   id="destination"
                   {...form.register('destination')}
                   placeholder="Jakarta, Bandung, dll"
-                  className="border-neutral-700 bg-neutral-800/50 text-white"
+                  className="border-border bg-muted/60 text-foreground"
                 />
                 {form.formState.errors.destination && (
                   <p className="text-sm text-red-400">{form.formState.errors.destination.message}</p>
@@ -168,14 +168,14 @@ export default function NewPerizinanPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="date" className="text-neutral-300">
+                <Label htmlFor="date" className="text-foreground">
                   Tanggal Penggunaan
                 </Label>
                 <Input
                   id="date"
                   type="date"
                   {...form.register('date')}
-                  className="border-neutral-700 bg-neutral-800/50 text-white"
+                  className="border-border bg-muted/60 text-foreground"
                 />
                 {form.formState.errors.date && (
                   <p className="text-sm text-red-400">{form.formState.errors.date.message}</p>
@@ -183,7 +183,7 @@ export default function NewPerizinanPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="numberOfPassengers" className="text-neutral-300">
+                <Label htmlFor="numberOfPassengers" className="text-foreground">
                   Jumlah Penumpang
                 </Label>
                 <Input
@@ -191,7 +191,7 @@ export default function NewPerizinanPage() {
                   type="number"
                   {...form.register('numberOfPassengers', { valueAsNumber: true })}
                   placeholder="1"
-                  className="border-neutral-700 bg-neutral-800/50 text-white"
+                  className="border-border bg-muted/60 text-foreground"
                 />
                 {form.formState.errors.numberOfPassengers && (
                   <p className="text-sm text-red-400">{form.formState.errors.numberOfPassengers.message}</p>
@@ -199,7 +199,7 @@ export default function NewPerizinanPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="estimation" className="text-neutral-300">
+                <Label htmlFor="estimation" className="text-foreground">
                   Estimasi Biaya (Rp)
                 </Label>
                 <Input
@@ -207,26 +207,26 @@ export default function NewPerizinanPage() {
                   type="number"
                   {...form.register('estimation', { valueAsNumber: true })}
                   placeholder="100000"
-                  className="border-neutral-700 bg-neutral-800/50 text-white"
+                  className="border-border bg-muted/60 text-foreground"
                 />
                 {form.formState.errors.estimation && (
                   <p className="text-sm text-red-400">{form.formState.errors.estimation.message}</p>
                 )}
                 {estimation > 0 && (
-                  <p className="text-sm text-neutral-500">{formatRupiah(estimation)}</p>
+                  <p className="text-sm text-muted-foreground">{formatRupiah(estimation)}</p>
                 )}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description" className="text-neutral-300">
+              <Label htmlFor="description" className="text-foreground">
                 Keterangan (Opsional)
               </Label>
               <Textarea
                 id="description"
                 {...form.register('description')}
                 placeholder="Tambahkan keterangan..."
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
             </div>
 
@@ -239,7 +239,7 @@ export default function NewPerizinanPage() {
                 {isSubmitting ? 'Menyimpan...' : 'Ajukan Perizinan'}
               </Button>
               <Link href="/dashboard/perizinan">
-                <Button type="button" variant="outline" className="border-neutral-700">
+                <Button type="button" variant="outline" className="border-border">
                   Batal
                 </Button>
               </Link>

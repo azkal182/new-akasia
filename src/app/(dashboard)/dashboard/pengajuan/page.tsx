@@ -18,8 +18,8 @@ export default async function PengajuanPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Pengajuan</h1>
-          <p className="text-neutral-400">Kelola pengajuan pembelian dan perbaikan</p>
+          <h1 className="text-2xl font-bold text-foreground">Pengajuan</h1>
+          <p className="text-muted-foreground">Kelola pengajuan pembelian dan perbaikan</p>
         </div>
         <Link href="/dashboard/pengajuan/new">
           <Button className="bg-blue-600 hover:bg-blue-500">
@@ -31,9 +31,9 @@ export default async function PengajuanPage() {
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-400">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Clock className="h-4 w-4 text-amber-500" />
               Menunggu Persetujuan
             </CardTitle>
@@ -43,9 +43,9 @@ export default async function PengajuanPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-400">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <CheckCircle className="h-4 w-4 text-emerald-500" />
               Disetujui
             </CardTitle>
@@ -55,9 +55,9 @@ export default async function PengajuanPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-400">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <XCircle className="h-4 w-4 text-red-400" />
               Ditolak
             </CardTitle>
@@ -69,14 +69,14 @@ export default async function PengajuanPage() {
       </div>
 
       {/* Pengajuan List */}
-      <Card className="border-neutral-800 bg-neutral-900/50">
+      <Card className="border-border bg-card/60">
         <CardHeader>
-          <CardTitle className="text-white">Daftar Pengajuan</CardTitle>
+          <CardTitle className="text-foreground">Daftar Pengajuan</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {pengajuans.length === 0 ? (
-              <p className="text-center text-neutral-500 py-8">
+              <p className="text-center text-muted-foreground py-8">
                 Belum ada pengajuan
               </p>
             ) : (
@@ -85,7 +85,7 @@ export default async function PengajuanPage() {
                 return (
                   <div
                     key={p.id}
-                    className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-4"
+                    className="flex items-center justify-between rounded-lg bg-muted/60 p-4"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
@@ -98,16 +98,16 @@ export default async function PengajuanPage() {
                         <FileCheck className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="font-medium text-white">
+                        <p className="font-medium text-foreground">
                           Pengajuan #{p.id.slice(-6).toUpperCase()}
                         </p>
-                        <p className="text-sm text-neutral-500">
+                        <p className="text-sm text-muted-foreground">
                           {formatDate(p.createdAt)} • {p.items.length} item
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-white">
+                      <p className="font-semibold text-foreground">
                         {formatRupiah(totalEstimation)}
                       </p>
                       <Badge

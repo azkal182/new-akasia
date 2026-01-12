@@ -74,20 +74,20 @@ export default function NewTaxPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/dashboard/tax">
-          <Button variant="ghost" size="icon" className="text-neutral-400">
+          <Button variant="ghost" size="icon" className="text-muted-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-white">Tambah Pajak</h1>
-          <p className="text-neutral-400">Catat pajak kendaraan baru</p>
+          <h1 className="text-2xl font-bold text-foreground">Tambah Pajak</h1>
+          <p className="text-muted-foreground">Catat pajak kendaraan baru</p>
         </div>
       </div>
 
       {/* Form */}
-      <Card className="border-neutral-800 bg-neutral-900/50 max-w-xl">
+      <Card className="border-border bg-card/60 max-w-xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <FileText className="h-5 w-5" />
             Data Pajak
           </CardTitle>
@@ -95,12 +95,12 @@ export default function NewTaxPage() {
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-neutral-300">Kendaraan</Label>
+              <Label className="text-foreground">Kendaraan</Label>
               <Select onValueChange={(v) => form.setValue('carId', v)}>
-                <SelectTrigger className="border-neutral-700 bg-neutral-800/50 text-white">
+                <SelectTrigger className="border-border bg-muted/60 text-foreground">
                   <SelectValue placeholder="Pilih kendaraan" />
                 </SelectTrigger>
-                <SelectContent className="border-neutral-700 bg-neutral-900">
+                <SelectContent className="border-border bg-card">
                   {cars.map((car) => (
                     <SelectItem key={car.id} value={car.id}>
                       {car.name} - {car.licensePlate}
@@ -114,12 +114,12 @@ export default function NewTaxPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-neutral-300">Jenis Pajak</Label>
+              <Label className="text-foreground">Jenis Pajak</Label>
               <Select defaultValue="ANNUAL" onValueChange={(v) => form.setValue('type', v as 'ANNUAL' | 'FIVE_YEAR')}>
-                <SelectTrigger className="border-neutral-700 bg-neutral-800/50 text-white">
+                <SelectTrigger className="border-border bg-muted/60 text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="border-neutral-700 bg-neutral-900">
+                <SelectContent className="border-border bg-card">
                   <SelectItem value="ANNUAL">Pajak Tahunan</SelectItem>
                   <SelectItem value="FIVE_YEAR">STNK 5 Tahunan</SelectItem>
                 </SelectContent>
@@ -127,14 +127,14 @@ export default function NewTaxPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="dueDate" className="text-neutral-300">
+              <Label htmlFor="dueDate" className="text-foreground">
                 Tanggal Jatuh Tempo
               </Label>
               <Input
                 id="dueDate"
                 type="date"
                 {...form.register('dueDate')}
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
               {form.formState.errors.dueDate && (
                 <p className="text-sm text-red-400">{form.formState.errors.dueDate.message}</p>
@@ -142,14 +142,14 @@ export default function NewTaxPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes" className="text-neutral-300">
+              <Label htmlFor="notes" className="text-foreground">
                 Catatan (Opsional)
               </Label>
               <Textarea
                 id="notes"
                 {...form.register('notes')}
                 placeholder="Tambahkan catatan..."
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
             </div>
 
@@ -162,7 +162,7 @@ export default function NewTaxPage() {
                 {isSubmitting ? 'Menyimpan...' : 'Simpan'}
               </Button>
               <Link href="/dashboard/tax">
-                <Button type="button" variant="outline" className="border-neutral-700">
+                <Button type="button" variant="outline" className="border-border">
                   Batal
                 </Button>
               </Link>

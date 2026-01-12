@@ -66,8 +66,8 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-neutral-400">Selamat datang kembali!</p>
+        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+        <p className="text-muted-foreground">Selamat datang kembali!</p>
       </div>
 
       {/* Driver Status Card */}
@@ -78,10 +78,10 @@ export default async function DashboardPage() {
         {stats.map((stat) => (
           <Card
             key={stat.title}
-            className="border-neutral-800 bg-neutral-900/50 backdrop-blur-sm"
+            className="border-border bg-card/60 backdrop-blur-sm"
           >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-neutral-400">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 {stat.title}
               </CardTitle>
               <div
@@ -91,8 +91,8 @@ export default async function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">{stat.value}</div>
-              <div className="mt-1 text-xs text-neutral-500">{stat.subtitle}</div>
+              <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+              <div className="mt-1 text-xs text-muted-foreground">{stat.subtitle}</div>
             </CardContent>
           </Card>
         ))}
@@ -100,9 +100,9 @@ export default async function DashboardPage() {
 
       {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
+        <Card className="border-border bg-card/60 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="flex items-center justify-between text-white">
+            <CardTitle className="flex items-center justify-between text-foreground">
               Transaksi Terakhir
               <Badge variant="outline" className="border-blue-500/50 text-blue-400">
                 Lihat Semua
@@ -112,18 +112,18 @@ export default async function DashboardPage() {
           <CardContent>
             <div className="space-y-3">
               {recentTransactions.length === 0 ? (
-                <p className="text-sm text-neutral-500">Belum ada transaksi.</p>
+                <p className="text-sm text-muted-foreground">Belum ada transaksi.</p>
               ) : (
                 recentTransactions.map((trx) => (
                   <div
                     key={trx.id}
-                    className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-3"
+                    className="flex items-center justify-between rounded-lg bg-muted/60 p-3"
                   >
                     <div className="flex flex-col">
-                      <span className="text-sm text-neutral-300">
+                      <span className="text-sm text-foreground">
                         {trx.description || `Pengeluaran untuk ${trx.expense?.items[0]?.car?.name ?? 'armada'}`}
                       </span>
-                      <span className="text-xs text-neutral-600">
+                      <span className="text-xs text-muted-foreground">
                         {formatDate(trx.date)}
                       </span>
                     </div>
@@ -142,9 +142,9 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
+        <Card className="border-border bg-card/60 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="flex items-center justify-between text-white">
+            <CardTitle className="flex items-center justify-between text-foreground">
               Status Armada
               <Badge variant="outline" className="border-emerald-500/50 text-emerald-400">
                 {availableCars} Tersedia
@@ -169,11 +169,11 @@ export default async function DashboardPage() {
                 return (
                   <div
                     key={car.id}
-                    className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-3"
+                    className="flex items-center justify-between rounded-lg bg-muted/60 p-3"
                   >
                     <div>
-                      <p className="text-sm font-medium text-white">{car.name}</p>
-                      <p className="text-xs text-neutral-500">{car.licensePlate ?? '-'}</p>
+                      <p className="text-sm font-medium text-foreground">{car.name}</p>
+                      <p className="text-xs text-muted-foreground">{car.licensePlate ?? '-'}</p>
                     </div>
                     <Badge variant="outline" className={statusClass}>
                       {statusLabel}
@@ -185,9 +185,9 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
+        <Card className="border-border bg-card/60 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="flex items-center justify-between text-white">
+            <CardTitle className="flex items-center justify-between text-foreground">
               Pajak Mendatang
               <Badge variant="outline" className="border-red-500/50 text-red-400">
                 {upcomingTaxes.length} Jatuh Tempo
@@ -197,18 +197,18 @@ export default async function DashboardPage() {
           <CardContent>
             <div className="space-y-3">
               {upcomingTaxes.length === 0 ? (
-                <p className="text-sm text-neutral-500">Tidak ada pajak mendatang.</p>
+                <p className="text-sm text-muted-foreground">Tidak ada pajak mendatang.</p>
               ) : (
                 upcomingTaxes.slice(0, 3).map((tax) => (
                   <div
                     key={tax.id}
-                    className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-3"
+                    className="flex items-center justify-between rounded-lg bg-muted/60 p-3"
                   >
                     <div>
-                      <p className="text-sm font-medium text-white">
+                      <p className="text-sm font-medium text-foreground">
                         {tax.car.name} ({tax.car.licensePlate ?? '-'})
                       </p>
-                      <p className="text-xs text-neutral-500">
+                      <p className="text-xs text-muted-foreground">
                         {tax.type === 'FIVE_YEAR' ? 'STNK 5 Tahunan' : 'Pajak Tahunan'}
                       </p>
                     </div>

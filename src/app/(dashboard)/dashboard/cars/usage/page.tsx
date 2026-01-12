@@ -112,7 +112,7 @@ export default function UsageRecordsPage() {
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-neutral-700 border-t-blue-500" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-blue-500" />
       </div>
     );
   }
@@ -122,8 +122,8 @@ export default function UsageRecordsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Penggunaan Armada</h1>
-          <p className="text-neutral-400">Kelola penggunaan kendaraan</p>
+          <h1 className="text-2xl font-bold text-foreground">Penggunaan Armada</h1>
+          <p className="text-muted-foreground">Kelola penggunaan kendaraan</p>
         </div>
         <Button className="bg-blue-600 hover:bg-blue-500" onClick={() => setShowStartDialog(true)}>
           <Play className="mr-2 h-4 w-4" />
@@ -145,18 +145,18 @@ export default function UsageRecordsPage() {
               {activeRecords.map((record) => (
                 <div
                   key={record.id}
-                  className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-4"
+                  className="flex items-center justify-between rounded-lg bg-muted/60 p-4"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
                       <Car className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="font-medium text-white">{record.car.name}</p>
-                      <p className="text-sm text-neutral-500">
+                      <p className="font-medium text-foreground">{record.car.name}</p>
+                      <p className="text-sm text-muted-foreground">
                         {record.purpose} • {record.destination}
                       </p>
-                      <p className="text-xs text-neutral-600">
+                      <p className="text-xs text-muted-foreground">
                         Mulai: {formatDate(record.startTime)} • {record.user.name}
                       </p>
                     </div>
@@ -181,14 +181,14 @@ export default function UsageRecordsPage() {
       )}
 
       {/* History */}
-      <Card className="border-neutral-800 bg-neutral-900/50">
+      <Card className="border-border bg-card/60">
         <CardHeader>
-          <CardTitle className="text-white">Riwayat Penggunaan</CardTitle>
+          <CardTitle className="text-foreground">Riwayat Penggunaan</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {records.filter((r) => r.endTime).length === 0 ? (
-              <p className="text-center text-neutral-500 py-8">
+              <p className="text-center text-muted-foreground py-8">
                 Belum ada riwayat penggunaan
               </p>
             ) : (
@@ -197,22 +197,22 @@ export default function UsageRecordsPage() {
                 .map((record) => (
                   <div
                     key={record.id}
-                    className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-4"
+                    className="flex items-center justify-between rounded-lg bg-muted/60 p-4"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-700 text-neutral-400">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
                         <Car className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="font-medium text-white">{record.car.name}</p>
-                        <p className="text-sm text-neutral-500">
+                        <p className="font-medium text-foreground">{record.car.name}</p>
+                        <p className="text-sm text-muted-foreground">
                           <MapPin className="mr-1 inline h-3 w-3" />
                           {record.destination} • {record.purpose}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-neutral-400">
+                      <p className="text-sm text-muted-foreground">
                         {formatDate(record.startTime)}
                       </p>
                       <Badge variant="outline" className="border-emerald-500/50 text-emerald-400">
@@ -228,18 +228,18 @@ export default function UsageRecordsPage() {
 
       {/* Start Usage Dialog */}
       <Dialog open={showStartDialog} onOpenChange={setShowStartDialog}>
-        <DialogContent className="border-neutral-800 bg-neutral-900">
+        <DialogContent className="border-border bg-card">
           <DialogHeader>
-            <DialogTitle className="text-white">Mulai Penggunaan Kendaraan</DialogTitle>
+            <DialogTitle className="text-foreground">Mulai Penggunaan Kendaraan</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="text-neutral-300">Kendaraan</Label>
+              <Label className="text-foreground">Kendaraan</Label>
               <Select value={selectedCarId} onValueChange={setSelectedCarId}>
-                <SelectTrigger className="border-neutral-700 bg-neutral-800/50 text-white">
+                <SelectTrigger className="border-border bg-muted/60 text-foreground">
                   <SelectValue placeholder="Pilih kendaraan" />
                 </SelectTrigger>
-                <SelectContent className="border-neutral-700 bg-neutral-900">
+                <SelectContent className="border-border bg-card">
                   {cars.map((car) => (
                     <SelectItem key={car.id} value={car.id}>
                       {car.name} - {car.licensePlate}
@@ -249,26 +249,26 @@ export default function UsageRecordsPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-neutral-300">Tujuan Penggunaan</Label>
+              <Label className="text-foreground">Tujuan Penggunaan</Label>
               <Input
                 value={purpose}
                 onChange={(e) => setPurpose(e.target.value)}
                 placeholder="Antar jemput, dinas, dll"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-neutral-300">Tempat Tujuan</Label>
+              <Label className="text-foreground">Tempat Tujuan</Label>
               <Input
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
                 placeholder="Jakarta, Bandung, dll"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowStartDialog(false)} className="border-neutral-700">
+            <Button variant="outline" onClick={() => setShowStartDialog(false)} className="border-border">
               Batal
             </Button>
             <Button onClick={handleStartUsage} disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-500">
@@ -280,25 +280,25 @@ export default function UsageRecordsPage() {
 
       {/* End Usage Dialog */}
       <Dialog open={showEndDialog} onOpenChange={setShowEndDialog}>
-        <DialogContent className="border-neutral-800 bg-neutral-900">
+        <DialogContent className="border-border bg-card">
           <DialogHeader>
-            <DialogTitle className="text-white">Selesaikan Penggunaan</DialogTitle>
+            <DialogTitle className="text-foreground">Selesaikan Penggunaan</DialogTitle>
           </DialogHeader>
           {selectedRecord && (
             <div className="py-4">
-              <p className="text-neutral-400">
-                Kendaraan: <span className="text-white">{selectedRecord.car.name}</span>
+              <p className="text-muted-foreground">
+                Kendaraan: <span className="text-foreground">{selectedRecord.car.name}</span>
               </p>
-              <p className="text-neutral-400">
-                Tujuan: <span className="text-white">{selectedRecord.purpose}</span>
+              <p className="text-muted-foreground">
+                Tujuan: <span className="text-foreground">{selectedRecord.purpose}</span>
               </p>
-              <p className="text-neutral-400">
-                Mulai: <span className="text-white">{formatDate(selectedRecord.startTime)}</span>
+              <p className="text-muted-foreground">
+                Mulai: <span className="text-foreground">{formatDate(selectedRecord.startTime)}</span>
               </p>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEndDialog(false)} className="border-neutral-700">
+            <Button variant="outline" onClick={() => setShowEndDialog(false)} className="border-border">
               Batal
             </Button>
             <Button onClick={handleEndUsage} disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-500">

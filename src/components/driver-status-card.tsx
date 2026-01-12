@@ -110,13 +110,13 @@ export function DriverStatusCard({ drivingStatus, onStatusChange }: DriverStatus
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-xl font-bold text-white">{drivingStatus.car.name}</h3>
-              <p className="text-sm text-neutral-400">{drivingStatus.car.licensePlate}</p>
-              <div className="mt-1 flex items-center gap-2 text-sm text-neutral-500">
+              <h3 className="text-xl font-bold text-foreground">{drivingStatus.car.name}</h3>
+              <p className="text-sm text-muted-foreground">{drivingStatus.car.licensePlate}</p>
+              <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
                 <Navigation className="h-3 w-3" />
                 {drivingStatus.destination} • {drivingStatus.purpose}
               </div>
-              <p className="text-xs text-neutral-600 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Mulai: {formatDate(drivingStatus.startTime)}
               </p>
             </div>
@@ -146,23 +146,23 @@ export function DriverStatusCard({ drivingStatus, onStatusChange }: DriverStatus
 
       {/* End Usage Dialog */}
       <Dialog open={showEndDialog} onOpenChange={setShowEndDialog}>
-        <DialogContent className="border-neutral-800 bg-neutral-900">
+        <DialogContent className="border-border bg-card">
           <DialogHeader>
-            <DialogTitle className="text-white">Selesaikan Penggunaan</DialogTitle>
+            <DialogTitle className="text-foreground">Selesaikan Penggunaan</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p className="text-neutral-400">
-              Kendaraan: <span className="text-white">{drivingStatus.car.name}</span>
+            <p className="text-muted-foreground">
+              Kendaraan: <span className="text-foreground">{drivingStatus.car.name}</span>
             </p>
-            <p className="text-neutral-400">
-              Tujuan: <span className="text-white">{drivingStatus.purpose}</span>
+            <p className="text-muted-foreground">
+              Tujuan: <span className="text-foreground">{drivingStatus.purpose}</span>
             </p>
-            <p className="text-neutral-400">
-              Mulai: <span className="text-white">{formatDate(drivingStatus.startTime)}</span>
+            <p className="text-muted-foreground">
+              Mulai: <span className="text-foreground">{formatDate(drivingStatus.startTime)}</span>
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEndDialog(false)} className="border-neutral-700">
+            <Button variant="outline" onClick={() => setShowEndDialog(false)} className="border-border">
               Batal
             </Button>
             <Button onClick={handleEndUsage} disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-500">
@@ -174,23 +174,23 @@ export function DriverStatusCard({ drivingStatus, onStatusChange }: DriverStatus
 
       {/* Refuel Dialog */}
       <Dialog open={showRefuelDialog} onOpenChange={setShowRefuelDialog}>
-        <DialogContent className="border-neutral-800 bg-neutral-900">
+        <DialogContent className="border-border bg-card">
           <DialogHeader>
-            <DialogTitle className="text-white">Isi BBM - {drivingStatus.car.name}</DialogTitle>
+            <DialogTitle className="text-foreground">Isi BBM - {drivingStatus.car.name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="text-neutral-300">Total Biaya</Label>
+              <Label className="text-foreground">Total Biaya</Label>
               <Input
                 type="number"
                 value={totalAmount}
                 onChange={(e) => setTotalAmount(e.target.value)}
                 placeholder="Contoh: 500000"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-neutral-300">Nota/Struk</Label>
+              <Label className="text-foreground">Nota/Struk</Label>
               <input
                 ref={receiptInputRef}
                 type="file"
@@ -204,13 +204,13 @@ export function DriverStatusCard({ drivingStatus, onStatusChange }: DriverStatus
                   <img
                     src={receiptPreview}
                     alt="Receipt preview"
-                    className="max-h-40 rounded-lg border border-neutral-700"
+                    className="max-h-40 rounded-lg border border-border"
                   />
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => receiptInputRef.current?.click()}
-                    className="border-neutral-700"
+                    className="border-border"
                   >
                     Ganti Nota
                   </Button>
@@ -220,15 +220,15 @@ export function DriverStatusCard({ drivingStatus, onStatusChange }: DriverStatus
                   type="button"
                   variant="outline"
                   onClick={() => receiptInputRef.current?.click()}
-                  className="border-dashed border-neutral-600 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300"
+                  className="border-dashed border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
                 >
                   Upload Nota/Struk
                 </Button>
               )}
             </div>
             {Number(totalAmount) > 0 && (
-              <div className="rounded-lg bg-neutral-800/50 p-3 text-center">
-                <p className="text-sm text-neutral-400">Total</p>
+              <div className="rounded-lg bg-muted/60 p-3 text-center">
+                <p className="text-sm text-muted-foreground">Total</p>
                 <p className="text-xl font-bold text-amber-400">
                   {formatRupiah(Number(totalAmount))}
                 </p>
@@ -236,7 +236,7 @@ export function DriverStatusCard({ drivingStatus, onStatusChange }: DriverStatus
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRefuelDialog(false)} className="border-neutral-700">
+            <Button variant="outline" onClick={() => setShowRefuelDialog(false)} className="border-border">
               Batal
             </Button>
             <Button

@@ -16,8 +16,10 @@ import {
 import * as fs from "fs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
+import "dotenv/config";
 
-const connectionString = `postgresql://azkal:azkal@165.22.106.176:5432/new-akasia-v2?schema=public`;
+const connectionString = process.env.DATABASE_URL;
+console.log("database url : ", connectionString);
 // const connectionString = `postgresql://postgres@localhost:5432/akasia?schema=public`
 
 const adapter = new PrismaPg({ connectionString });

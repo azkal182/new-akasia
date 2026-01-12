@@ -17,7 +17,7 @@ export default async function ApprovePage({ params }: ApprovePageProps) {
 
   if (!validation.valid) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="border-red-500/30 bg-red-500/10 max-w-md w-full">
           <CardHeader>
             <CardTitle className="text-red-400 text-center flex items-center justify-center gap-2">
@@ -26,7 +26,7 @@ export default async function ApprovePage({ params }: ApprovePageProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-center text-neutral-300">{validation.error}</p>
+            <p className="text-center text-foreground">{validation.error}</p>
           </CardContent>
         </Card>
       </div>
@@ -45,7 +45,7 @@ export default async function ApprovePage({ params }: ApprovePageProps) {
   // If already approved/rejected
   if (perizinan.status !== 'PENDING') {
     return (
-      <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className={`max-w-md w-full ${
           perizinan.status === 'APPROVED'
             ? 'border-emerald-500/30 bg-emerald-500/10'
@@ -55,14 +55,14 @@ export default async function ApprovePage({ params }: ApprovePageProps) {
             {perizinan.status === 'APPROVED' ? (
               <>
                 <CheckCircle2 className="h-16 w-16 text-emerald-400 mx-auto mb-4" />
-                <h2 className="text-xl font-bold text-white mb-2">Sudah Disetujui</h2>
-                <p className="text-neutral-300">Perizinan ini sudah disetujui sebelumnya.</p>
+                <h2 className="text-xl font-bold text-foreground mb-2">Sudah Disetujui</h2>
+                <p className="text-foreground">Perizinan ini sudah disetujui sebelumnya.</p>
               </>
             ) : (
               <>
                 <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
-                <h2 className="text-xl font-bold text-white mb-2">Sudah Ditolak</h2>
-                <p className="text-neutral-300">Perizinan ini sudah ditolak sebelumnya.</p>
+                <h2 className="text-xl font-bold text-foreground mb-2">Sudah Ditolak</h2>
+                <p className="text-foreground">Perizinan ini sudah ditolak sebelumnya.</p>
               </>
             )}
           </CardContent>
@@ -72,17 +72,17 @@ export default async function ApprovePage({ params }: ApprovePageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 p-4">
+    <div className="min-h-screen bg-background p-4">
       <div className="max-w-lg mx-auto space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white">Persetujuan Perizinan</h1>
-          <p className="text-neutral-400 mt-2">Review dan setujui permohonan berikut</p>
+          <h1 className="text-2xl font-bold text-foreground">Persetujuan Perizinan</h1>
+          <p className="text-muted-foreground mt-2">Review dan setujui permohonan berikut</p>
         </div>
 
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-white">Detail Permohonan</CardTitle>
+              <CardTitle className="text-foreground">Detail Permohonan</CardTitle>
               <Badge variant="outline" className="border-amber-500/50 text-amber-400">
                 Menunggu
               </Badge>
@@ -95,8 +95,8 @@ export default async function ApprovePage({ params }: ApprovePageProps) {
                   <Users className="h-5 w-5 text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-neutral-400">Pemohon</p>
-                  <p className="text-white font-medium">{perizinan.name}</p>
+                  <p className="text-sm text-muted-foreground">Pemohon</p>
+                  <p className="text-foreground font-medium">{perizinan.name}</p>
                 </div>
               </div>
 
@@ -105,8 +105,8 @@ export default async function ApprovePage({ params }: ApprovePageProps) {
                   <MapPin className="h-5 w-5 text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-neutral-400">Tujuan</p>
-                  <p className="text-white font-medium">{perizinan.destination}</p>
+                  <p className="text-sm text-muted-foreground">Tujuan</p>
+                  <p className="text-foreground font-medium">{perizinan.destination}</p>
                 </div>
               </div>
 
@@ -115,8 +115,8 @@ export default async function ApprovePage({ params }: ApprovePageProps) {
                   <Calendar className="h-5 w-5 text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-neutral-400">Tanggal & Durasi</p>
-                  <p className="text-white font-medium">
+                  <p className="text-sm text-muted-foreground">Tanggal & Durasi</p>
+                  <p className="text-foreground font-medium">
                     {new Date(perizinan.date).toLocaleDateString('id-ID', {
                       weekday: 'long',
                       day: 'numeric',
@@ -133,29 +133,29 @@ export default async function ApprovePage({ params }: ApprovePageProps) {
                   <Clock className="h-5 w-5 text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-neutral-400">Keperluan</p>
-                  <p className="text-white font-medium">{perizinan.purpose}</p>
+                  <p className="text-sm text-muted-foreground">Keperluan</p>
+                  <p className="text-foreground font-medium">{perizinan.purpose}</p>
                 </div>
               </div>
             </div>
 
             {perizinan.description && (
-              <div className="pt-3 border-t border-neutral-800">
-                <p className="text-sm text-neutral-400 mb-1">Keterangan:</p>
-                <p className="text-neutral-300">{perizinan.description}</p>
+              <div className="pt-3 border-t border-border">
+                <p className="text-sm text-muted-foreground mb-1">Keterangan:</p>
+                <p className="text-foreground">{perizinan.description}</p>
               </div>
             )}
 
-            <div className="pt-3 border-t border-neutral-800">
-              <p className="text-sm text-neutral-400 mb-1">Kendaraan:</p>
-              <p className="text-white font-medium">
+            <div className="pt-3 border-t border-border">
+              <p className="text-sm text-muted-foreground mb-1">Kendaraan:</p>
+              <p className="text-foreground font-medium">
                 {perizinan.car.name} - {perizinan.car.licensePlate}
               </p>
             </div>
 
-            <div className="pt-3 border-t border-neutral-800">
-              <p className="text-sm text-neutral-400 mb-1">Jumlah Penumpang:</p>
-              <p className="text-white font-medium">{perizinan.numberOfPassengers} orang</p>
+            <div className="pt-3 border-t border-border">
+              <p className="text-sm text-muted-foreground mb-1">Jumlah Penumpang:</p>
+              <p className="text-foreground font-medium">{perizinan.numberOfPassengers} orang</p>
             </div>
           </CardContent>
         </Card>

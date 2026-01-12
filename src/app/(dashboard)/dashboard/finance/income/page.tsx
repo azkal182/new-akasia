@@ -65,21 +65,21 @@ export default function IncomePage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/dashboard/finance">
-          <Button variant="ghost" size="icon" className="text-neutral-400 hover:text-white">
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-white">Input Pemasukan</h1>
-          <p className="text-neutral-400">Tambah pemasukan baru</p>
+          <h1 className="text-2xl font-bold text-foreground">Input Pemasukan</h1>
+          <p className="text-muted-foreground">Tambah pemasukan baru</p>
         </div>
       </div>
 
       {/* Form */}
-      <Card className="max-w-xl border-neutral-800 bg-neutral-900/50">
+      <Card className="max-w-xl border-border bg-card/60">
         <CardHeader>
-          <CardTitle className="text-white">Detail Pemasukan</CardTitle>
-          <CardDescription className="text-neutral-400">
+          <CardTitle className="text-foreground">Detail Pemasukan</CardTitle>
+          <CardDescription className="text-muted-foreground">
             Masukkan informasi pemasukan
           </CardDescription>
         </CardHeader>
@@ -91,14 +91,14 @@ export default function IncomePage() {
                 name="date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-neutral-300">Tanggal</FormLabel>
+                    <FormLabel className="text-foreground">Tanggal</FormLabel>
                     <FormControl>
                       <Input
                         type="date"
                         value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : ''}
                         onChange={(e) => field.onChange(new Date(e.target.value))}
                         disabled={isLoading}
-                        className="border-neutral-700 bg-neutral-800/50 text-white"
+                        className="border-border bg-muted/60 text-foreground"
                       />
                     </FormControl>
                     <FormMessage />
@@ -111,13 +111,13 @@ export default function IncomePage() {
                 name="source"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-neutral-300">Sumber</FormLabel>
+                    <FormLabel className="text-foreground">Sumber</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         placeholder="Contoh: Yayasan, Donasi, dll"
                         disabled={isLoading}
-                        className="border-neutral-700 bg-neutral-800/50 text-white"
+                        className="border-border bg-muted/60 text-foreground"
                       />
                     </FormControl>
                     <FormMessage />
@@ -130,7 +130,7 @@ export default function IncomePage() {
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-neutral-300">Jumlah (Rp)</FormLabel>
+                    <FormLabel className="text-foreground">Jumlah (Rp)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -138,7 +138,7 @@ export default function IncomePage() {
                         onChange={(e) => field.onChange(Number(e.target.value))}
                         placeholder="0"
                         disabled={isLoading}
-                        className="border-neutral-700 bg-neutral-800/50 text-white"
+                        className="border-border bg-muted/60 text-foreground"
                       />
                     </FormControl>
                     <FormMessage />
@@ -151,13 +151,13 @@ export default function IncomePage() {
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-neutral-300">Catatan (Opsional)</FormLabel>
+                    <FormLabel className="text-foreground">Catatan (Opsional)</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         placeholder="Catatan tambahan"
                         disabled={isLoading}
-                        className="border-neutral-700 bg-neutral-800/50 text-white"
+                        className="border-border bg-muted/60 text-foreground"
                       />
                     </FormControl>
                     <FormMessage />
@@ -185,7 +185,7 @@ export default function IncomePage() {
                     type="button"
                     variant="outline"
                     disabled={isLoading}
-                    className="border-neutral-700"
+                    className="border-border"
                   >
                     Batal
                   </Button>

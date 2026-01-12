@@ -77,20 +77,20 @@ export default function NewPengajuanPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/dashboard/pengajuan">
-          <Button variant="ghost" size="icon" className="text-neutral-400">
+          <Button variant="ghost" size="icon" className="text-muted-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-white">Buat Pengajuan</h1>
-          <p className="text-neutral-400">Ajukan pembelian atau perbaikan</p>
+          <h1 className="text-2xl font-bold text-foreground">Buat Pengajuan</h1>
+          <p className="text-muted-foreground">Ajukan pembelian atau perbaikan</p>
         </div>
       </div>
 
       {/* Form */}
-      <Card className="border-neutral-800 bg-neutral-900/50">
+      <Card className="border-border bg-card/60">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <FileCheck className="h-5 w-5" />
             Data Pengajuan
           </CardTitle>
@@ -100,13 +100,13 @@ export default function NewPengajuanPage() {
             {/* Items */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label className="text-neutral-300">Item Pengajuan</Label>
+                <Label className="text-foreground">Item Pengajuan</Label>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => append({ requirement: '', estimation: 0, carId: '' })}
-                  className="border-neutral-700"
+                  className="border-border"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Tambah Item
@@ -114,9 +114,9 @@ export default function NewPengajuanPage() {
               </div>
 
               {fields.map((field, index) => (
-                <div key={field.id} className="rounded-lg border border-neutral-800 bg-neutral-800/30 p-4">
+                <div key={field.id} className="rounded-lg border border-border bg-muted/40 p-4">
                   <div className="mb-2 flex items-center justify-between">
-                    <span className="text-sm text-neutral-400">Item #{index + 1}</span>
+                    <span className="text-sm text-muted-foreground">Item #{index + 1}</span>
                     {fields.length > 1 && (
                       <Button
                         type="button"
@@ -131,20 +131,20 @@ export default function NewPengajuanPage() {
                   </div>
                   <div className="grid gap-4 md:grid-cols-3">
                     <div className="space-y-2">
-                      <Label className="text-neutral-300">Kebutuhan</Label>
+                      <Label className="text-foreground">Kebutuhan</Label>
                       <Input
                         {...form.register(`items.${index}.requirement`)}
                         placeholder="Ganti oli, servis, dll"
-                        className="border-neutral-700 bg-neutral-800/50 text-white"
+                        className="border-border bg-muted/60 text-foreground"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-neutral-300">Kendaraan</Label>
+                      <Label className="text-foreground">Kendaraan</Label>
                       <Select onValueChange={(v) => form.setValue(`items.${index}.carId`, v)}>
-                        <SelectTrigger className="border-neutral-700 bg-neutral-800/50 text-white">
+                        <SelectTrigger className="border-border bg-muted/60 text-foreground">
                           <SelectValue placeholder="Pilih" />
                         </SelectTrigger>
-                        <SelectContent className="border-neutral-700 bg-neutral-900">
+                        <SelectContent className="border-border bg-card">
                           {cars.map((car) => (
                             <SelectItem key={car.id} value={car.id}>
                               {car.name}
@@ -154,34 +154,34 @@ export default function NewPengajuanPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-neutral-300">Estimasi (Rp)</Label>
+                      <Label className="text-foreground">Estimasi (Rp)</Label>
                       <Input
                         type="number"
                         {...form.register(`items.${index}.estimation`, { valueAsNumber: true })}
                         placeholder="100000"
-                        className="border-neutral-700 bg-neutral-800/50 text-white"
+                        className="border-border bg-muted/60 text-foreground"
                       />
                     </div>
                   </div>
                 </div>
               ))}
 
-              <div className="rounded-lg bg-neutral-800/50 p-4 text-right">
-                <span className="text-neutral-400">Total Estimasi: </span>
-                <span className="text-xl font-bold text-white">{formatRupiah(totalEstimation)}</span>
+              <div className="rounded-lg bg-muted/60 p-4 text-right">
+                <span className="text-muted-foreground">Total Estimasi: </span>
+                <span className="text-xl font-bold text-foreground">{formatRupiah(totalEstimation)}</span>
               </div>
             </div>
 
             {/* Notes */}
             <div className="space-y-2">
-              <Label htmlFor="notes" className="text-neutral-300">
+              <Label htmlFor="notes" className="text-foreground">
                 Catatan (Opsional)
               </Label>
               <Textarea
                 id="notes"
                 {...form.register('notes')}
                 placeholder="Tambahkan catatan..."
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
             </div>
 
@@ -194,7 +194,7 @@ export default function NewPengajuanPage() {
                 {isSubmitting ? 'Menyimpan...' : 'Ajukan'}
               </Button>
               <Link href="/dashboard/pengajuan">
-                <Button type="button" variant="outline" className="border-neutral-700">
+                <Button type="button" variant="outline" className="border-border">
                   Batal
                 </Button>
               </Link>

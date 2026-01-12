@@ -43,12 +43,12 @@ export function HijriMonthSelect({ onMonthChange, defaultYear, defaultMonth }: H
   return (
     <div className="flex items-center gap-3">
       <div className="space-y-1">
-        <Label className="text-xs text-neutral-500">Tahun Hijri</Label>
+        <Label className="text-xs text-muted-foreground">Tahun Hijri</Label>
         <Select value={year.toString()} onValueChange={(v) => setYear(parseInt(v))}>
-          <SelectTrigger className="w-24 border-neutral-700 bg-neutral-800/50 text-white">
+          <SelectTrigger className="w-24 border-border bg-muted/60 text-foreground">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="border-neutral-700 bg-neutral-900">
+          <SelectContent className="border-border bg-card">
             {years.map((y) => (
               <SelectItem key={y} value={y.toString()}>
                 {y}
@@ -58,12 +58,12 @@ export function HijriMonthSelect({ onMonthChange, defaultYear, defaultMonth }: H
         </Select>
       </div>
       <div className="space-y-1">
-        <Label className="text-xs text-neutral-500">Bulan Hijri</Label>
+        <Label className="text-xs text-muted-foreground">Bulan Hijri</Label>
         <Select value={month.toString()} onValueChange={(v) => setMonth(parseInt(v))}>
-          <SelectTrigger className="w-40 border-neutral-700 bg-neutral-800/50 text-white">
+          <SelectTrigger className="w-40 border-border bg-muted/60 text-foreground">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="border-neutral-700 bg-neutral-900">
+          <SelectContent className="border-border bg-card">
             {hijriMonths.map((m) => (
               <SelectItem key={m.value} value={m.value.toString()}>
                 {m.label}

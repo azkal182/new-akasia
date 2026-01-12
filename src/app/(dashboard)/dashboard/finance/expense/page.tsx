@@ -98,21 +98,21 @@ export default function ExpensePage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/dashboard/finance">
-          <Button variant="ghost" size="icon" className="text-neutral-400 hover:text-white">
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-white">Input Pengeluaran</h1>
-          <p className="text-neutral-400">Tambah pengeluaran baru</p>
+          <h1 className="text-2xl font-bold text-foreground">Input Pengeluaran</h1>
+          <p className="text-muted-foreground">Tambah pengeluaran baru</p>
         </div>
       </div>
 
       {/* Form */}
-      <Card className="max-w-2xl border-neutral-800 bg-neutral-900/50">
+      <Card className="max-w-2xl border-border bg-card/60">
         <CardHeader>
-          <CardTitle className="text-white">Detail Pengeluaran</CardTitle>
-          <CardDescription className="text-neutral-400">
+          <CardTitle className="text-foreground">Detail Pengeluaran</CardTitle>
+          <CardDescription className="text-muted-foreground">
             Masukkan informasi pengeluaran
           </CardDescription>
         </CardHeader>
@@ -125,14 +125,14 @@ export default function ExpensePage() {
                   name="date"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-neutral-300">Tanggal</FormLabel>
+                      <FormLabel className="text-foreground">Tanggal</FormLabel>
                       <FormControl>
                         <Input
                           type="date"
                           value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : ''}
                           onChange={(e) => field.onChange(new Date(e.target.value))}
                           disabled={isLoading}
-                          className="border-neutral-700 bg-neutral-800/50 text-white"
+                          className="border-border bg-muted/60 text-foreground"
                         />
                       </FormControl>
                       <FormMessage />
@@ -145,13 +145,13 @@ export default function ExpensePage() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-neutral-300">Keterangan</FormLabel>
+                      <FormLabel className="text-foreground">Keterangan</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           placeholder="Contoh: Pembelian Sparepart"
                           disabled={isLoading}
-                          className="border-neutral-700 bg-neutral-800/50 text-white"
+                          className="border-border bg-muted/60 text-foreground"
                         />
                       </FormControl>
                       <FormMessage />
@@ -162,7 +162,7 @@ export default function ExpensePage() {
 
               {/* Receipt Upload */}
               <div className="space-y-2">
-                <FormLabel className="text-neutral-300">Nota/Struk *</FormLabel>
+                <FormLabel className="text-foreground">Nota/Struk *</FormLabel>
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -176,13 +176,13 @@ export default function ExpensePage() {
                     <img
                       src={receiptPreview}
                       alt="Receipt preview"
-                      className="max-h-48 rounded-lg border border-neutral-700"
+                      className="max-h-48 rounded-lg border border-border"
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="mt-2 border-neutral-700"
+                      className="mt-2 border-border"
                       onClick={() => fileInputRef.current?.click()}
                     >
                       Ganti Nota
@@ -192,7 +192,7 @@ export default function ExpensePage() {
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full border-dashed border-neutral-600 py-8 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300"
+                    className="w-full border-dashed border-border py-8 text-muted-foreground hover:border-foreground/40 hover:text-foreground"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <Upload className="mr-2 h-5 w-5" />
@@ -201,18 +201,18 @@ export default function ExpensePage() {
                 )}
               </div>
 
-              <Separator className="bg-neutral-800" />
+              <Separator className="bg-muted" />
 
               {/* Items */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-white">Daftar Item</h3>
+                  <h3 className="font-medium text-foreground">Daftar Item</h3>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => append({ description: '', quantity: 1, unitPrice: 0 })}
-                    className="border-neutral-700"
+                    className="border-border"
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Tambah Item
@@ -220,19 +220,19 @@ export default function ExpensePage() {
                 </div>
 
                 {fields.map((field, index) => (
-                  <div key={field.id} className="grid gap-3 rounded-lg bg-neutral-800/30 p-4 md:grid-cols-4">
+                  <div key={field.id} className="grid gap-3 rounded-lg bg-muted/40 p-4 md:grid-cols-4">
                     <FormField
                       control={form.control}
                       name={`items.${index}.description`}
                       render={({ field }) => (
                         <FormItem className="md:col-span-2">
-                          <FormLabel className="text-neutral-400 text-sm">Deskripsi</FormLabel>
+                          <FormLabel className="text-muted-foreground text-sm">Deskripsi</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
                               placeholder="Nama item"
                               disabled={isLoading}
-                              className="border-neutral-700 bg-neutral-800/50 text-white"
+                              className="border-border bg-muted/60 text-foreground"
                             />
                           </FormControl>
                           <FormMessage />
@@ -245,14 +245,14 @@ export default function ExpensePage() {
                       name={`items.${index}.quantity`}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-neutral-400 text-sm">Qty</FormLabel>
+                          <FormLabel className="text-muted-foreground text-sm">Qty</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
                               {...field}
                               onChange={(e) => field.onChange(Number(e.target.value))}
                               disabled={isLoading}
-                              className="border-neutral-700 bg-neutral-800/50 text-white"
+                              className="border-border bg-muted/60 text-foreground"
                             />
                           </FormControl>
                           <FormMessage />
@@ -266,14 +266,14 @@ export default function ExpensePage() {
                         name={`items.${index}.unitPrice`}
                         render={({ field }) => (
                           <FormItem className="flex-1">
-                            <FormLabel className="text-neutral-400 text-sm">Harga</FormLabel>
+                            <FormLabel className="text-muted-foreground text-sm">Harga</FormLabel>
                             <FormControl>
                               <Input
                                 type="number"
                                 {...field}
                                 onChange={(e) => field.onChange(Number(e.target.value))}
                                 disabled={isLoading}
-                                className="border-neutral-700 bg-neutral-800/50 text-white"
+                                className="border-border bg-muted/60 text-foreground"
                               />
                             </FormControl>
                             <FormMessage />
@@ -296,11 +296,11 @@ export default function ExpensePage() {
                 ))}
               </div>
 
-              <Separator className="bg-neutral-800" />
+              <Separator className="bg-muted" />
 
               {/* Total */}
-              <div className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-4">
-                <span className="font-medium text-neutral-300">Total</span>
+              <div className="flex items-center justify-between rounded-lg bg-muted/60 p-4">
+                <span className="font-medium text-foreground">Total</span>
                 <span className="text-xl font-bold text-red-400">
                   {formatRupiah(totalAmount)}
                 </span>
@@ -311,13 +311,13 @@ export default function ExpensePage() {
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-neutral-300">Catatan (Opsional)</FormLabel>
+                    <FormLabel className="text-foreground">Catatan (Opsional)</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         placeholder="Catatan tambahan"
                         disabled={isLoading}
-                        className="border-neutral-700 bg-neutral-800/50 text-white"
+                        className="border-border bg-muted/60 text-foreground"
                       />
                     </FormControl>
                     <FormMessage />
@@ -345,7 +345,7 @@ export default function ExpensePage() {
                     type="button"
                     variant="outline"
                     disabled={isLoading}
-                    className="border-neutral-700"
+                    className="border-border"
                   >
                     Batal
                   </Button>

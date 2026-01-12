@@ -93,20 +93,20 @@ export default function FuelPurchasePage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/dashboard/fuel">
-          <Button variant="ghost" size="icon" className="text-neutral-400">
+          <Button variant="ghost" size="icon" className="text-muted-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-white">Isi BBM</h1>
-          <p className="text-neutral-400">Catat pembelian bahan bakar</p>
+          <h1 className="text-2xl font-bold text-foreground">Isi BBM</h1>
+          <p className="text-muted-foreground">Catat pembelian bahan bakar</p>
         </div>
       </div>
 
       {/* Form */}
-      <Card className="border-neutral-800 bg-neutral-900/50 max-w-xl">
+      <Card className="border-border bg-card/60 max-w-xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <Fuel className="h-5 w-5" />
             Data Pembelian BBM
           </CardTitle>
@@ -114,12 +114,12 @@ export default function FuelPurchasePage() {
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-neutral-300">Kendaraan</Label>
+              <Label className="text-foreground">Kendaraan</Label>
               <Select onValueChange={(v) => form.setValue('carId', v)}>
-                <SelectTrigger className="border-neutral-700 bg-neutral-800/50 text-white">
+                <SelectTrigger className="border-border bg-muted/60 text-foreground">
                   <SelectValue placeholder="Pilih kendaraan" />
                 </SelectTrigger>
-                <SelectContent className="border-neutral-700 bg-neutral-900">
+                <SelectContent className="border-border bg-card">
                   {cars.map((car) => (
                     <SelectItem key={car.id} value={car.id}>
                       {car.name} - {car.licensePlate}
@@ -134,7 +134,7 @@ export default function FuelPurchasePage() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="totalAmount" className="text-neutral-300">
+                <Label htmlFor="totalAmount" className="text-foreground">
                   Total Biaya (Rp)
                 </Label>
                 <Input
@@ -142,7 +142,7 @@ export default function FuelPurchasePage() {
                   type="number"
                   {...form.register('totalAmount', { valueAsNumber: true })}
                   placeholder="500000"
-                  className="border-neutral-700 bg-neutral-800/50 text-white"
+                  className="border-border bg-muted/60 text-foreground"
                 />
                 {form.formState.errors.totalAmount && (
                   <p className="text-sm text-red-400">{form.formState.errors.totalAmount.message}</p>
@@ -150,15 +150,15 @@ export default function FuelPurchasePage() {
               </div>
             </div>
 
-            <div className="rounded-lg bg-neutral-800/50 p-4">
+            <div className="rounded-lg bg-muted/60 p-4">
               <div className="flex items-center justify-between">
-                <span className="text-neutral-400">Total</span>
+                <span className="text-muted-foreground">Total</span>
                 <span className="text-xl font-bold text-amber-400">{formatRupiah(watchTotal || 0)}</span>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-neutral-300">Nota/Struk *</Label>
+              <Label className="text-foreground">Nota/Struk *</Label>
               <input
                 type="file"
                 ref={receiptInputRef}
@@ -172,13 +172,13 @@ export default function FuelPurchasePage() {
                   <img
                     src={receiptPreview}
                     alt="Receipt preview"
-                    className="max-h-48 rounded-lg border border-neutral-700"
+                    className="max-h-48 rounded-lg border border-border"
                   />
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="mt-2 border-neutral-700"
+                    className="mt-2 border-border"
                     onClick={() => receiptInputRef.current?.click()}
                   >
                     Ganti Nota
@@ -188,7 +188,7 @@ export default function FuelPurchasePage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full border-dashed border-neutral-600 py-8 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300"
+                  className="w-full border-dashed border-border py-8 text-muted-foreground hover:border-foreground/40 hover:text-foreground"
                   onClick={() => receiptInputRef.current?.click()}
                 >
                   <Upload className="mr-2 h-5 w-5" />
@@ -198,14 +198,14 @@ export default function FuelPurchasePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="date" className="text-neutral-300">
+              <Label htmlFor="date" className="text-foreground">
                 Tanggal
               </Label>
               <Input
                 id="date"
                 type="date"
                 {...form.register('date')}
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
               {form.formState.errors.date && (
                 <p className="text-sm text-red-400">{form.formState.errors.date.message}</p>
@@ -213,14 +213,14 @@ export default function FuelPurchasePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes" className="text-neutral-300">
+              <Label htmlFor="notes" className="text-foreground">
                 Catatan (Opsional)
               </Label>
               <Textarea
                 id="notes"
                 {...form.register('notes')}
                 placeholder="SPBU, jenis BBM, dll"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
             </div>
 
@@ -233,7 +233,7 @@ export default function FuelPurchasePage() {
                 {isSubmitting ? 'Menyimpan...' : 'Simpan'}
               </Button>
               <Link href="/dashboard/fuel">
-                <Button type="button" variant="outline" className="border-neutral-700">
+                <Button type="button" variant="outline" className="border-border">
                   Batal
                 </Button>
               </Link>

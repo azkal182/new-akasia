@@ -21,8 +21,8 @@ export default async function TaxPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Pajak Kendaraan</h1>
-          <p className="text-neutral-400">Kelola pajak dan STNK</p>
+          <h1 className="text-2xl font-bold text-foreground">Pajak Kendaraan</h1>
+          <p className="text-muted-foreground">Kelola pajak dan STNK</p>
         </div>
         <Link href="/dashboard/tax/new">
           <Button className="bg-blue-600 hover:bg-blue-500">
@@ -34,9 +34,9 @@ export default async function TaxPage() {
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-400">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <AlertTriangle className="h-4 w-4 text-amber-500" />
               Jatuh Tempo 30 Hari
             </CardTitle>
@@ -46,9 +46,9 @@ export default async function TaxPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-neutral-400">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Belum Dibayar
             </CardTitle>
           </CardHeader>
@@ -57,9 +57,9 @@ export default async function TaxPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-400">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <CheckCircle className="h-4 w-4 text-emerald-500" />
               Sudah Dibayar
             </CardTitle>
@@ -71,14 +71,14 @@ export default async function TaxPage() {
       </div>
 
       {/* Tax List */}
-      <Card className="border-neutral-800 bg-neutral-900/50">
+      <Card className="border-border bg-card/60">
         <CardHeader>
-          <CardTitle className="text-white">Daftar Pajak</CardTitle>
+          <CardTitle className="text-foreground">Daftar Pajak</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {allTaxes.length === 0 ? (
-              <p className="text-center text-neutral-500 py-8">
+              <p className="text-center text-muted-foreground py-8">
                 Belum ada data pajak
               </p>
             ) : (
@@ -88,7 +88,7 @@ export default async function TaxPage() {
                 return (
                   <div
                     key={tax.id}
-                    className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-4"
+                    className="flex items-center justify-between rounded-lg bg-muted/60 p-4"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
@@ -101,16 +101,16 @@ export default async function TaxPage() {
                         <FileText className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="font-medium text-white">
+                        <p className="font-medium text-foreground">
                           {tax.type === 'FIVE_YEAR' ? 'STNK 5 Tahunan' : 'Pajak Tahunan'}
                         </p>
-                        <p className="text-sm text-neutral-500">
+                        <p className="text-sm text-muted-foreground">
                           {tax.car.name} • {tax.car.licensePlate}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-neutral-400">
+                      <p className="text-sm text-muted-foreground">
                         Jatuh tempo: {formatDate(tax.dueDate)}
                       </p>
                       <div className="flex items-center gap-2 justify-end">

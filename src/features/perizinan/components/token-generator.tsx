@@ -67,9 +67,9 @@ export default function TokenGenerator({ perizinanId }: TokenGeneratorProps) {
   }
 
   return (
-    <Card className="border-neutral-800 bg-neutral-900/50">
+    <Card className="border-border bg-card/60">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-white">
+        <CardTitle className="flex items-center gap-2 text-foreground">
           <Link2 className="h-5 w-5" />
           Buat Link Publik
         </CardTitle>
@@ -77,19 +77,19 @@ export default function TokenGenerator({ perizinanId }: TokenGeneratorProps) {
       <CardContent className="space-y-4">
         {/* Form Link */}
         <div>
-          <p className="text-sm text-neutral-400 mb-2">
+          <p className="text-sm text-muted-foreground mb-2">
             Link Form (untuk diisi oleh pemohon)
           </p>
           {formLink ? (
             <div className="flex items-center gap-2">
-              <code className="flex-1 p-2 bg-neutral-800 rounded text-xs text-neutral-300 truncate">
+              <code className="flex-1 p-2 bg-muted rounded text-xs text-foreground truncate">
                 {formLink}
               </code>
               <Button
                 size="icon"
                 variant="outline"
                 onClick={() => copyToClipboard(formLink, 'form')}
-                className="border-neutral-700"
+                className="border-border"
               >
                 {copied === 'form' ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
               </Button>
@@ -97,7 +97,7 @@ export default function TokenGenerator({ perizinanId }: TokenGeneratorProps) {
                 size="icon"
                 variant="outline"
                 onClick={() => window.open(formLink, '_blank')}
-                className="border-neutral-700"
+                className="border-border"
               >
                 <ExternalLink className="h-4 w-4" />
               </Button>
@@ -107,30 +107,30 @@ export default function TokenGenerator({ perizinanId }: TokenGeneratorProps) {
               onClick={handleGenerateFormLink}
               disabled={isGenerating}
               variant="outline"
-              className="border-neutral-700"
+              className="border-border"
             >
               {isGenerating ? 'Membuat...' : 'Buat Link Form'}
             </Button>
           )}
-          <p className="text-xs text-neutral-500 mt-1">Valid 7 hari</p>
+          <p className="text-xs text-muted-foreground mt-1">Valid 7 hari</p>
         </div>
 
         {/* Approval Link */}
         {perizinanId && (
           <div>
-            <p className="text-sm text-neutral-400 mb-2">
+            <p className="text-sm text-muted-foreground mb-2">
               Link Persetujuan (untuk dikirim via WhatsApp)
             </p>
             {approvalLink ? (
               <div className="flex items-center gap-2">
-                <code className="flex-1 p-2 bg-neutral-800 rounded text-xs text-neutral-300 truncate">
+                <code className="flex-1 p-2 bg-muted rounded text-xs text-foreground truncate">
                   {approvalLink}
                 </code>
                 <Button
                   size="icon"
                   variant="outline"
                   onClick={() => copyToClipboard(approvalLink, 'approval')}
-                  className="border-neutral-700"
+                  className="border-border"
                 >
                   {copied === 'approval' ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
                 </Button>
@@ -138,7 +138,7 @@ export default function TokenGenerator({ perizinanId }: TokenGeneratorProps) {
                   size="icon"
                   variant="outline"
                   onClick={() => window.open(approvalLink, '_blank')}
-                  className="border-neutral-700"
+                  className="border-border"
                 >
                   <ExternalLink className="h-4 w-4" />
                 </Button>
@@ -148,12 +148,12 @@ export default function TokenGenerator({ perizinanId }: TokenGeneratorProps) {
                 onClick={handleGenerateApprovalLink}
                 disabled={isGenerating}
                 variant="outline"
-                className="border-neutral-700"
+                className="border-border"
               >
                 {isGenerating ? 'Membuat...' : 'Buat Link Approval'}
               </Button>
             )}
-            <p className="text-xs text-neutral-500 mt-1">Valid 48 jam, sekali pakai</p>
+            <p className="text-xs text-muted-foreground mt-1">Valid 48 jam, sekali pakai</p>
           </div>
         )}
       </CardContent>

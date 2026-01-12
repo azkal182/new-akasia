@@ -23,8 +23,8 @@ export default async function UsersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Pengguna</h1>
-          <p className="text-neutral-400">Kelola pengguna sistem</p>
+          <h1 className="text-2xl font-bold text-foreground">Pengguna</h1>
+          <p className="text-muted-foreground">Kelola pengguna sistem</p>
         </div>
         <Link href="/dashboard/users/new">
           <Button className="bg-blue-600 hover:bg-blue-500">
@@ -36,21 +36,21 @@ export default async function UsersPage() {
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-400">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Users className="h-4 w-4" />
               Total Pengguna
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{users.length}</div>
+            <div className="text-2xl font-bold text-foreground">{users.length}</div>
           </CardContent>
         </Card>
 
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-400">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Shield className="h-4 w-4 text-amber-500" />
               Admin
             </CardTitle>
@@ -60,9 +60,9 @@ export default async function UsersPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-400">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <UserCheck className="h-4 w-4 text-emerald-500" />
               Aktif
             </CardTitle>
@@ -74,21 +74,21 @@ export default async function UsersPage() {
       </div>
 
       {/* Users List */}
-      <Card className="border-neutral-800 bg-neutral-900/50">
+      <Card className="border-border bg-card/60">
         <CardHeader>
-          <CardTitle className="text-white">Daftar Pengguna</CardTitle>
+          <CardTitle className="text-foreground">Daftar Pengguna</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {users.length === 0 ? (
-              <p className="text-center text-neutral-500 py-8">
+              <p className="text-center text-muted-foreground py-8">
                 Belum ada pengguna
               </p>
             ) : (
               users.map((user) => (
                 <div
                   key={user.id}
-                  className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-4"
+                  className="flex items-center justify-between rounded-lg bg-muted/60 p-4"
                 >
                   <div className="flex items-center gap-3">
                     <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
@@ -96,7 +96,7 @@ export default async function UsersPage() {
                         ? 'bg-amber-500/20 text-amber-500'
                         : user.role === 'DRIVER'
                           ? 'bg-blue-500/20 text-blue-400'
-                          : 'bg-neutral-700 text-neutral-400'
+                          : 'bg-muted text-muted-foreground'
                     }`}>
                       {user.role === 'ADMIN' ? (
                         <Shield className="h-5 w-5" />
@@ -106,14 +106,14 @@ export default async function UsersPage() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-medium text-white">{user.name}</p>
+                        <p className="font-medium text-foreground">{user.name}</p>
                         {!user.isActive && (
                           <Badge variant="outline" className="border-red-500/50 text-red-400 text-xs">
                             Nonaktif
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-neutral-500">
+                      <p className="text-sm text-muted-foreground">
                         @{user.username} • {user.email || 'Tidak ada email'}
                       </p>
                     </div>
@@ -124,29 +124,29 @@ export default async function UsersPage() {
                         variant="outline"
                         className={
                           user.role === 'ADMIN'
-                            ? 'border-amber-500/50 text-amber-400'
-                            : user.role === 'DRIVER'
-                              ? 'border-blue-500/50 text-blue-400'
-                              : 'border-neutral-500/50 text-neutral-400'
+                              ? 'border-amber-500/50 text-amber-400'
+                              : user.role === 'DRIVER'
+                                ? 'border-blue-500/50 text-blue-400'
+                              : 'border-border text-muted-foreground'
                         }
                       >
                         {user.role}
                       </Badge>
-                      <p className="text-xs text-neutral-600 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         Dibuat: {formatDate(user.createdAt)}
                       </p>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-neutral-400">
+                        <Button variant="ghost" size="icon" className="text-muted-foreground">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="border-neutral-800 bg-neutral-900">
-                        <DropdownMenuItem asChild className="text-neutral-300">
+                      <DropdownMenuContent align="end" className="border-border bg-card">
+                        <DropdownMenuItem asChild className="text-foreground">
                           <Link href={`/dashboard/users/${user.id}/edit`}>Edit</Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="text-neutral-300">
+                        <DropdownMenuItem asChild className="text-foreground">
                           <Link href={`/dashboard/users/${user.id}/password`}>Ubah Password</Link>
                         </DropdownMenuItem>
                       </DropdownMenuContent>

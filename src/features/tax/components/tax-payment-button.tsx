@@ -61,31 +61,31 @@ export function TaxPaymentButton({ taxId, carLabel }: TaxPaymentButtonProps) {
         Bayar
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="border-neutral-800 bg-neutral-900">
+        <DialogContent className="border-border bg-card">
           <DialogHeader>
-            <DialogTitle className="text-white">Pembayaran Pajak</DialogTitle>
+            <DialogTitle className="text-foreground">Pembayaran Pajak</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="text-sm text-neutral-400">
+            <div className="text-sm text-muted-foreground">
               {carLabel}
             </div>
             <div className="space-y-2">
-              <Label className="text-neutral-300">Jumlah (Rp)</Label>
+              <Label className="text-foreground">Jumlah (Rp)</Label>
               <Input
                 type="number"
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
                 placeholder="1000000"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-neutral-300">Catatan (Opsional)</Label>
+              <Label className="text-foreground">Catatan (Opsional)</Label>
               <Textarea
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
                 placeholder="Nomor kwitansi, lokasi pembayaran, dll"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
             </div>
           </div>
@@ -94,7 +94,7 @@ export function TaxPaymentButton({ taxId, carLabel }: TaxPaymentButtonProps) {
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="border-neutral-700"
+              className="border-border"
             >
               Batal
             </Button>

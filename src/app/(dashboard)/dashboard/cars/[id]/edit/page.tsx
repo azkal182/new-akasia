@@ -83,7 +83,7 @@ export default function EditCarPage({ params }: EditCarPageProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-neutral-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -93,20 +93,20 @@ export default function EditCarPage({ params }: EditCarPageProps) {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href={`/dashboard/cars/${carId}`}>
-          <Button variant="ghost" size="icon" className="text-neutral-400">
+          <Button variant="ghost" size="icon" className="text-muted-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-white">Edit Mobil</h1>
-          <p className="text-neutral-400">Ubah data kendaraan</p>
+          <h1 className="text-2xl font-bold text-foreground">Edit Mobil</h1>
+          <p className="text-muted-foreground">Ubah data kendaraan</p>
         </div>
       </div>
 
       {/* Form */}
-      <Card className="border-neutral-800 bg-neutral-900/50 max-w-xl">
+      <Card className="border-border bg-card/60 max-w-xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <Car className="h-5 w-5" />
             Data Kendaraan
           </CardTitle>
@@ -114,14 +114,14 @@ export default function EditCarPage({ params }: EditCarPageProps) {
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-neutral-300">
+              <Label htmlFor="name" className="text-foreground">
                 Nama Mobil
               </Label>
               <Input
                 id="name"
                 {...form.register('name')}
                 placeholder="Toyota Avanza"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
               {form.formState.errors.name && (
                 <p className="text-sm text-red-400">{form.formState.errors.name.message}</p>
@@ -129,14 +129,14 @@ export default function EditCarPage({ params }: EditCarPageProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="licensePlate" className="text-neutral-300">
+              <Label htmlFor="licensePlate" className="text-foreground">
                 Plat Nomor
               </Label>
               <Input
                 id="licensePlate"
                 {...form.register('licensePlate')}
                 placeholder="B 1234 ABC"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
               {form.formState.errors.licensePlate && (
                 <p className="text-sm text-red-400">{form.formState.errors.licensePlate.message}</p>
@@ -144,14 +144,14 @@ export default function EditCarPage({ params }: EditCarPageProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="barcodeString" className="text-neutral-300">
+              <Label htmlFor="barcodeString" className="text-foreground">
                 Kode Barcode (Opsional)
               </Label>
               <Input
                 id="barcodeString"
                 {...form.register('barcodeString')}
                 placeholder="CAR-001"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
             </div>
 
@@ -164,7 +164,7 @@ export default function EditCarPage({ params }: EditCarPageProps) {
                 {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
               </Button>
               <Link href={`/dashboard/cars/${carId}`}>
-                <Button type="button" variant="outline" className="border-neutral-700">
+                <Button type="button" variant="outline" className="border-border">
                   Batal
                 </Button>
               </Link>

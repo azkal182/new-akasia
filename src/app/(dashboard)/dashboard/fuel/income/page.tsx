@@ -68,20 +68,20 @@ export default function FuelIncomePage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/dashboard/fuel">
-          <Button variant="ghost" size="icon" className="text-neutral-400">
+          <Button variant="ghost" size="icon" className="text-muted-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-white">Pemasukan BBM</h1>
-          <p className="text-neutral-400">Catat dana BBM yang diterima</p>
+          <h1 className="text-2xl font-bold text-foreground">Pemasukan BBM</h1>
+          <p className="text-muted-foreground">Catat dana BBM yang diterima</p>
         </div>
       </div>
 
       {/* Form */}
-      <Card className="border-neutral-800 bg-neutral-900/50 max-w-xl">
+      <Card className="border-border bg-card/60 max-w-xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <ArrowUpRight className="h-5 w-5 text-emerald-500" />
             Data Pemasukan
           </CardTitle>
@@ -89,7 +89,7 @@ export default function FuelIncomePage() {
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="amount" className="text-neutral-300">
+              <Label htmlFor="amount" className="text-foreground">
                 Jumlah (Rp)
               </Label>
               <Input
@@ -97,7 +97,7 @@ export default function FuelIncomePage() {
                 type="number"
                 {...form.register('amount', { valueAsNumber: true })}
                 placeholder="1000000"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
               {form.formState.errors.amount && (
                 <p className="text-sm text-red-400">{form.formState.errors.amount.message}</p>
@@ -108,14 +108,14 @@ export default function FuelIncomePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="source" className="text-neutral-300">
+              <Label htmlFor="source" className="text-foreground">
                 Sumber Dana
               </Label>
               <Input
                 id="source"
                 {...form.register('source')}
                 placeholder="Yayasan, Operasional, dll"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
               {form.formState.errors.source && (
                 <p className="text-sm text-red-400">{form.formState.errors.source.message}</p>
@@ -123,14 +123,14 @@ export default function FuelIncomePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="date" className="text-neutral-300">
+              <Label htmlFor="date" className="text-foreground">
                 Tanggal
               </Label>
               <Input
                 id="date"
                 type="date"
                 {...form.register('date')}
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
               {form.formState.errors.date && (
                 <p className="text-sm text-red-400">{form.formState.errors.date.message}</p>
@@ -138,14 +138,14 @@ export default function FuelIncomePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes" className="text-neutral-300">
+              <Label htmlFor="notes" className="text-foreground">
                 Catatan (Opsional)
               </Label>
               <Textarea
                 id="notes"
                 {...form.register('notes')}
                 placeholder="Tambahkan catatan..."
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
             </div>
 
@@ -158,7 +158,7 @@ export default function FuelIncomePage() {
                 {isSubmitting ? 'Menyimpan...' : 'Simpan'}
               </Button>
               <Link href="/dashboard/fuel">
-                <Button type="button" variant="outline" className="border-neutral-700">
+                <Button type="button" variant="outline" className="border-border">
                   Batal
                 </Button>
               </Link>

@@ -13,24 +13,24 @@ async function FuelStats() {
 
   return (
     <div className="grid gap-4 md:grid-cols-4">
-      <Card className="border-neutral-800 bg-neutral-900/50">
+      <Card className="border-border bg-card/60">
         <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-400">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
             <Calendar className="h-4 w-4" />
             Bulan Hijri
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-xl font-bold text-white">
+          <div className="text-xl font-bold text-foreground">
             {report.hijriMonth} {report.hijriYear}
           </div>
-          <p className="text-xs text-neutral-500">{hijri.hijriDate}</p>
+          <p className="text-xs text-muted-foreground">{hijri.hijriDate}</p>
         </CardContent>
       </Card>
 
-      <Card className="border-neutral-800 bg-neutral-900/50">
+      <Card className="border-border bg-card/60">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-neutral-400">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
             Pemasukan BBM
           </CardTitle>
         </CardHeader>
@@ -41,9 +41,9 @@ async function FuelStats() {
         </CardContent>
       </Card>
 
-      <Card className="border-neutral-800 bg-neutral-900/50">
+      <Card className="border-border bg-card/60">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-neutral-400">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
             Pengeluaran BBM
           </CardTitle>
         </CardHeader>
@@ -54,9 +54,9 @@ async function FuelStats() {
         </CardContent>
       </Card>
 
-      <Card className="border-neutral-800 bg-neutral-900/50">
+      <Card className="border-border bg-card/60">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-neutral-400">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
             Sisa Saldo BBM
           </CardTitle>
         </CardHeader>
@@ -74,21 +74,21 @@ async function FuelTransactionsList() {
   const transactions = await getFuelTransactions();
 
   return (
-    <Card className="border-neutral-800 bg-neutral-900/50">
+    <Card className="border-border bg-card/60">
       <CardHeader>
-        <CardTitle className="text-white">Transaksi BBM Bulan Ini</CardTitle>
+        <CardTitle className="text-foreground">Transaksi BBM Bulan Ini</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           {transactions.length === 0 ? (
-            <p className="text-center text-neutral-500 py-8">
+            <p className="text-center text-muted-foreground py-8">
               Belum ada transaksi BBM bulan ini
             </p>
           ) : (
             transactions.map((trx) => (
               <div
                 key={trx.id}
-                className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-4"
+                className="flex items-center justify-between rounded-lg bg-muted/60 p-4"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -105,12 +105,12 @@ async function FuelTransactionsList() {
                     )}
                   </div>
                   <div>
-                    <p className="font-medium text-white">{trx.description}</p>
-                    <p className="text-sm text-neutral-500">
+                    <p className="font-medium text-foreground">{trx.description}</p>
+                    <p className="text-sm text-muted-foreground">
                       {formatDate(trx.date)} • {trx.user?.name}
                     </p>
                     {trx.fuelPurchase && (
-                      <p className="text-xs text-neutral-600">
+                      <p className="text-xs text-muted-foreground">
                         {trx.fuelPurchase.car?.name}
                         {trx.fuelPurchase.notes ? ` • ${trx.fuelPurchase.notes}` : ''}
                       </p>
@@ -152,8 +152,8 @@ export default async function FuelPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Bahan Bakar</h1>
-          <p className="text-neutral-400">Kelola cashflow BBM (kalender Hijri)</p>
+          <h1 className="text-2xl font-bold text-foreground">Bahan Bakar</h1>
+          <p className="text-muted-foreground">Kelola cashflow BBM (kalender Hijri)</p>
         </div>
         <div className="flex gap-2">
           <Link href="/dashboard/fuel/income">
@@ -163,7 +163,7 @@ export default async function FuelPage() {
             </Button>
           </Link>
           <Link href="/dashboard/fuel/purchase">
-            <Button variant="outline" className="border-neutral-700 hover:bg-neutral-800">
+            <Button variant="outline" className="border-border hover:bg-muted">
               <Fuel className="mr-2 h-4 w-4" />
               Isi BBM
             </Button>
@@ -172,12 +172,12 @@ export default async function FuelPage() {
       </div>
 
       {/* Stats */}
-      <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-neutral-800" />}>
+      <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-muted" />}>
         <FuelStats />
       </Suspense>
 
       {/* Transactions */}
-      <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-neutral-800" />}>
+      <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-muted" />}>
         <FuelTransactionsList />
       </Suspense>
     </div>

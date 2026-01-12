@@ -58,7 +58,7 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-bold text-white">{car.name}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">{car.name}</h1>
               <Badge
                 variant="outline"
                 className={
@@ -76,12 +76,12 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
                     : 'Maintenance'}
               </Badge>
             </div>
-            <p className="text-sm text-neutral-400">{car.licensePlate}</p>
+            <p className="text-sm text-muted-foreground">{car.licensePlate}</p>
           </div>
         </div>
         <div className="flex gap-2">
           <Link href={`/dashboard/cars/${id}/edit`}>
-            <Button variant="outline" size="sm" className="border-neutral-700 hover:bg-neutral-800">
+            <Button variant="outline" size="sm" className="border-border hover:bg-muted">
               Edit
             </Button>
           </Link>
@@ -90,9 +90,9 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-400">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Fuel className="h-4 w-4" />
               Total BBM
             </CardTitle>
@@ -101,13 +101,13 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
             <div className="text-xl font-bold text-amber-400">
               {formatRupiah(totalFuelCost)}
             </div>
-            <p className="text-xs text-neutral-500">{totalFuelPurchases} transaksi</p>
+            <p className="text-xs text-muted-foreground">{totalFuelPurchases} transaksi</p>
           </CardContent>
         </Card>
 
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-400">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Car className="h-4 w-4" />
               Penggunaan
             </CardTitle>
@@ -116,24 +116,24 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
             <div className="text-xl font-bold text-blue-400">
               {totalUsages}x
             </div>
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-muted-foreground">
               {ongoingUsage ? 'Sedang digunakan' : 'Tidak digunakan'}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-400">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <FileText className="h-4 w-4" />
               Pajak
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-white">
+            <div className="text-xl font-bold text-foreground">
               {car.taxes.length}
             </div>
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-muted-foreground">
               {unpaidTaxes.length > 0
                 ? `${unpaidTaxes.length} belum dibayar`
                 : 'Semua lunas'}
@@ -141,15 +141,15 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
           </CardContent>
         </Card>
 
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-neutral-400">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Calendar className="h-4 w-4" />
               Barcode
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold text-white truncate">
+            <div className="text-lg font-bold text-foreground truncate">
               {car.barcodeString || '-'}
             </div>
           </CardContent>
@@ -178,16 +178,16 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
 
       {/* Tabs for Details */}
       <Tabs defaultValue="fuel" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-neutral-800">
-          <TabsTrigger value="fuel" className="data-[state=active]:bg-neutral-700">
+        <TabsList className="grid w-full grid-cols-3 bg-muted">
+          <TabsTrigger value="fuel" className="data-[state=active]:bg-muted">
             <Fuel className="mr-2 h-4 w-4" />
             BBM
           </TabsTrigger>
-          <TabsTrigger value="tax" className="data-[state=active]:bg-neutral-700">
+          <TabsTrigger value="tax" className="data-[state=active]:bg-muted">
             <FileText className="mr-2 h-4 w-4" />
             Pajak
           </TabsTrigger>
-          <TabsTrigger value="usage" className="data-[state=active]:bg-neutral-700">
+          <TabsTrigger value="usage" className="data-[state=active]:bg-muted">
             <Clock className="mr-2 h-4 w-4" />
             Penggunaan
           </TabsTrigger>
@@ -195,9 +195,9 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
 
         {/* Fuel Tab */}
         <TabsContent value="fuel" className="mt-4">
-          <Card className="border-neutral-800 bg-neutral-900/50">
+          <Card className="border-border bg-card/60">
             <CardHeader>
-              <CardTitle className="flex items-center justify-between text-white">
+              <CardTitle className="flex items-center justify-between text-foreground">
                 <span>Riwayat Pembelian BBM</span>
                 <Link href="/dashboard/fuel/purchase">
                   <Button size="sm" className="bg-amber-600 hover:bg-amber-500">
@@ -208,24 +208,24 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
             </CardHeader>
             <CardContent>
               {car.fuelPurchases.length === 0 ? (
-                <p className="text-center text-neutral-500 py-8">
+                <p className="text-center text-muted-foreground py-8">
                   Belum ada pembelian BBM
                 </p>
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-neutral-800">
-                      <TableHead className="text-neutral-400">Tanggal</TableHead>
-                      <TableHead className="text-neutral-400">Jenis</TableHead>
-                      <TableHead className="text-neutral-400">Catatan</TableHead>
-                      <TableHead className="text-right text-neutral-400">Total</TableHead>
-                      <TableHead className="text-right text-neutral-400">Nota</TableHead>
+                    <TableRow className="border-border">
+                      <TableHead className="text-muted-foreground">Tanggal</TableHead>
+                      <TableHead className="text-muted-foreground">Jenis</TableHead>
+                      <TableHead className="text-muted-foreground">Catatan</TableHead>
+                      <TableHead className="text-right text-muted-foreground">Total</TableHead>
+                      <TableHead className="text-right text-muted-foreground">Nota</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {car.fuelPurchases.map((fp) => (
-                      <TableRow key={fp.id} className="border-neutral-800">
-                        <TableCell className="text-white">
+                      <TableRow key={fp.id} className="border-border">
+                        <TableCell className="text-foreground">
                           {formatDate(fp.createdAt)}
                         </TableCell>
                         <TableCell>
@@ -240,7 +240,7 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
                             {fp.fuelType}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-neutral-400">
+                        <TableCell className="text-muted-foreground">
                           {fp.notes || '-'}
                         </TableCell>
                         <TableCell className="text-right font-medium text-amber-400">
@@ -257,7 +257,7 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
                               Lihat
                             </Link>
                           ) : (
-                            <span className="text-xs text-neutral-600">-</span>
+                            <span className="text-xs text-muted-foreground">-</span>
                           )}
                         </TableCell>
                       </TableRow>
@@ -271,9 +271,9 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
 
         {/* Tax Tab */}
         <TabsContent value="tax" className="mt-4">
-          <Card className="border-neutral-800 bg-neutral-900/50">
+          <Card className="border-border bg-card/60">
             <CardHeader>
-              <CardTitle className="flex items-center justify-between text-white">
+              <CardTitle className="flex items-center justify-between text-foreground">
                 <span>Pajak Kendaraan</span>
                 <Link href="/dashboard/tax/new">
                   <Button size="sm" className="bg-blue-600 hover:bg-blue-500">
@@ -284,7 +284,7 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
             </CardHeader>
             <CardContent>
               {car.taxes.length === 0 ? (
-                <p className="text-center text-neutral-500 py-8">
+                <p className="text-center text-muted-foreground py-8">
                   Belum ada data pajak
                 </p>
               ) : (
@@ -305,10 +305,10 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
                           <AlertCircle className="h-5 w-5 text-red-400" />
                         )}
                         <div>
-                          <p className="font-medium text-white">
+                          <p className="font-medium text-foreground">
                             {tax.type === 'ANNUAL' ? 'Pajak Tahunan' : 'Pajak 5 Tahunan'}
                           </p>
-                          <p className="text-sm text-neutral-400">
+                          <p className="text-sm text-muted-foreground">
                             Jatuh tempo: {formatDate(tax.dueDate)}
                           </p>
                         </div>
@@ -333,13 +333,13 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
 
         {/* Usage Tab */}
         <TabsContent value="usage" className="mt-4">
-          <Card className="border-neutral-800 bg-neutral-900/50">
+          <Card className="border-border bg-card/60">
             <CardHeader>
-              <CardTitle className="text-white">Riwayat Penggunaan</CardTitle>
+              <CardTitle className="text-foreground">Riwayat Penggunaan</CardTitle>
             </CardHeader>
             <CardContent>
               {car.usageRecords.length === 0 ? (
-                <p className="text-center text-neutral-500 py-8">
+                <p className="text-center text-muted-foreground py-8">
                   Belum ada riwayat penggunaan
                 </p>
               ) : (
@@ -347,12 +347,12 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
                   {car.usageRecords.map((usage) => (
                     <div
                       key={usage.id}
-                      className="flex items-start justify-between rounded-lg bg-neutral-800/50 p-4"
+                      className="flex items-start justify-between rounded-lg bg-muted/60 p-4"
                     >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-neutral-400" />
-                          <span className="font-medium text-white">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium text-foreground">
                             {usage.user?.name}
                           </span>
                           <Badge
@@ -366,11 +366,11 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
                             {usage.status === 'ONGOING' ? 'Sedang Digunakan' : 'Selesai'}
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-neutral-400">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <MapPin className="h-4 w-4" />
                           <span>{usage.purpose} ke {usage.destination}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-neutral-500">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Clock className="h-4 w-4" />
                           <span>
                             {formatDate(usage.startTime)}

@@ -54,16 +54,16 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="border-neutral-800 bg-neutral-900/50 backdrop-blur-sm shadow-2xl">
+    <Card className="border-border bg-card/60 backdrop-blur-sm shadow-2xl">
       <CardHeader className="space-y-4 text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/25">
           <Car className="h-8 w-8 text-white" />
         </div>
         <div>
-          <CardTitle className="text-2xl font-bold text-white">
+          <CardTitle className="text-2xl font-bold text-foreground">
             Akasia
           </CardTitle>
-          <CardDescription className="text-neutral-400">
+          <CardDescription className="text-muted-foreground">
             Sistem Manajemen Armada & Keuangan
           </CardDescription>
         </div>
@@ -76,13 +76,13 @@ export default function LoginPage() {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-neutral-300">Username</FormLabel>
+                  <FormLabel className="text-foreground">Username</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       placeholder="Masukkan username"
                       disabled={isLoading}
-                      className="border-neutral-700 bg-neutral-800/50 text-white placeholder:text-neutral-500 focus:border-blue-500 focus:ring-blue-500/20"
+                      className="border-border bg-muted/60 text-foreground placeholder:text-muted-foreground focus:border-blue-500 focus:ring-blue-500/20"
                     />
                   </FormControl>
                   <FormMessage />
@@ -94,14 +94,14 @@ export default function LoginPage() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-neutral-300">Password</FormLabel>
+                  <FormLabel className="text-foreground">Password</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
                       type="password"
                       placeholder="Masukkan password"
                       disabled={isLoading}
-                      className="border-neutral-700 bg-neutral-800/50 text-white placeholder:text-neutral-500 focus:border-blue-500 focus:ring-blue-500/20"
+                      className="border-border bg-muted/60 text-foreground placeholder:text-muted-foreground focus:border-blue-500 focus:ring-blue-500/20"
                     />
                   </FormControl>
                   <FormMessage />

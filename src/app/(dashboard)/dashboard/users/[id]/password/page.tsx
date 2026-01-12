@@ -77,14 +77,14 @@ export default function ChangePasswordPage({ params }: { params: Promise<{ id: s
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-neutral-700 border-t-blue-500" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-blue-500" />
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="text-center py-16 text-neutral-500">
+      <div className="text-center py-16 text-muted-foreground">
         Pengguna tidak ditemukan
       </div>
     );
@@ -95,22 +95,22 @@ export default function ChangePasswordPage({ params }: { params: Promise<{ id: s
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/dashboard/users">
-          <Button variant="ghost" size="icon" className="text-neutral-400">
+          <Button variant="ghost" size="icon" className="text-muted-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-white">Ubah Password</h1>
-          <p className="text-neutral-400">
+          <h1 className="text-2xl font-bold text-foreground">Ubah Password</h1>
+          <p className="text-muted-foreground">
             Reset password untuk {user.name} (@{user.username})
           </p>
         </div>
       </div>
 
       {/* Form */}
-      <Card className="border-neutral-800 bg-neutral-900/50 max-w-md">
+      <Card className="border-border bg-card/60 max-w-md">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <Key className="h-5 w-5" />
             Password Baru
           </CardTitle>
@@ -118,7 +118,7 @@ export default function ChangePasswordPage({ params }: { params: Promise<{ id: s
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="newPassword" className="text-neutral-300">
+              <Label htmlFor="newPassword" className="text-foreground">
                 Password Baru
               </Label>
               <Input
@@ -126,7 +126,7 @@ export default function ChangePasswordPage({ params }: { params: Promise<{ id: s
                 type="password"
                 {...form.register('newPassword')}
                 placeholder="••••••••"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
               {form.formState.errors.newPassword && (
                 <p className="text-sm text-red-400">{form.formState.errors.newPassword.message}</p>
@@ -134,7 +134,7 @@ export default function ChangePasswordPage({ params }: { params: Promise<{ id: s
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-neutral-300">
+              <Label htmlFor="confirmPassword" className="text-foreground">
                 Konfirmasi Password
               </Label>
               <Input
@@ -142,7 +142,7 @@ export default function ChangePasswordPage({ params }: { params: Promise<{ id: s
                 type="password"
                 {...form.register('confirmPassword')}
                 placeholder="••••••••"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
               {form.formState.errors.confirmPassword && (
                 <p className="text-sm text-red-400">{form.formState.errors.confirmPassword.message}</p>
@@ -158,7 +158,7 @@ export default function ChangePasswordPage({ params }: { params: Promise<{ id: s
                 {isSubmitting ? 'Menyimpan...' : 'Simpan Password'}
               </Button>
               <Link href="/dashboard/users">
-                <Button type="button" variant="outline" className="border-neutral-700">
+                <Button type="button" variant="outline" className="border-border">
                   Batal
                 </Button>
               </Link>

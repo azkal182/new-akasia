@@ -20,7 +20,7 @@ export function ThemeToggle() {
         <Button
           variant="ghost"
           size="icon"
-          className="text-neutral-400 hover:bg-neutral-800 hover:text-white"
+          className="text-muted-foreground hover:bg-accent hover:text-foreground"
         >
           {effectiveTheme === 'dark' ? (
             <Moon className="h-4 w-4" />
@@ -29,23 +29,23 @@ export function ThemeToggle() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="border-neutral-800 bg-neutral-900">
+      <DropdownMenuContent align="end" className="border-border bg-popover">
         <DropdownMenuItem
-          className="cursor-pointer text-neutral-300 focus:bg-neutral-800 focus:text-white"
+          className="cursor-pointer text-foreground focus:bg-accent focus:text-accent-foreground"
           onClick={() => setTheme('light')}
         >
           <Sun className="mr-2 h-4 w-4" />
           Light
         </DropdownMenuItem>
         <DropdownMenuItem
-          className="cursor-pointer text-neutral-300 focus:bg-neutral-800 focus:text-white"
+          className="cursor-pointer text-foreground focus:bg-accent focus:text-accent-foreground"
           onClick={() => setTheme('dark')}
         >
           <Moon className="mr-2 h-4 w-4" />
           Dark
         </DropdownMenuItem>
         <DropdownMenuItem
-          className="cursor-pointer text-neutral-300 focus:bg-neutral-800 focus:text-white"
+          className="cursor-pointer text-foreground focus:bg-accent focus:text-accent-foreground"
           onClick={() => setTheme('system')}
         >
           <Monitor className="mr-2 h-4 w-4" />

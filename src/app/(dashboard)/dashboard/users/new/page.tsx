@@ -73,20 +73,20 @@ export default function NewUserPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/dashboard/users">
-          <Button variant="ghost" size="icon" className="text-neutral-400">
+          <Button variant="ghost" size="icon" className="text-muted-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-white">Tambah Pengguna</h1>
-          <p className="text-neutral-400">Buat akun pengguna baru</p>
+          <h1 className="text-2xl font-bold text-foreground">Tambah Pengguna</h1>
+          <p className="text-muted-foreground">Buat akun pengguna baru</p>
         </div>
       </div>
 
       {/* Form */}
-      <Card className="border-neutral-800 bg-neutral-900/50 max-w-xl">
+      <Card className="border-border bg-card/60 max-w-xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <User className="h-5 w-5" />
             Data Pengguna
           </CardTitle>
@@ -94,14 +94,14 @@ export default function NewUserPage() {
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-neutral-300">
+              <Label htmlFor="name" className="text-foreground">
                 Nama Lengkap
               </Label>
               <Input
                 id="name"
                 {...form.register('name')}
                 placeholder="John Doe"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
               {form.formState.errors.name && (
                 <p className="text-sm text-red-400">{form.formState.errors.name.message}</p>
@@ -109,14 +109,14 @@ export default function NewUserPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-neutral-300">
+              <Label htmlFor="username" className="text-foreground">
                 Username
               </Label>
               <Input
                 id="username"
                 {...form.register('username')}
                 placeholder="johndoe"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
               {form.formState.errors.username && (
                 <p className="text-sm text-red-400">{form.formState.errors.username.message}</p>
@@ -124,7 +124,7 @@ export default function NewUserPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-neutral-300">
+              <Label htmlFor="email" className="text-foreground">
                 Email (Opsional)
               </Label>
               <Input
@@ -132,7 +132,7 @@ export default function NewUserPage() {
                 type="email"
                 {...form.register('email')}
                 placeholder="john@example.com"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
               {form.formState.errors.email && (
                 <p className="text-sm text-red-400">{form.formState.errors.email.message}</p>
@@ -140,12 +140,12 @@ export default function NewUserPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-neutral-300">Role</Label>
+              <Label className="text-foreground">Role</Label>
               <Select defaultValue="USER" onValueChange={(v) => form.setValue('role', v as 'USER' | 'ADMIN' | 'DRIVER')}>
-                <SelectTrigger className="border-neutral-700 bg-neutral-800/50 text-white">
+                <SelectTrigger className="border-border bg-muted/60 text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="border-neutral-700 bg-neutral-900">
+                <SelectContent className="border-border bg-card">
                   <SelectItem value="USER">User</SelectItem>
                   <SelectItem value="DRIVER">Driver</SelectItem>
                   <SelectItem value="ADMIN">Admin</SelectItem>
@@ -154,7 +154,7 @@ export default function NewUserPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-neutral-300">
+              <Label htmlFor="password" className="text-foreground">
                 Password
               </Label>
               <Input
@@ -162,7 +162,7 @@ export default function NewUserPage() {
                 type="password"
                 {...form.register('password')}
                 placeholder="••••••••"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
               {form.formState.errors.password && (
                 <p className="text-sm text-red-400">{form.formState.errors.password.message}</p>
@@ -170,7 +170,7 @@ export default function NewUserPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-neutral-300">
+              <Label htmlFor="confirmPassword" className="text-foreground">
                 Konfirmasi Password
               </Label>
               <Input
@@ -178,7 +178,7 @@ export default function NewUserPage() {
                 type="password"
                 {...form.register('confirmPassword')}
                 placeholder="••••••••"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
               {form.formState.errors.confirmPassword && (
                 <p className="text-sm text-red-400">{form.formState.errors.confirmPassword.message}</p>
@@ -194,7 +194,7 @@ export default function NewUserPage() {
                 {isSubmitting ? 'Menyimpan...' : 'Simpan'}
               </Button>
               <Link href="/dashboard/users">
-                <Button type="button" variant="outline" className="border-neutral-700">
+                <Button type="button" variant="outline" className="border-border">
                   Batal
                 </Button>
               </Link>

@@ -68,22 +68,22 @@ export default function FinanceReportPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/dashboard/finance">
-          <Button variant="ghost" size="icon" className="text-neutral-400">
+          <Button variant="ghost" size="icon" className="text-muted-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-white">Laporan Keuangan</h1>
-          <p className="text-neutral-400">
+          <h1 className="text-2xl font-bold text-foreground">Laporan Keuangan</h1>
+          <p className="text-muted-foreground">
             {hijriMonths.find((m) => m.value === hijriMonth)?.label} {hijriYear}H
           </p>
         </div>
       </div>
 
       {/* Filter */}
-      <Card className="border-neutral-800 bg-neutral-900/50">
+      <Card className="border-border bg-card/60">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-sm text-neutral-400">
+          <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
             <Filter className="h-4 w-4" />
             Filter Bulan Hijri
           </CardTitle>
@@ -91,12 +91,12 @@ export default function FinanceReportPage() {
         <CardContent>
           <div className="flex items-end gap-4">
             <div className="space-y-1">
-              <Label className="text-xs text-neutral-500">Tahun</Label>
+              <Label className="text-xs text-muted-foreground">Tahun</Label>
               <Select value={hijriYear.toString()} onValueChange={(v) => setHijriYear(parseInt(v))}>
-                <SelectTrigger className="w-24 border-neutral-700 bg-neutral-800/50 text-white">
+                <SelectTrigger className="w-24 border-border bg-muted/60 text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="border-neutral-700 bg-neutral-900">
+                <SelectContent className="border-border bg-card">
                   {years.map((y) => (
                     <SelectItem key={y} value={y.toString()}>
                       {y}
@@ -106,12 +106,12 @@ export default function FinanceReportPage() {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-neutral-500">Bulan</Label>
+              <Label className="text-xs text-muted-foreground">Bulan</Label>
               <Select value={hijriMonth.toString()} onValueChange={(v) => setHijriMonth(parseInt(v))}>
-                <SelectTrigger className="w-40 border-neutral-700 bg-neutral-800/50 text-white">
+                <SelectTrigger className="w-40 border-border bg-muted/60 text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="border-neutral-700 bg-neutral-900">
+                <SelectContent className="border-border bg-card">
                   {hijriMonths.map((m) => (
                     <SelectItem key={m.value} value={m.value.toString()}>
                       {m.label}
@@ -134,25 +134,25 @@ export default function FinanceReportPage() {
             <div className="text-lg sm:text-xl font-bold text-amber-300">{formatRupiah(stats.previousMonthBalance)}</div>
           </CardContent>
         </Card>
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-neutral-400">Saldo Awal</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Saldo Awal</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-lg sm:text-xl font-bold text-white">{formatRupiah(stats.openingBalance)}</div>
+            <div className="text-lg sm:text-xl font-bold text-foreground">{formatRupiah(stats.openingBalance)}</div>
           </CardContent>
         </Card>
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-neutral-400">Total Pemasukan</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Total Pemasukan</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-lg sm:text-xl font-bold text-emerald-500">{formatRupiah(stats.totalIncome)}</div>
           </CardContent>
         </Card>
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-neutral-400">Total Pengeluaran</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Total Pengeluaran</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-lg sm:text-xl font-bold text-red-400">{formatRupiah(stats.totalExpense)}</div>
@@ -169,9 +169,9 @@ export default function FinanceReportPage() {
       </div>
 
       {/* Transactions Table */}
-      <Card className="border-neutral-800 bg-neutral-900/50">
+      <Card className="border-border bg-card/60">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <FileText className="h-5 w-5" />
             Daftar Transaksi
           </CardTitle>
@@ -179,24 +179,24 @@ export default function FinanceReportPage() {
         <CardContent>
           {loading ? (
             <div className="flex h-32 items-center justify-center">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-700 border-t-blue-500" />
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-blue-500" />
             </div>
           ) : transactions.length === 0 ? (
-            <p className="text-center text-neutral-500 py-8">
+            <p className="text-center text-muted-foreground py-8">
               Tidak ada transaksi pada bulan ini
             </p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-neutral-800 hover:bg-transparent">
-                    <TableHead className="text-neutral-400">No</TableHead>
-                    <TableHead className="text-neutral-400">Tanggal</TableHead>
-                    <TableHead className="text-neutral-400">Keterangan</TableHead>
-                    <TableHead className="text-neutral-400">Items</TableHead>
-                    <TableHead className="text-right text-neutral-400">Debit</TableHead>
-                    <TableHead className="text-right text-neutral-400">Kredit</TableHead>
-                    <TableHead className="text-right text-neutral-400">Saldo</TableHead>
+                  <TableRow className="border-border hover:bg-transparent">
+                    <TableHead className="text-muted-foreground">No</TableHead>
+                    <TableHead className="text-muted-foreground">Tanggal</TableHead>
+                    <TableHead className="text-muted-foreground">Keterangan</TableHead>
+                    <TableHead className="text-muted-foreground">Items</TableHead>
+                    <TableHead className="text-right text-muted-foreground">Debit</TableHead>
+                    <TableHead className="text-right text-muted-foreground">Kredit</TableHead>
+                    <TableHead className="text-right text-muted-foreground">Saldo</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -211,9 +211,9 @@ export default function FinanceReportPage() {
                       }
 
                       return (
-                        <TableRow key={trx.id} className="border-neutral-800">
-                          <TableCell className="text-neutral-400">{index + 1}</TableCell>
-                          <TableCell className="text-neutral-300">{formatDate(trx.date)}</TableCell>
+                        <TableRow key={trx.id} className="border-border">
+                          <TableCell className="text-muted-foreground">{index + 1}</TableCell>
+                          <TableCell className="text-foreground">{formatDate(trx.date)}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <div className={`flex h-6 w-6 items-center justify-center rounded-full ${
@@ -227,12 +227,12 @@ export default function FinanceReportPage() {
                                   <ArrowDownRight className="h-3 w-3" />
                                 )}
                               </div>
-                              <span className="text-white">{trx.description}</span>
+                              <span className="text-foreground">{trx.description}</span>
                             </div>
                           </TableCell>
                           <TableCell className="max-w-xs">
                             {trx.expense?.items && trx.expense.items.length > 0 ? (
-                              <ul className="text-xs text-neutral-400 space-y-0.5">
+                              <ul className="text-xs text-muted-foreground space-y-0.5">
                                 {trx.expense.items.map((item, i) => (
                                   <li key={i}>
                                     {item.description} (x{item.quantity}) - {formatRupiah(item.total)}
@@ -240,27 +240,27 @@ export default function FinanceReportPage() {
                                 ))}
                               </ul>
                             ) : trx.income ? (
-                              <span className="text-xs text-neutral-500">{trx.income.source}</span>
+                              <span className="text-xs text-muted-foreground">{trx.income.source}</span>
                             ) : trx.fuelPurchase ? (
-                              <span className="text-xs text-neutral-500">
+                              <span className="text-xs text-muted-foreground">
                                 {trx.fuelPurchase.car?.name} - {formatRupiah(trx.fuelPurchase.totalAmount)}
                               </span>
                             ) : (
-                              <span className="text-neutral-600">-</span>
+                              <span className="text-muted-foreground">-</span>
                             )}
                           </TableCell>
                           <TableCell className="text-right">
                             {trx.type === 'INCOME' ? (
                               <span className="text-emerald-500">{formatRupiah(trx.amount)}</span>
                             ) : (
-                              <span className="text-neutral-600">-</span>
+                              <span className="text-muted-foreground">-</span>
                             )}
                           </TableCell>
                           <TableCell className="text-right">
                             {trx.type !== 'INCOME' ? (
                               <span className="text-red-400">{formatRupiah(trx.amount)}</span>
                             ) : (
-                              <span className="text-neutral-600">-</span>
+                              <span className="text-muted-foreground">-</span>
                             )}
                           </TableCell>
                           <TableCell className="text-right font-medium text-blue-400">

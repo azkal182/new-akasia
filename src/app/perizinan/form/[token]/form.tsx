@@ -81,8 +81,8 @@ export default function PublicPerizinanForm({ token, cars }: PublicPerizinanForm
       <Card className="border-emerald-500/30 bg-emerald-500/10">
         <CardContent className="py-12 text-center">
           <CheckCircle2 className="h-16 w-16 text-emerald-400 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-white mb-2">Pengajuan Berhasil!</h2>
-          <p className="text-neutral-300">
+          <h2 className="text-xl font-bold text-foreground mb-2">Pengajuan Berhasil!</h2>
+          <p className="text-foreground">
             Permohonan izin Anda telah dikirim dan menunggu persetujuan.
           </p>
         </CardContent>
@@ -91,18 +91,18 @@ export default function PublicPerizinanForm({ token, cars }: PublicPerizinanForm
   }
 
   return (
-    <Card className="border-neutral-800 bg-neutral-900/50">
+    <Card className="border-border bg-card/60">
       <CardHeader>
-        <CardTitle className="text-white">Data Permohonan</CardTitle>
+        <CardTitle className="text-foreground">Data Permohonan</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-neutral-300">Nama Pemohon</Label>
+            <Label className="text-foreground">Nama Pemohon</Label>
             <Input
               {...form.register('name')}
               placeholder="Nama lengkap"
-              className="border-neutral-700 bg-neutral-800/50 text-white"
+              className="border-border bg-muted/60 text-foreground"
             />
             {form.formState.errors.name && (
               <p className="text-sm text-red-400">{form.formState.errors.name.message}</p>
@@ -110,12 +110,12 @@ export default function PublicPerizinanForm({ token, cars }: PublicPerizinanForm
           </div>
 
           <div className="space-y-2">
-            <Label className="text-neutral-300">Kendaraan</Label>
+            <Label className="text-foreground">Kendaraan</Label>
             <Select onValueChange={(v) => form.setValue('carId', v)}>
-              <SelectTrigger className="border-neutral-700 bg-neutral-800/50 text-white">
+              <SelectTrigger className="border-border bg-muted/60 text-foreground">
                 <SelectValue placeholder="Pilih kendaraan" />
               </SelectTrigger>
-              <SelectContent className="border-neutral-700 bg-neutral-900">
+              <SelectContent className="border-border bg-card">
                 {cars.map((car) => (
                   <SelectItem key={car.id} value={car.id}>
                     {car.name} - {car.licensePlate}
@@ -130,11 +130,11 @@ export default function PublicPerizinanForm({ token, cars }: PublicPerizinanForm
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-neutral-300">Keperluan</Label>
+              <Label className="text-foreground">Keperluan</Label>
               <Input
                 {...form.register('purpose')}
                 placeholder="Tujuan penggunaan"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
               {form.formState.errors.purpose && (
                 <p className="text-sm text-red-400">{form.formState.errors.purpose.message}</p>
@@ -142,11 +142,11 @@ export default function PublicPerizinanForm({ token, cars }: PublicPerizinanForm
             </div>
 
             <div className="space-y-2">
-              <Label className="text-neutral-300">Tujuan</Label>
+              <Label className="text-foreground">Tujuan</Label>
               <Input
                 {...form.register('destination')}
                 placeholder="Tempat tujuan"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
               {form.formState.errors.destination && (
                 <p className="text-sm text-red-400">{form.formState.errors.destination.message}</p>
@@ -156,11 +156,11 @@ export default function PublicPerizinanForm({ token, cars }: PublicPerizinanForm
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label className="text-neutral-300">Tanggal Penggunaan</Label>
+              <Label className="text-foreground">Tanggal Penggunaan</Label>
               <Input
                 type="date"
                 {...form.register('date')}
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
               {form.formState.errors.date && (
                 <p className="text-sm text-red-400">{form.formState.errors.date.message}</p>
@@ -168,32 +168,32 @@ export default function PublicPerizinanForm({ token, cars }: PublicPerizinanForm
             </div>
 
             <div className="space-y-2">
-              <Label className="text-neutral-300">Jumlah Penumpang</Label>
+              <Label className="text-foreground">Jumlah Penumpang</Label>
               <Input
                 type="number"
                 min="1"
                 {...form.register('numberOfPassengers')}
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-neutral-300">Estimasi (hari)</Label>
+              <Label className="text-foreground">Estimasi (hari)</Label>
               <Input
                 type="number"
                 min="1"
                 {...form.register('estimation')}
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-neutral-300">Keterangan (Opsional)</Label>
+            <Label className="text-foreground">Keterangan (Opsional)</Label>
             <Textarea
               {...form.register('description')}
               placeholder="Tambahkan keterangan..."
-              className="border-neutral-700 bg-neutral-800/50 text-white"
+              className="border-border bg-muted/60 text-foreground"
             />
           </div>
 

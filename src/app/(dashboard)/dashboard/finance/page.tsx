@@ -23,12 +23,12 @@ export default async function FinancePage() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white">Keuangan</h1>
-          <p className="text-sm text-neutral-400">Kelola pemasukan dan pengeluaran</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Keuangan</h1>
+          <p className="text-sm text-muted-foreground">Kelola pemasukan dan pengeluaran</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/dashboard/finance/report">
-            <Button variant="outline" size="sm" className="border-neutral-700 hover:bg-neutral-800">
+            <Button variant="outline" size="sm" className="border-border hover:bg-muted">
               <FileText className="mr-1.5 h-4 w-4" />
               <span className="hidden sm:inline">Laporan</span>
             </Button>
@@ -40,7 +40,7 @@ export default async function FinancePage() {
             </Button>
           </Link>
           <Link href="/dashboard/finance/expense">
-            <Button variant="outline" size="sm" className="border-neutral-700 hover:bg-neutral-800">
+            <Button variant="outline" size="sm" className="border-border hover:bg-muted">
               <Plus className="mr-1.5 h-4 w-4" />
               <span className="hidden sm:inline">Pengeluaran</span>
             </Button>
@@ -50,22 +50,22 @@ export default async function FinancePage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-neutral-400">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Saldo Saat Ini
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">
+            <div className="text-2xl font-bold text-foreground">
               {formatRupiah(balance)}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-neutral-400">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Pemasukan Bulan Ini
             </CardTitle>
           </CardHeader>
@@ -76,9 +76,9 @@ export default async function FinancePage() {
           </CardContent>
         </Card>
 
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-neutral-400">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Pengeluaran Bulan Ini
             </CardTitle>
           </CardHeader>
@@ -89,9 +89,9 @@ export default async function FinancePage() {
           </CardContent>
         </Card>
 
-        <Card className="border-neutral-800 bg-neutral-900/50">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-neutral-400">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Net Bulan Ini
             </CardTitle>
           </CardHeader>
@@ -104,9 +104,9 @@ export default async function FinancePage() {
       </div>
 
       {/* Transactions List */}
-      <Card className="border-neutral-800 bg-neutral-900/50">
+      <Card className="border-border bg-card/60">
         <CardHeader>
-          <CardTitle className="text-white">Transaksi Terakhir</CardTitle>
+          <CardTitle className="text-foreground">Transaksi Terakhir</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="recent" className="w-full">
@@ -139,7 +139,7 @@ function TransactionList({
   emptyLabel: string;
 }) {
   if (transactions.length === 0) {
-    return <p className="text-center text-neutral-500 py-8">{emptyLabel}</p>;
+    return <p className="text-center text-muted-foreground py-8">{emptyLabel}</p>;
   }
 
   return (
@@ -147,7 +147,7 @@ function TransactionList({
       {transactions.map((trx) => (
         <div
           key={trx.id}
-          className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-4"
+          className="flex items-center justify-between rounded-lg bg-muted/60 p-4"
         >
           <div className="flex items-center gap-3">
             <div
@@ -164,10 +164,10 @@ function TransactionList({
               )}
             </div>
             <div>
-              <p className="font-medium text-white">
+              <p className="font-medium text-foreground">
                 {trx.description || `service atau beli sparepart ${trx.expense?.items[0].car?.name ?? ''}`}
               </p>
-              <p className="text-sm text-neutral-500">
+              <p className="text-sm text-muted-foreground">
                 {formatDate(trx.date)} • {trx.user?.name}
               </p>
             </div>

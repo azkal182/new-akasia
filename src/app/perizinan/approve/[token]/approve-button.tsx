@@ -38,8 +38,8 @@ export default function ApproveButton({ token }: ApproveButtonProps) {
       <Card className="border-emerald-500/30 bg-emerald-500/10">
         <CardContent className="py-8 text-center">
           <CheckCircle2 className="h-12 w-12 text-emerald-400 mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-white">Berhasil Disetujui!</h3>
-          <p className="text-neutral-300 text-sm mt-1">Perizinan telah disetujui.</p>
+          <h3 className="text-lg font-bold text-foreground">Berhasil Disetujui!</h3>
+          <p className="text-foreground text-sm mt-1">Perizinan telah disetujui.</p>
         </CardContent>
       </Card>
     );

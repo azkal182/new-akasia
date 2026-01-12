@@ -19,14 +19,14 @@ export default async function DashboardLayout({
 
   return (
     <DriverModeProvider>
-      <div className="flex h-screen bg-neutral-950">
+      <div className="flex h-screen bg-background text-foreground">
         {/* Desktop Sidebar - hidden on mobile and in driver mode */}
         <SidebarWrapper>
           <Sidebar user={session.user} />
         </SidebarWrapper>
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header user={session.user} />
-          <main className="flex-1 overflow-y-auto bg-gradient-to-br from-neutral-900 to-neutral-950 p-3 sm:p-4 md:p-6">
+          <main className="flex-1 overflow-y-auto bg-gradient-to-br from-background via-background to-muted/40 p-3 sm:p-4 md:p-6">
             <DashboardContent>{children}</DashboardContent>
           </main>
         </div>

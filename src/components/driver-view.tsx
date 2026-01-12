@@ -156,8 +156,8 @@ export function DriverView() {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-neutral-700 border-t-blue-500" />
-          <p className="mt-4 text-neutral-400">Memuat status...</p>
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-border border-t-blue-500" />
+          <p className="mt-4 text-muted-foreground">Memuat status...</p>
         </div>
       </div>
     );
@@ -168,13 +168,13 @@ export function DriverView() {
     return (
       <>
         <div className="flex h-[60vh] items-center justify-center">
-          <Card className="w-full max-w-sm border-neutral-800 bg-neutral-900/50">
+          <Card className="w-full max-w-sm border-border bg-card/60">
             <CardHeader className="text-center">
-              <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-neutral-800">
-                <Car className="h-10 w-10 text-neutral-500" />
+              <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+                <Car className="h-10 w-10 text-muted-foreground" />
               </div>
-              <CardTitle className="text-xl text-white">Mode Driver</CardTitle>
-              <p className="text-sm text-neutral-400">
+              <CardTitle className="text-xl text-foreground">Mode Driver</CardTitle>
+              <p className="text-sm text-muted-foreground">
                 Anda belum mengendarai kendaraan
               </p>
             </CardHeader>
@@ -193,18 +193,18 @@ export function DriverView() {
 
         {/* Start Driving Dialog */}
         <Dialog open={showStartDialog} onOpenChange={setShowStartDialog}>
-          <DialogContent className="border-neutral-800 bg-neutral-900">
+          <DialogContent className="border-border bg-card">
             <DialogHeader>
-              <DialogTitle className="text-white">Mulai Mengendarai</DialogTitle>
+              <DialogTitle className="text-foreground">Mulai Mengendarai</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label className="text-neutral-300">Pilih Kendaraan</Label>
+                <Label className="text-foreground">Pilih Kendaraan</Label>
                 <Select value={selectedCarId} onValueChange={setSelectedCarId}>
-                  <SelectTrigger className="border-neutral-700 bg-neutral-800/50 text-white">
+                  <SelectTrigger className="border-border bg-muted/60 text-foreground">
                     <SelectValue placeholder="Pilih kendaraan" />
                   </SelectTrigger>
-                  <SelectContent className="border-neutral-700 bg-neutral-900">
+                  <SelectContent className="border-border bg-card">
                     {cars.length === 0 ? (
                       <SelectItem value="-" disabled>Tidak ada kendaraan tersedia</SelectItem>
                     ) : (
@@ -218,26 +218,26 @@ export function DriverView() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-neutral-300">Tujuan Penggunaan</Label>
+                <Label className="text-foreground">Tujuan Penggunaan</Label>
                 <Input
                   value={purpose}
                   onChange={(e) => setPurpose(e.target.value)}
                   placeholder="Antar jemput, dinas, dll"
-                  className="border-neutral-700 bg-neutral-800/50 text-white"
+                  className="border-border bg-muted/60 text-foreground"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-neutral-300">Tempat Tujuan</Label>
+                <Label className="text-foreground">Tempat Tujuan</Label>
                 <Input
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                   placeholder="Jakarta, Bandung, dll"
-                  className="border-neutral-700 bg-neutral-800/50 text-white"
+                  className="border-border bg-muted/60 text-foreground"
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowStartDialog(false)} className="border-neutral-700">
+              <Button variant="outline" onClick={() => setShowStartDialog(false)} className="border-border">
                 Batal
               </Button>
               <Button
@@ -268,31 +268,31 @@ export function DriverView() {
                     <Car className="h-8 w-8 text-blue-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-neutral-400">Sedang Mengendarai</p>
-                    <h2 className="text-xl sm:text-2xl font-bold text-white">{drivingStatus.car.name}</h2>
-                    <p className="text-sm text-neutral-500">{drivingStatus.car.licensePlate}</p>
+                    <p className="text-sm text-muted-foreground">Sedang Mengendarai</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-foreground">{drivingStatus.car.name}</h2>
+                    <p className="text-sm text-muted-foreground">{drivingStatus.car.licensePlate}</p>
                   </div>
                 </div>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="flex items-center gap-2 rounded-lg bg-neutral-800/50 p-3">
-                  <Navigation className="h-4 w-4 text-neutral-500" />
+                <div className="flex items-center gap-2 rounded-lg bg-muted/60 p-3">
+                  <Navigation className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <p className="text-xs text-neutral-500">Keperluan</p>
-                    <p className="text-sm font-medium text-white">{drivingStatus.purpose}</p>
+                    <p className="text-xs text-muted-foreground">Keperluan</p>
+                    <p className="text-sm font-medium text-foreground">{drivingStatus.purpose}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 rounded-lg bg-neutral-800/50 p-3">
-                  <MapPin className="h-4 w-4 text-neutral-500" />
+                <div className="flex items-center gap-2 rounded-lg bg-muted/60 p-3">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <p className="text-xs text-neutral-500">Tujuan</p>
-                    <p className="text-sm font-medium text-white">{drivingStatus.destination}</p>
+                    <p className="text-xs text-muted-foreground">Tujuan</p>
+                    <p className="text-sm font-medium text-foreground">{drivingStatus.destination}</p>
                   </div>
                 </div>
               </div>
 
-              <p className="text-xs text-neutral-600">
+              <p className="text-xs text-muted-foreground">
                 Mulai: {formatDate(drivingStatus.startTime)}
               </p>
             </div>
@@ -323,23 +323,23 @@ export function DriverView() {
 
       {/* End Driving Dialog */}
       <Dialog open={showEndDialog} onOpenChange={setShowEndDialog}>
-        <DialogContent className="border-neutral-800 bg-neutral-900">
+        <DialogContent className="border-border bg-card">
           <DialogHeader>
-            <DialogTitle className="text-white">Selesai Mengendarai</DialogTitle>
+            <DialogTitle className="text-foreground">Selesai Mengendarai</DialogTitle>
           </DialogHeader>
           <div className="py-4 space-y-2">
-            <p className="text-neutral-400">
-              Kendaraan: <span className="text-white">{drivingStatus.car.name}</span>
+            <p className="text-muted-foreground">
+              Kendaraan: <span className="text-foreground">{drivingStatus.car.name}</span>
             </p>
-            <p className="text-neutral-400">
-              Tujuan: <span className="text-white">{drivingStatus.purpose}</span>
+            <p className="text-muted-foreground">
+              Tujuan: <span className="text-foreground">{drivingStatus.purpose}</span>
             </p>
-            <p className="text-neutral-400">
-              Mulai: <span className="text-white">{formatDate(drivingStatus.startTime)}</span>
+            <p className="text-muted-foreground">
+              Mulai: <span className="text-foreground">{formatDate(drivingStatus.startTime)}</span>
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEndDialog(false)} className="border-neutral-700">
+            <Button variant="outline" onClick={() => setShowEndDialog(false)} className="border-border">
               Batal
             </Button>
             <Button onClick={handleEndDriving} disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-500">
@@ -351,23 +351,23 @@ export function DriverView() {
 
       {/* Refuel Dialog */}
       <Dialog open={showRefuelDialog} onOpenChange={setShowRefuelDialog}>
-        <DialogContent className="border-neutral-800 bg-neutral-900">
+        <DialogContent className="border-border bg-card">
           <DialogHeader>
-            <DialogTitle className="text-white">Isi BBM - {drivingStatus.car.name}</DialogTitle>
+            <DialogTitle className="text-foreground">Isi BBM - {drivingStatus.car.name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="text-neutral-300">Total Biaya</Label>
+              <Label className="text-foreground">Total Biaya</Label>
               <Input
                 type="number"
                 value={totalAmount}
                 onChange={(e) => setTotalAmount(e.target.value)}
                 placeholder="Contoh: 500000"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+                className="border-border bg-muted/60 text-foreground"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-neutral-300">Nota/Struk</Label>
+              <Label className="text-foreground">Nota/Struk</Label>
               <input
                 ref={receiptInputRef}
                 type="file"
@@ -381,13 +381,13 @@ export function DriverView() {
                   <img
                     src={receiptPreview}
                     alt="Receipt preview"
-                    className="max-h-40 rounded-lg border border-neutral-700"
+                    className="max-h-40 rounded-lg border border-border"
                   />
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => receiptInputRef.current?.click()}
-                    className="border-neutral-700"
+                    className="border-border"
                   >
                     Ganti Nota
                   </Button>
@@ -397,15 +397,15 @@ export function DriverView() {
                   type="button"
                   variant="outline"
                   onClick={() => receiptInputRef.current?.click()}
-                  className="border-dashed border-neutral-600 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300"
+                  className="border-dashed border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
                 >
                   Upload Nota/Struk
                 </Button>
               )}
             </div>
             {Number(totalAmount) > 0 && (
-              <div className="rounded-lg bg-neutral-800/50 p-3 text-center">
-                <p className="text-sm text-neutral-400">Total</p>
+              <div className="rounded-lg bg-muted/60 p-3 text-center">
+                <p className="text-sm text-muted-foreground">Total</p>
                 <p className="text-xl font-bold text-amber-400">
                   {formatRupiah(Number(totalAmount))}
                 </p>
@@ -413,7 +413,7 @@ export function DriverView() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRefuelDialog(false)} className="border-neutral-700">
+            <Button variant="outline" onClick={() => setShowRefuelDialog(false)} className="border-border">
               Batal
             </Button>
             <Button
