@@ -1,0 +1,332 @@
+// This is your Prisma schema file
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client"
+    output   = "../src/generated/prisma"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+// ============================================
+// AUTH & USERS
+// ============================================
+model User {
+    id       String   @id @default(uuid())
+    name     String
+    username String   @unique
+    email    String?  @unique
+    password String
+    role     UserRole @default(USER)
+    isActive Boolean  @default(true)
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    // Relations
+    transactions Transaction[]
+    usageRecords UsageRecord[]
+
+    @@index([username])
+    @@index([role])
+}
+
+enum UserRole {
+    USER
+    ADMIN
+    DRIVER
+}
+
+// ============================================
+// FINANCE (Unified Ledger)
+// ============================================
+model Transaction {
+    id          String          @id @default(uuid())
+    type        TransactionType
+    amount      Int
+    description String
+    date        DateTime        @default(now())
+
+    // Running balance (calculated)
+    balanceBefore Int
+    balanceAfter  Int
+
+    // Relations
+    userId String
+    user   User   @relation(fields: [userId], references: [id])
+
+    // Optional relations based on type
+    income       Income?
+    expense      Expense?
+    fuelPurchase FuelPurchase?
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    @@index([date])
+    @@index([type])
+    @@index([userId])
+}
+
+enum TransactionType {
+    INCOME
+    EXPENSE
+    FUEL_PURCHASE
+}
+
+model Income {
+    id     String  @id @default(uuid())
+    source String  @default("Yayasan")
+    notes  String?
+
+    transactionId String      @unique
+    transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+}
+
+model Expense {
+    id         String  @id @default(uuid())
+    receiptUrl String?
+    notes      String?
+
+    transactionId String      @unique
+    transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+    items ExpenseItem[]
+}
+
+model ExpenseItem {
+    id          String  @id @default(uuid())
+    description String
+    quantity    Int     @default(1)
+    unitPrice   Int
+    total       Int
+    carId       String? // Optional link to car
+
+    expenseId String
+    expense   Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+    car Car? @relation(fields: [carId], references: [id])
+}
+
+// ============================================
+// CARS & FLEET
+// ============================================
+model Car {
+    id            String    @id @default(uuid())
+    name          String
+    licensePlate  String?   @unique
+    barcodeString String?   @unique
+    status        CarStatus @default(AVAILABLE)
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    // Relations
+    usageRecords   UsageRecord[]
+    fuelPurchases  FuelPurchase[]
+    taxes          Tax[]
+    pengajuanItems PengajuanItem[]
+    perizinan      Perizinan[]
+    expenseItems   ExpenseItem[]
+
+    @@index([status])
+    @@index([licensePlate])
+}
+
+enum CarStatus {
+    AVAILABLE
+    IN_USE
+    MAINTENANCE
+}
+
+model UsageRecord {
+    id          String      @id @default(uuid())
+    purpose     String
+    destination String
+    startTime   DateTime    @default(now())
+    endTime     DateTime?
+    status      UsageStatus @default(ONGOING)
+
+    carId String
+    car   Car    @relation(fields: [carId], references: [id])
+
+    userId String
+    user   User   @relation(fields: [userId], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([status])
+    @@index([carId])
+}
+
+enum UsageStatus {
+    ONGOING
+    COMPLETED
+}
+
+// ============================================
+// FUEL
+// ============================================
+model FuelPurchase {
+    id            String   @id @default(uuid())
+    literAmount   Float
+    pricePerLiter Int
+    totalAmount   Int
+    fuelType      FuelType @default(SOLAR)
+    receiptUrl    String?
+    notes         String?
+    createdAt     DateTime @default(now())
+
+    carId String
+    car   Car    @relation(fields: [carId], references: [id])
+
+    transactionId String      @unique
+    transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+    @@index([carId])
+    @@index([createdAt])
+}
+
+enum FuelType {
+    SOLAR
+    BENSIN
+}
+
+// ============================================
+// TAX
+// ============================================
+model Tax {
+    id      String    @id @default(uuid())
+    type    TaxType
+    dueDate DateTime
+    isPaid  Boolean   @default(false)
+    paidAt  DateTime?
+    notes   String?
+
+    carId String
+    car   Car    @relation(fields: [carId], references: [id])
+
+    payments TaxPayment[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([dueDate])
+    @@index([isPaid])
+}
+
+model TaxPayment {
+    id     String   @id @default(uuid())
+    amount Int
+    paidAt DateTime @default(now())
+    notes  String?
+
+    taxId String
+    tax   Tax    @relation(fields: [taxId], references: [id], onDelete: Cascade)
+}
+
+enum TaxType {
+    ANNUAL
+    FIVE_YEAR
+}
+
+// ============================================
+// PENGAJUAN (Fund Requests)
+// ============================================
+model Pengajuan {
+    id     String          @id @default(uuid())
+    date   DateTime        @default(now())
+    status PengajuanStatus @default(PENDING)
+    notes  String?
+
+    items PengajuanItem[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([status])
+    @@index([date])
+}
+
+model PengajuanItem {
+    id          String  @id @default(uuid())
+    requirement String
+    estimation  Int
+    imageUrl    String?
+
+    carId String
+    car   Car    @relation(fields: [carId], references: [id])
+
+    pengajuanId String
+    pengajuan   Pengajuan @relation(fields: [pengajuanId], references: [id], onDelete: Cascade)
+}
+
+enum PengajuanStatus {
+    PENDING
+    APPROVED
+    REJECTED
+    COMPLETED
+}
+
+// ============================================
+// PERIZINAN (Permissions)
+// ============================================
+model Perizinan {
+    id                 String          @id @default(uuid())
+    name               String
+    purpose            String
+    destination        String
+    description        String?
+    numberOfPassengers Int
+    date               DateTime
+    estimation         Int
+    status             PerizinanStatus @default(PENDING)
+
+    carId String
+    car   Car    @relation(fields: [carId], references: [id])
+
+    createdAt DateTime         @default(now())
+    updatedAt DateTime         @updatedAt
+    tokens    PerizinanToken[]
+
+    @@index([status])
+    @@index([date])
+}
+
+enum PerizinanStatus {
+    PENDING
+    APPROVED
+    REJECTED
+}
+
+// ============================================
+// PERIZINAN TOKEN (Public Links)
+// ============================================
+model PerizinanToken {
+    id        String    @id @default(uuid())
+    token     String    @unique @default(uuid())
+    type      TokenType
+    expiresAt DateTime
+    usedAt    DateTime?
+
+    // FORM token: perizinanId is null until form submitted
+    // APPROVE token: perizinanId is set when token created
+    perizinanId String?
+    perizinan   Perizinan? @relation(fields: [perizinanId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+
+    @@index([token])
+    @@index([expiresAt])
+}
+
+enum TokenType {
+    FORM // For public form submission
+    APPROVE // For approval link
+}

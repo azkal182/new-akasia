@@ -1,0 +1,388 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { Car, Fuel, Play, StopCircle, Navigation, MapPin } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { toast } from 'sonner';
+import { formatDate, formatRupiah } from '@/lib/utils';
+import {
+  getCurrentUserDrivingStatus,
+  getCars,
+  startCarUsage,
+  endCarUsage,
+} from '@/features/cars/actions';
+import { purchaseFuel } from '@/features/fuel/actions';
+
+type DrivingStatus = Awaited<ReturnType<typeof getCurrentUserDrivingStatus>>;
+type CarItem = { id: string; name: string; licensePlate: string | null; status: string };
+
+export function DriverView() {
+  const [drivingStatus, setDrivingStatus] = useState<DrivingStatus>(null);
+  const [cars, setCars] = useState<CarItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Dialogs
+  const [showStartDialog, setShowStartDialog] = useState(false);
+  const [showEndDialog, setShowEndDialog] = useState(false);
+  const [showRefuelDialog, setShowRefuelDialog] = useState(false);
+
+  // Start driving form
+  const [selectedCarId, setSelectedCarId] = useState('');
+  const [purpose, setPurpose] = useState('');
+  const [destination, setDestination] = useState('');
+
+  // Refuel form
+  const [liters, setLiters] = useState('');
+  const [pricePerLiter, setPricePerLiter] = useState('');
+  const totalPrice = parseFloat(liters || '0') * parseFloat(pricePerLiter || '0');
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [status, allCars] = await Promise.all([
+        getCurrentUserDrivingStatus(),
+        getCars(),
+      ]);
+      setDrivingStatus(status);
+      setCars(allCars.filter((c) => c.status === 'AVAILABLE'));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  async function handleStartDriving() {
+    if (!selectedCarId || !purpose || !destination) {
+      toast.error('Lengkapi semua field');
+      return;
+    }
+
+    setIsSubmitting(true);
+    const result = await startCarUsage({
+      carId: selectedCarId,
+      purpose,
+      destination,
+      startTime: new Date(),
+    });
+
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success('Mulai mengendarai');
+      setShowStartDialog(false);
+      setSelectedCarId('');
+      setPurpose('');
+      setDestination('');
+      loadData();
+    }
+    setIsSubmitting(false);
+  }
+
+  async function handleEndDriving() {
+    if (!drivingStatus) return;
+
+    setIsSubmitting(true);
+    const result = await endCarUsage({
+      recordId: drivingStatus.id,
+      endTime: new Date(),
+    });
+
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success('Selesai mengendarai');
+      setShowEndDialog(false);
+      loadData();
+    }
+    setIsSubmitting(false);
+  }
+
+  async function handleRefuel() {
+    if (!drivingStatus || !liters || !pricePerLiter) {
+      toast.error('Lengkapi semua field');
+      return;
+    }
+
+    setIsSubmitting(true);
+    const result = await purchaseFuel({
+      carId: drivingStatus.car.id,
+      literAmount: parseFloat(liters),
+      pricePerLiter: parseFloat(pricePerLiter),
+      date: new Date(),
+    });
+
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success('Pengisian BBM berhasil dicatat');
+      setShowRefuelDialog(false);
+      setLiters('');
+      setPricePerLiter('');
+    }
+    setIsSubmitting(false);
+  }
+
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-neutral-700 border-t-blue-500" />
+          <p className="mt-4 text-neutral-400">Memuat status...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not driving - show start button
+  if (!drivingStatus) {
+    return (
+      <>
+        <div className="flex h-[60vh] items-center justify-center">
+          <Card className="w-full max-w-sm border-neutral-800 bg-neutral-900/50">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-neutral-800">
+                <Car className="h-10 w-10 text-neutral-500" />
+              </div>
+              <CardTitle className="text-xl text-white">Mode Driver</CardTitle>
+              <p className="text-sm text-neutral-400">
+                Anda belum mengendarai kendaraan
+              </p>
+            </CardHeader>
+            <CardContent>
+              <Button
+                className="w-full bg-blue-600 hover:bg-blue-500"
+                size="lg"
+                onClick={() => setShowStartDialog(true)}
+              >
+                <Play className="mr-2 h-5 w-5" />
+                Mulai Mengendarai
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Start Driving Dialog */}
+        <Dialog open={showStartDialog} onOpenChange={setShowStartDialog}>
+          <DialogContent className="border-neutral-800 bg-neutral-900">
+            <DialogHeader>
+              <DialogTitle className="text-white">Mulai Mengendarai</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label className="text-neutral-300">Pilih Kendaraan</Label>
+                <Select value={selectedCarId} onValueChange={setSelectedCarId}>
+                  <SelectTrigger className="border-neutral-700 bg-neutral-800/50 text-white">
+                    <SelectValue placeholder="Pilih kendaraan" />
+                  </SelectTrigger>
+                  <SelectContent className="border-neutral-700 bg-neutral-900">
+                    {cars.length === 0 ? (
+                      <SelectItem value="-" disabled>Tidak ada kendaraan tersedia</SelectItem>
+                    ) : (
+                      cars.map((car) => (
+                        <SelectItem key={car.id} value={car.id}>
+                          {car.name} - {car.licensePlate}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-neutral-300">Tujuan Penggunaan</Label>
+                <Input
+                  value={purpose}
+                  onChange={(e) => setPurpose(e.target.value)}
+                  placeholder="Antar jemput, dinas, dll"
+                  className="border-neutral-700 bg-neutral-800/50 text-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-neutral-300">Tempat Tujuan</Label>
+                <Input
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  placeholder="Jakarta, Bandung, dll"
+                  className="border-neutral-700 bg-neutral-800/50 text-white"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowStartDialog(false)} className="border-neutral-700">
+                Batal
+              </Button>
+              <Button
+                onClick={handleStartDriving}
+                disabled={isSubmitting || !selectedCarId}
+                className="bg-blue-600 hover:bg-blue-500"
+              >
+                {isSubmitting ? 'Memulai...' : 'Mulai'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+
+  // Currently driving - show status
+  return (
+    <>
+      <div className="space-y-4 sm:space-y-6">
+        {/* Status Card */}
+        <Card className="border-blue-500/30 bg-gradient-to-br from-blue-500/10 to-cyan-500/5">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-blue-500/20">
+                    <Car className="h-8 w-8 text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-neutral-400">Sedang Mengendarai</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-white">{drivingStatus.car.name}</h2>
+                    <p className="text-sm text-neutral-500">{drivingStatus.car.licensePlate}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="flex items-center gap-2 rounded-lg bg-neutral-800/50 p-3">
+                  <Navigation className="h-4 w-4 text-neutral-500" />
+                  <div>
+                    <p className="text-xs text-neutral-500">Keperluan</p>
+                    <p className="text-sm font-medium text-white">{drivingStatus.purpose}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 rounded-lg bg-neutral-800/50 p-3">
+                  <MapPin className="h-4 w-4 text-neutral-500" />
+                  <div>
+                    <p className="text-xs text-neutral-500">Tujuan</p>
+                    <p className="text-sm font-medium text-white">{drivingStatus.destination}</p>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs text-neutral-600">
+                Mulai: {formatDate(drivingStatus.startTime)}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Button
+            size="lg"
+            className="h-auto flex-col gap-2 bg-amber-600 py-4 hover:bg-amber-500"
+            onClick={() => setShowRefuelDialog(true)}
+          >
+            <Fuel className="h-6 w-6" />
+            <span>Isi BBM</span>
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            className="h-auto flex-col gap-2 border-emerald-500/50 py-4 text-emerald-400 hover:bg-emerald-500/10"
+            onClick={() => setShowEndDialog(true)}
+          >
+            <StopCircle className="h-6 w-6" />
+            <span>Selesai Mengendarai</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* End Driving Dialog */}
+      <Dialog open={showEndDialog} onOpenChange={setShowEndDialog}>
+        <DialogContent className="border-neutral-800 bg-neutral-900">
+          <DialogHeader>
+            <DialogTitle className="text-white">Selesai Mengendarai</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-2">
+            <p className="text-neutral-400">
+              Kendaraan: <span className="text-white">{drivingStatus.car.name}</span>
+            </p>
+            <p className="text-neutral-400">
+              Tujuan: <span className="text-white">{drivingStatus.purpose}</span>
+            </p>
+            <p className="text-neutral-400">
+              Mulai: <span className="text-white">{formatDate(drivingStatus.startTime)}</span>
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEndDialog(false)} className="border-neutral-700">
+              Batal
+            </Button>
+            <Button onClick={handleEndDriving} disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-500">
+              {isSubmitting ? 'Menyimpan...' : 'Selesai'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Refuel Dialog */}
+      <Dialog open={showRefuelDialog} onOpenChange={setShowRefuelDialog}>
+        <DialogContent className="border-neutral-800 bg-neutral-900">
+          <DialogHeader>
+            <DialogTitle className="text-white">Isi BBM - {drivingStatus.car.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-neutral-300">Jumlah Liter</Label>
+              <Input
+                type="number"
+                step="0.1"
+                value={liters}
+                onChange={(e) => setLiters(e.target.value)}
+                placeholder="Contoh: 45"
+                className="border-neutral-700 bg-neutral-800/50 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-neutral-300">Harga per Liter</Label>
+              <Input
+                type="number"
+                value={pricePerLiter}
+                onChange={(e) => setPricePerLiter(e.target.value)}
+                placeholder="Contoh: 12000"
+                className="border-neutral-700 bg-neutral-800/50 text-white"
+              />
+            </div>
+            {totalPrice > 0 && (
+              <div className="rounded-lg bg-neutral-800/50 p-3 text-center">
+                <p className="text-sm text-neutral-400">Total</p>
+                <p className="text-xl font-bold text-amber-400">{formatRupiah(totalPrice)}</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRefuelDialog(false)} className="border-neutral-700">
+              Batal
+            </Button>
+            <Button
+              onClick={handleRefuel}
+              disabled={isSubmitting || !liters || !pricePerLiter}
+              className="bg-amber-600 hover:bg-amber-500"
+            >
+              {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

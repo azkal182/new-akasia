@@ -1,0 +1,174 @@
+import Link from 'next/link';
+import { Plus, ArrowUpRight, ArrowDownRight, FileText } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { formatRupiah, formatDate } from '@/lib/utils';
+import { getTransactions, getBalance, getMonthlyStats } from '@/features/finance/actions';
+
+export default async function FinancePage() {
+  const now = new Date();
+  const [transactions, balance, monthlyStats] = await Promise.all([
+    getTransactions({ limit: 20 }),
+    getBalance(),
+    getMonthlyStats(now.getFullYear(), now.getMonth() + 1),
+  ]);
+
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Keuangan</h1>
+          <p className="text-sm text-neutral-400">Kelola pemasukan dan pengeluaran</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/dashboard/finance/report">
+            <Button variant="outline" size="sm" className="border-neutral-700 hover:bg-neutral-800">
+              <FileText className="mr-1.5 h-4 w-4" />
+              <span className="hidden sm:inline">Laporan</span>
+            </Button>
+          </Link>
+          <Link href="/dashboard/finance/income">
+            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500">
+              <Plus className="mr-1.5 h-4 w-4" />
+              <span className="hidden sm:inline">Pemasukan</span>
+            </Button>
+          </Link>
+          <Link href="/dashboard/finance/expense">
+            <Button variant="outline" size="sm" className="border-neutral-700 hover:bg-neutral-800">
+              <Plus className="mr-1.5 h-4 w-4" />
+              <span className="hidden sm:inline">Pengeluaran</span>
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+        <Card className="border-neutral-800 bg-neutral-900/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-neutral-400">
+              Saldo Saat Ini
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">
+              {formatRupiah(balance)}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-neutral-800 bg-neutral-900/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-neutral-400">
+              Pemasukan Bulan Ini
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-emerald-500">
+              {formatRupiah(monthlyStats.totalIncome)}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-neutral-800 bg-neutral-900/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-neutral-400">
+              Pengeluaran Bulan Ini
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-400">
+              {formatRupiah(monthlyStats.totalExpense)}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-neutral-800 bg-neutral-900/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-neutral-400">
+              Net Bulan Ini
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${monthlyStats.net >= 0 ? 'text-emerald-500' : 'text-red-400'}`}>
+              {formatRupiah(monthlyStats.net)}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Transactions List */}
+      <Card className="border-neutral-800 bg-neutral-900/50">
+        <CardHeader>
+          <CardTitle className="text-white">Transaksi Terakhir</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {transactions.length === 0 ? (
+              <p className="text-center text-neutral-500 py-8">
+                Belum ada transaksi
+              </p>
+            ) : (
+              transactions.map((trx) => (
+                <div
+                  key={trx.id}
+                  className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                        trx.type === 'INCOME'
+                          ? 'bg-emerald-500/20 text-emerald-500'
+                          : 'bg-red-500/20 text-red-400'
+                      }`}
+                    >
+                      {trx.type === 'INCOME' ? (
+                        <ArrowUpRight className="h-5 w-5" />
+                      ) : (
+                        <ArrowDownRight className="h-5 w-5" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium text-white">{trx.description ? trx.description : `service atau beli sparepart ${trx.expense?.items[0].car?.name}`}</p>
+                      <p className="text-sm text-neutral-500">
+                        {formatDate(trx.date)} • {trx.user?.name}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p
+                      className={`font-semibold ${
+                        trx.type === 'INCOME' ? 'text-emerald-500' : 'text-red-400'
+                      }`}
+                    >
+                      {trx.type === 'INCOME' ? '+' : '-'}
+                      {formatRupiah(trx.amount)}
+                    </p>
+                    <Badge
+                      variant="outline"
+                      className={`text-xs ${
+                        trx.type === 'INCOME'
+                          ? 'border-emerald-500/50 text-emerald-400'
+                          : trx.type === 'FUEL_PURCHASE'
+                            ? 'border-amber-500/50 text-amber-400'
+                            : 'border-red-500/50 text-red-400'
+                      }`}
+                    >
+                      {trx.type === 'INCOME'
+                        ? 'Pemasukan'
+                        : trx.type === 'FUEL_PURCHASE'
+                          ? 'BBM'
+                          : 'Pengeluaran'}
+                    </Badge>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
