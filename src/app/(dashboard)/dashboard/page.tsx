@@ -1,48 +1,62 @@
-import {
-  Car,
-  Wallet,
-  Fuel,
-  FileText,
-  ArrowUpRight,
-  ArrowDownRight,
-  TrendingUp,
-} from 'lucide-react';
+import { Car, Wallet, Fuel, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DashboardDriverStatus } from '@/components/dashboard-driver-status';
+import { formatDate, formatRupiah } from '@/lib/utils';
+import { getBalance, getTransactions } from '@/features/finance/actions';
+import { getCars } from '@/features/cars/actions';
+import { getPengajuans } from '@/features/pengajuan/actions';
+import { getUpcomingTaxes } from '@/features/tax/actions';
+import { getCurrentHijriDate, getFuelMonthlyReport } from '@/features/fuel/actions';
 
-export default function DashboardPage() {
-  // TODO: Fetch real data from database
+export default async function DashboardPage() {
+  const hijri = await getCurrentHijriDate();
+  const [
+    balance,
+    cars,
+    pengajuans,
+    recentTransactions,
+    upcomingTaxes,
+    fuelReport,
+  ] = await Promise.all([
+    getBalance(),
+    getCars(),
+    getPengajuans(),
+    getTransactions({ limit: 3 }),
+    getUpcomingTaxes(30),
+    getFuelMonthlyReport(hijri.hijriYear, hijri.hijriMonth),
+  ]);
+
+  const availableCars = cars.filter((car) => car.status === 'AVAILABLE').length;
+  const inUseCars = cars.filter((car) => car.status === 'IN_USE').length;
+  const pendingPengajuans = pengajuans.filter((p) => p.status === 'PENDING').length;
+
   const stats = [
     {
       title: 'Total Saldo',
-      value: 'Rp 12.500.000',
-      change: '+12%',
-      trend: 'up',
+      value: formatRupiah(balance),
+      subtitle: 'Saldo bersih operasional',
       icon: Wallet,
       color: 'from-emerald-500 to-green-600',
     },
     {
       title: 'Jumlah Armada',
-      value: '8',
-      change: '+2',
-      trend: 'up',
+      value: String(cars.length),
+      subtitle: `${availableCars} tersedia • ${inUseCars} digunakan`,
       icon: Car,
       color: 'from-blue-500 to-cyan-600',
     },
     {
       title: 'Pengeluaran BBM',
-      value: 'Rp 3.200.000',
-      change: '-5%',
-      trend: 'down',
+      value: formatRupiah(fuelReport.totalExpense),
+      subtitle: `${fuelReport.hijriMonth} ${fuelReport.hijriYear}H`,
       icon: Fuel,
       color: 'from-amber-500 to-orange-600',
     },
     {
       title: 'Pengajuan Pending',
-      value: '3',
-      change: 'menunggu',
-      trend: 'neutral',
+      value: String(pendingPengajuans),
+      subtitle: `Total ${pengajuans.length} pengajuan`,
       icon: FileText,
       color: 'from-purple-500 to-pink-600',
     },
@@ -78,29 +92,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">{stat.value}</div>
-              <div className="mt-1 flex items-center gap-1">
-                {stat.trend === 'up' && (
-                  <ArrowUpRight className="h-4 w-4 text-emerald-500" />
-                )}
-                {stat.trend === 'down' && (
-                  <ArrowDownRight className="h-4 w-4 text-red-500" />
-                )}
-                {stat.trend === 'neutral' && (
-                  <TrendingUp className="h-4 w-4 text-amber-500" />
-                )}
-                <span
-                  className={`text-xs ${
-                    stat.trend === 'up'
-                      ? 'text-emerald-500'
-                      : stat.trend === 'down'
-                        ? 'text-red-500'
-                        : 'text-amber-500'
-                  }`}
-                >
-                  {stat.change}
-                </span>
-                <span className="text-xs text-neutral-500">dari bulan lalu</span>
-              </div>
+              <div className="mt-1 text-xs text-neutral-500">{stat.subtitle}</div>
             </CardContent>
           </Card>
         ))}
@@ -119,22 +111,33 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {[
-                { desc: 'Pembelian Solar', amount: '-Rp 500.000', type: 'expense' },
-                { desc: 'Dana Yayasan', amount: '+Rp 5.000.000', type: 'income' },
-                { desc: 'Service Kendaraan', amount: '-Rp 1.200.000', type: 'expense' },
-              ].map((trx, i) => (
-                <div key={i} className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-3">
-                  <span className="text-sm text-neutral-300">{trx.desc}</span>
-                  <span
-                    className={`text-sm font-medium ${
-                      trx.type === 'income' ? 'text-emerald-500' : 'text-red-400'
-                    }`}
+              {recentTransactions.length === 0 ? (
+                <p className="text-sm text-neutral-500">Belum ada transaksi.</p>
+              ) : (
+                recentTransactions.map((trx) => (
+                  <div
+                    key={trx.id}
+                    className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-3"
                   >
-                    {trx.amount}
-                  </span>
-                </div>
-              ))}
+                    <div className="flex flex-col">
+                      <span className="text-sm text-neutral-300">
+                        {trx.description || `Pengeluaran untuk ${trx.expense?.items[0]?.car?.name ?? 'armada'}`}
+                      </span>
+                      <span className="text-xs text-neutral-600">
+                        {formatDate(trx.date)}
+                      </span>
+                    </div>
+                    <span
+                      className={`text-sm font-medium ${
+                        trx.type === 'INCOME' ? 'text-emerald-500' : 'text-red-400'
+                      }`}
+                    >
+                      {trx.type === 'INCOME' ? '+' : '-'}
+                      {formatRupiah(trx.amount)}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -144,34 +147,40 @@ export default function DashboardPage() {
             <CardTitle className="flex items-center justify-between text-white">
               Status Armada
               <Badge variant="outline" className="border-emerald-500/50 text-emerald-400">
-                6 Tersedia
+                {availableCars} Tersedia
               </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {[
-                { name: 'Toyota Innova', plate: 'B 1234 XYZ', status: 'available' },
-                { name: 'Mitsubishi Pajero', plate: 'B 5678 ABC', status: 'in_use' },
-                { name: 'Toyota Avanza', plate: 'B 9012 DEF', status: 'available' },
-              ].map((car, i) => (
-                <div key={i} className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-3">
-                  <div>
-                    <p className="text-sm font-medium text-white">{car.name}</p>
-                    <p className="text-xs text-neutral-500">{car.plate}</p>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className={
-                      car.status === 'available'
-                        ? 'border-emerald-500/50 text-emerald-400'
-                        : 'border-amber-500/50 text-amber-400'
-                    }
+              {cars.slice(0, 3).map((car) => {
+                const statusLabel =
+                  car.status === 'AVAILABLE'
+                    ? 'Tersedia'
+                    : car.status === 'IN_USE'
+                      ? 'Digunakan'
+                      : 'Perawatan';
+                const statusClass =
+                  car.status === 'AVAILABLE'
+                    ? 'border-emerald-500/50 text-emerald-400'
+                    : car.status === 'IN_USE'
+                      ? 'border-amber-500/50 text-amber-400'
+                      : 'border-red-500/50 text-red-400';
+                return (
+                  <div
+                    key={car.id}
+                    className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-3"
                   >
-                    {car.status === 'available' ? 'Tersedia' : 'Digunakan'}
-                  </Badge>
-                </div>
-              ))}
+                    <div>
+                      <p className="text-sm font-medium text-white">{car.name}</p>
+                      <p className="text-xs text-neutral-500">{car.licensePlate ?? '-'}</p>
+                    </div>
+                    <Badge variant="outline" className={statusClass}>
+                      {statusLabel}
+                    </Badge>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -181,25 +190,32 @@ export default function DashboardPage() {
             <CardTitle className="flex items-center justify-between text-white">
               Pajak Mendatang
               <Badge variant="outline" className="border-red-500/50 text-red-400">
-                2 Jatuh Tempo
+                {upcomingTaxes.length} Jatuh Tempo
               </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {[
-                { car: 'Innova (B 1234 XYZ)', type: 'Tahunan', due: '15 Jan 2025' },
-                { car: 'Pajero (B 5678 ABC)', type: '5 Tahun', due: '20 Feb 2025' },
-                { car: 'Avanza (B 9012 DEF)', type: 'Tahunan', due: '10 Mar 2025' },
-              ].map((tax, i) => (
-                <div key={i} className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-3">
-                  <div>
-                    <p className="text-sm font-medium text-white">{tax.car}</p>
-                    <p className="text-xs text-neutral-500">{tax.type}</p>
+              {upcomingTaxes.length === 0 ? (
+                <p className="text-sm text-neutral-500">Tidak ada pajak mendatang.</p>
+              ) : (
+                upcomingTaxes.slice(0, 3).map((tax) => (
+                  <div
+                    key={tax.id}
+                    className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-3"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-white">
+                        {tax.car.name} ({tax.car.licensePlate ?? '-'})
+                      </p>
+                      <p className="text-xs text-neutral-500">
+                        {tax.type === 'FIVE_YEAR' ? 'STNK 5 Tahunan' : 'Pajak Tahunan'}
+                      </p>
+                    </div>
+                    <span className="text-xs text-amber-400">{formatDate(tax.dueDate)}</span>
                   </div>
-                  <span className="text-xs text-amber-400">{tax.due}</span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>

@@ -66,7 +66,7 @@ export async function getTransactions(options?: {
   type?: TransactionType;
   limit?: number;
 }) {
-  const { year, month, type, limit = 50 } = options ?? {};
+  const { year, month, type, limit } = options ?? {};
 
   const where: Record<string, unknown> = {
     deletedAt: null,
@@ -86,7 +86,7 @@ export async function getTransactions(options?: {
   const transactions = await prisma.transaction.findMany({
     where,
     orderBy: { date: 'desc' },
-    take: limit,
+    take: limit ?? undefined,
     include: {
       income: true,
       expense: {

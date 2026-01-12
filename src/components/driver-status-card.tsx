@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Car, Fuel, StopCircle, Navigation } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,10 +31,10 @@ export function DriverStatusCard({ drivingStatus, onStatusChange }: DriverStatus
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Refuel form state
-  const [liters, setLiters] = useState('');
-  const [pricePerLiter, setPricePerLiter] = useState('');
-
-  const totalPrice = parseFloat(liters || '0') * parseFloat(pricePerLiter || '0');
+  const [totalAmount, setTotalAmount] = useState('');
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const receiptInputRef = useRef<HTMLInputElement>(null);
 
   async function handleEndUsage() {
     if (!drivingStatus) return;
@@ -56,28 +56,42 @@ export function DriverStatusCard({ drivingStatus, onStatusChange }: DriverStatus
   }
 
   async function handleRefuel() {
-    if (!drivingStatus || !liters || !pricePerLiter) {
-      toast.error('Lengkapi semua field');
+    if (!drivingStatus || !totalAmount) {
+      toast.error('Total wajib diisi');
+      return;
+    }
+
+    if (!receiptFile) {
+      toast.error('Nota wajib diupload');
       return;
     }
 
     setIsSubmitting(true);
     const result = await purchaseFuel({
       carId: drivingStatus.car.id,
-      literAmount: parseFloat(liters),
-      pricePerLiter: parseFloat(pricePerLiter),
+      totalAmount: Number(totalAmount),
       date: new Date(),
-    });
+    }, receiptFile);
 
     if (result.error) {
       toast.error(result.error);
     } else {
       toast.success('Pengisian BBM berhasil dicatat');
       setShowRefuelDialog(false);
-      setLiters('');
-      setPricePerLiter('');
+      setTotalAmount('');
+      setReceiptFile(null);
+      setReceiptPreview(null);
     }
     setIsSubmitting(false);
+  }
+
+  function handleReceiptChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setReceiptFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setReceiptPreview(reader.result as string);
+    reader.readAsDataURL(file);
   }
 
   if (!drivingStatus) {
@@ -166,30 +180,58 @@ export function DriverStatusCard({ drivingStatus, onStatusChange }: DriverStatus
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="text-neutral-300">Jumlah Liter</Label>
+              <Label className="text-neutral-300">Total Biaya</Label>
               <Input
                 type="number"
-                step="0.1"
-                value={liters}
-                onChange={(e) => setLiters(e.target.value)}
-                placeholder="Contoh: 45"
+                value={totalAmount}
+                onChange={(e) => setTotalAmount(e.target.value)}
+                placeholder="Contoh: 500000"
                 className="border-neutral-700 bg-neutral-800/50 text-white"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-neutral-300">Harga per Liter</Label>
-              <Input
-                type="number"
-                value={pricePerLiter}
-                onChange={(e) => setPricePerLiter(e.target.value)}
-                placeholder="Contoh: 12000"
-                className="border-neutral-700 bg-neutral-800/50 text-white"
+              <Label className="text-neutral-300">Nota/Struk</Label>
+              <input
+                ref={receiptInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleReceiptChange}
+                className="hidden"
               />
+              {receiptPreview ? (
+                <div className="space-y-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={receiptPreview}
+                    alt="Receipt preview"
+                    className="max-h-40 rounded-lg border border-neutral-700"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => receiptInputRef.current?.click()}
+                    className="border-neutral-700"
+                  >
+                    Ganti Nota
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => receiptInputRef.current?.click()}
+                  className="border-dashed border-neutral-600 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300"
+                >
+                  Upload Nota/Struk
+                </Button>
+              )}
             </div>
-            {totalPrice > 0 && (
+            {Number(totalAmount) > 0 && (
               <div className="rounded-lg bg-neutral-800/50 p-3 text-center">
                 <p className="text-sm text-neutral-400">Total</p>
-                <p className="text-xl font-bold text-amber-400">{formatRupiah(totalPrice)}</p>
+                <p className="text-xl font-bold text-amber-400">
+                  {formatRupiah(Number(totalAmount))}
+                </p>
               </div>
             )}
           </div>
@@ -199,7 +241,7 @@ export function DriverStatusCard({ drivingStatus, onStatusChange }: DriverStatus
             </Button>
             <Button
               onClick={handleRefuel}
-              disabled={isSubmitting || !liters || !pricePerLiter}
+              disabled={isSubmitting || !totalAmount || !receiptFile}
               className="bg-amber-600 hover:bg-amber-500"
             >
               {isSubmitting ? 'Menyimpan...' : 'Simpan'}

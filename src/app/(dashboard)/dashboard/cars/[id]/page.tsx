@@ -41,7 +41,7 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
 
   // Calculate stats
   const totalFuelCost = car.fuelPurchases.reduce((sum, fp) => sum + fp.totalAmount, 0);
-  const totalFuelLiters = car.fuelPurchases.reduce((sum, fp) => sum + fp.literAmount, 0);
+  const totalFuelPurchases = car.fuelPurchases.length;
   const totalUsages = car.usageRecords.length;
   const ongoingUsage = car.usageRecords.find(ur => ur.status === 'ONGOING');
   const unpaidTaxes = car.taxes.filter(t => !t.isPaid);
@@ -99,9 +99,9 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
           </CardHeader>
           <CardContent>
             <div className="text-xl font-bold text-amber-400">
-              {totalFuelLiters.toFixed(1)} L
+              {formatRupiah(totalFuelCost)}
             </div>
-            <p className="text-xs text-neutral-500">{formatRupiah(totalFuelCost)}</p>
+            <p className="text-xs text-neutral-500">{totalFuelPurchases} transaksi</p>
           </CardContent>
         </Card>
 
@@ -217,9 +217,9 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
                     <TableRow className="border-neutral-800">
                       <TableHead className="text-neutral-400">Tanggal</TableHead>
                       <TableHead className="text-neutral-400">Jenis</TableHead>
-                      <TableHead className="text-right text-neutral-400">Liter</TableHead>
-                      <TableHead className="text-right text-neutral-400">Harga/L</TableHead>
+                      <TableHead className="text-neutral-400">Catatan</TableHead>
                       <TableHead className="text-right text-neutral-400">Total</TableHead>
+                      <TableHead className="text-right text-neutral-400">Nota</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -240,14 +240,25 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
                             {fp.fuelType}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right text-white">
-                          {fp.literAmount.toFixed(1)} L
-                        </TableCell>
-                        <TableCell className="text-right text-neutral-400">
-                          {formatRupiah(fp.pricePerLiter)}
+                        <TableCell className="text-neutral-400">
+                          {fp.notes || '-'}
                         </TableCell>
                         <TableCell className="text-right font-medium text-amber-400">
                           {formatRupiah(fp.totalAmount)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {fp.receiptUrl ? (
+                            <Link
+                              href={fp.receiptUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs text-blue-400 hover:text-blue-300"
+                            >
+                              Lihat
+                            </Link>
+                          ) : (
+                            <span className="text-xs text-neutral-600">-</span>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}

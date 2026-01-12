@@ -1,13 +1,11 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import sharp from 'sharp';
 import { prisma } from '@/lib/prisma';
-import { supabase } from '@/lib/supabase';
 import { TransactionType } from '@/generated/prisma/enums';
 import { createExpenseSchema, type CreateExpenseInput } from '../schemas/transaction.schema';
 import { auth } from '@/lib/auth';
-import { randomString } from '@/lib/utils';
+import { uploadCompressedReceipt } from '@/lib/receipt';
 
 export async function createExpense(data: CreateExpenseInput, receiptFile?: File | null) {
   const session = await auth();
@@ -29,29 +27,7 @@ export async function createExpense(data: CreateExpenseInput, receiptFile?: File
     // Upload receipt if provided
     let receiptUrl: string | null = null;
     if (receiptFile) {
-      const arrayBuffer = await receiptFile.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-
-      // Compress image
-      const compressedBuffer = await sharp(buffer)
-        .resize({ width: 1024, withoutEnlargement: true })
-        .jpeg({ quality: 70 })
-        .toBuffer();
-
-      // Upload to Supabase with buffer
-      const fileName = `receipts/${randomString(16)}.jpg`;
-      const { error: uploadError } = await supabase.storage
-        .from('akasia')
-        .upload(fileName, compressedBuffer, {
-          contentType: 'image/jpeg',
-        });
-
-      if (!uploadError) {
-        const { data: urlData } = supabase.storage
-          .from('akasia')
-          .getPublicUrl(fileName);
-        receiptUrl = urlData.publicUrl;
-      }
+      receiptUrl = await uploadCompressedReceipt(receiptFile, 'receipts/expense');
     }
 
     // Get recent transaction for balance calculation

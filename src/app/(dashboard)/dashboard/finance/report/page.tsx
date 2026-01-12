@@ -243,7 +243,7 @@ export default function FinanceReportPage() {
                               <span className="text-xs text-neutral-500">{trx.income.source}</span>
                             ) : trx.fuelPurchase ? (
                               <span className="text-xs text-neutral-500">
-                                {trx.fuelPurchase.car?.name} - {trx.fuelPurchase.literAmount}L
+                                {trx.fuelPurchase.car?.name} - {formatRupiah(trx.fuelPurchase.totalAmount)}
                               </span>
                             ) : (
                               <span className="text-neutral-600">-</span>

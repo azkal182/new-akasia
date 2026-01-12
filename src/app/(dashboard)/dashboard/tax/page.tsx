@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatRupiah, formatDate } from '@/lib/utils';
 import { getTaxes, getUpcomingTaxes } from '@/features/tax/actions';
+import { TaxPaymentButton } from '@/features/tax/components/tax-payment-button';
 
 export default async function TaxPage() {
   const [allTaxes, upcomingTaxes] = await Promise.all([
@@ -112,7 +113,7 @@ export default async function TaxPage() {
                       <p className="text-sm text-neutral-400">
                         Jatuh tempo: {formatDate(tax.dueDate)}
                       </p>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 justify-end">
                         {totalPaid > 0 && (
                           <span className="text-sm text-emerald-400">
                             {formatRupiah(totalPaid)}
@@ -130,6 +131,12 @@ export default async function TaxPage() {
                         >
                           {tax.isPaid ? 'Lunas' : isOverdue ? 'Terlambat' : 'Pending'}
                         </Badge>
+                        {!tax.isPaid && (
+                          <TaxPaymentButton
+                            taxId={tax.id}
+                            carLabel={`${tax.car.name} • ${tax.car.licensePlate ?? '-'}`}
+                          />
+                        )}
                       </div>
                     </div>
                   </div>

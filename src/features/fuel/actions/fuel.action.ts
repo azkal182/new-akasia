@@ -6,11 +6,11 @@ import { auth } from '@/lib/auth';
 import { TransactionType } from '@/generated/prisma/enums';
 import { z } from 'zod';
 import moment from 'moment-hijri';
+import { uploadCompressedReceipt } from '@/lib/receipt';
 
 const purchaseFuelSchema = z.object({
   carId: z.string().uuid('Invalid car ID'),
-  literAmount: z.coerce.number().positive('Liter amount must be positive'),
-  pricePerLiter: z.coerce.number().positive('Price per liter must be positive'),
+  totalAmount: z.coerce.number().int().positive('Total wajib diisi'),
   date: z.coerce.date(),
   notes: z.string().optional(),
 });
@@ -25,7 +25,7 @@ const receiveIncomeSchema = z.object({
 export type PurchaseFuelInput = z.infer<typeof purchaseFuelSchema>;
 export type ReceiveIncomeInput = z.infer<typeof receiveIncomeSchema>;
 
-export async function purchaseFuel(data: PurchaseFuelInput) {
+export async function purchaseFuel(data: PurchaseFuelInput, receiptFile?: File | null) {
   const session = await auth();
   if (!session?.user?.id) {
     return { error: 'Unauthorized' };
@@ -36,10 +36,14 @@ export async function purchaseFuel(data: PurchaseFuelInput) {
     return { error: validated.error.errors[0].message };
   }
 
-  const { carId, literAmount, pricePerLiter, date, notes } = validated.data;
-  const totalAmount = literAmount * pricePerLiter;
+  if (!receiptFile) {
+    return { error: 'Nota wajib diupload' };
+  }
+
+  const { carId, totalAmount, date, notes } = validated.data;
 
   try {
+    const receiptUrl = await uploadCompressedReceipt(receiptFile, 'receipts/fuel');
     // Get last transaction for balance
     const lastTransaction = await prisma.transaction.findFirst({
       orderBy: { date: 'desc' },
@@ -67,9 +71,10 @@ export async function purchaseFuel(data: PurchaseFuelInput) {
         fuelPurchase: {
           create: {
             carId,
-            literAmount,
-            pricePerLiter,
+            literAmount: 0,
+            pricePerLiter: 0,
             totalAmount,
+            receiptUrl,
             notes: notes ?? null,
           },
         },
@@ -264,8 +269,10 @@ export async function getFuelMonthlyReport(hijriYear: number, hijriMonth: number
       createdAt: { gte: startDate, lte: endDate },
     },
     _sum: {
-      literAmount: true,
       totalAmount: true,
+    },
+    _count: {
+      _all: true,
     },
   });
 

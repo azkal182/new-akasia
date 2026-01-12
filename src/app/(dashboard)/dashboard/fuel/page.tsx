@@ -111,7 +111,8 @@ async function FuelTransactionsList() {
                     </p>
                     {trx.fuelPurchase && (
                       <p className="text-xs text-neutral-600">
-                        {trx.fuelPurchase.literAmount}L @ {formatRupiah(trx.fuelPurchase.pricePerLiter)}/L
+                        {trx.fuelPurchase.car?.name}
+                        {trx.fuelPurchase.notes ? ` • ${trx.fuelPurchase.notes}` : ''}
                       </p>
                     )}
                   </div>

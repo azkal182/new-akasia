@@ -18,6 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { signOut } from 'next-auth/react';
 import { MobileSidebar } from './mobile-sidebar';
 import { useDriverMode } from '@/contexts/driver-mode-context';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 interface HeaderProps {
   user: {
@@ -73,6 +74,8 @@ export function Header({ user }: HeaderProps) {
               className="data-[state=checked]:bg-blue-600"
             />
           </div>
+
+          <ThemeToggle />
 
           {!isDriverMode && (
             /* Notifications */

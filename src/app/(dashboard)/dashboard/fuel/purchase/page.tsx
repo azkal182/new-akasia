@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Fuel } from 'lucide-react';
+import { ArrowLeft, Fuel, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,8 +20,7 @@ import { formatRupiah } from '@/lib/utils';
 
 const fuelSchema = z.object({
   carId: z.string().uuid('Pilih kendaraan'),
-  literAmount: z.coerce.number().positive('Jumlah liter wajib diisi'),
-  pricePerLiter: z.coerce.number().int().positive('Harga per liter wajib diisi'),
+  totalAmount: z.coerce.number().int().positive('Total wajib diisi'),
   date: z.string().min(1, 'Tanggal wajib diisi'),
   notes: z.string().optional(),
 });
@@ -33,6 +32,9 @@ export default function FuelPurchasePage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cars, setCars] = useState<Car[]>([]);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const receiptInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     getCars().then((data) => setCars(data));
@@ -42,27 +44,28 @@ export default function FuelPurchasePage() {
     resolver: zodResolver(fuelSchema),
     defaultValues: {
       carId: '',
-      literAmount: 0,
-      pricePerLiter: 13000,
+      totalAmount: 0,
       date: new Date().toISOString().split('T')[0],
       notes: '',
     },
   });
 
-  const watchLiter = form.watch('literAmount');
-  const watchPrice = form.watch('pricePerLiter');
-  const totalAmount = (watchLiter || 0) * (watchPrice || 0);
+  const watchTotal = form.watch('totalAmount');
 
   async function onSubmit(data: FuelFormData) {
+    if (!receiptFile) {
+      toast.error('Nota/struk wajib diupload');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const result = await purchaseFuel({
         carId: data.carId,
-        literAmount: data.literAmount,
-        pricePerLiter: data.pricePerLiter,
+        totalAmount: data.totalAmount,
         date: new Date(data.date),
         notes: data.notes,
-      });
+      }, receiptFile);
       if (result.error) {
         toast.error(result.error);
       } else {
@@ -74,6 +77,15 @@ export default function FuelPurchasePage() {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  function handleReceiptChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setReceiptFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setReceiptPreview(reader.result as string);
+    reader.readAsDataURL(file);
   }
 
   return (
@@ -122,35 +134,18 @@ export default function FuelPurchasePage() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="literAmount" className="text-neutral-300">
-                  Jumlah Liter
+                <Label htmlFor="totalAmount" className="text-neutral-300">
+                  Total Biaya (Rp)
                 </Label>
                 <Input
-                  id="literAmount"
+                  id="totalAmount"
                   type="number"
-                  step="0.01"
-                  {...form.register('literAmount', { valueAsNumber: true })}
-                  placeholder="20"
+                  {...form.register('totalAmount', { valueAsNumber: true })}
+                  placeholder="500000"
                   className="border-neutral-700 bg-neutral-800/50 text-white"
                 />
-                {form.formState.errors.literAmount && (
-                  <p className="text-sm text-red-400">{form.formState.errors.literAmount.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="pricePerLiter" className="text-neutral-300">
-                  Harga per Liter (Rp)
-                </Label>
-                <Input
-                  id="pricePerLiter"
-                  type="number"
-                  {...form.register('pricePerLiter', { valueAsNumber: true })}
-                  placeholder="13000"
-                  className="border-neutral-700 bg-neutral-800/50 text-white"
-                />
-                {form.formState.errors.pricePerLiter && (
-                  <p className="text-sm text-red-400">{form.formState.errors.pricePerLiter.message}</p>
+                {form.formState.errors.totalAmount && (
+                  <p className="text-sm text-red-400">{form.formState.errors.totalAmount.message}</p>
                 )}
               </div>
             </div>
@@ -158,8 +153,48 @@ export default function FuelPurchasePage() {
             <div className="rounded-lg bg-neutral-800/50 p-4">
               <div className="flex items-center justify-between">
                 <span className="text-neutral-400">Total</span>
-                <span className="text-xl font-bold text-amber-400">{formatRupiah(totalAmount)}</span>
+                <span className="text-xl font-bold text-amber-400">{formatRupiah(watchTotal || 0)}</span>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-neutral-300">Nota/Struk *</Label>
+              <input
+                type="file"
+                ref={receiptInputRef}
+                accept="image/*"
+                onChange={handleReceiptChange}
+                className="hidden"
+              />
+              {receiptPreview ? (
+                <div className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={receiptPreview}
+                    alt="Receipt preview"
+                    className="max-h-48 rounded-lg border border-neutral-700"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 border-neutral-700"
+                    onClick={() => receiptInputRef.current?.click()}
+                  >
+                    Ganti Nota
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-dashed border-neutral-600 py-8 text-neutral-400 hover:border-neutral-500 hover:text-neutral-300"
+                  onClick={() => receiptInputRef.current?.click()}
+                >
+                  <Upload className="mr-2 h-5 w-5" />
+                  Upload Nota/Struk
+                </Button>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -190,10 +225,10 @@ export default function FuelPurchasePage() {
             </div>
 
             <div className="flex gap-3 pt-4">
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="bg-amber-600 hover:bg-amber-500"
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-amber-600 hover:bg-amber-500"
               >
                 {isSubmitting ? 'Menyimpan...' : 'Simpan'}
               </Button>

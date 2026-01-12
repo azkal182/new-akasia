@@ -3,15 +3,19 @@ import { Plus, ArrowUpRight, ArrowDownRight, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatRupiah, formatDate } from '@/lib/utils';
 import { getTransactions, getBalance, getMonthlyStats } from '@/features/finance/actions';
+import { TransactionType } from '@/generated/prisma/enums';
 
 export default async function FinancePage() {
   const now = new Date();
-  const [transactions, balance, monthlyStats] = await Promise.all([
+  const [transactions, balance, monthlyStats, incomeTransactions, expenseTransactions] = await Promise.all([
     getTransactions({ limit: 20 }),
     getBalance(),
     getMonthlyStats(now.getFullYear(), now.getMonth() + 1),
+    getTransactions({ type: TransactionType.INCOME }),
+    getTransactions({ type: TransactionType.EXPENSE }),
   ]);
 
   return (
@@ -105,70 +109,97 @@ export default async function FinancePage() {
           <CardTitle className="text-white">Transaksi Terakhir</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {transactions.length === 0 ? (
-              <p className="text-center text-neutral-500 py-8">
-                Belum ada transaksi
-              </p>
-            ) : (
-              transactions.map((trx) => (
-                <div
-                  key={trx.id}
-                  className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                        trx.type === 'INCOME'
-                          ? 'bg-emerald-500/20 text-emerald-500'
-                          : 'bg-red-500/20 text-red-400'
-                      }`}
-                    >
-                      {trx.type === 'INCOME' ? (
-                        <ArrowUpRight className="h-5 w-5" />
-                      ) : (
-                        <ArrowDownRight className="h-5 w-5" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-medium text-white">{trx.description ? trx.description : `service atau beli sparepart ${trx.expense?.items[0].car?.name}`}</p>
-                      <p className="text-sm text-neutral-500">
-                        {formatDate(trx.date)} • {trx.user?.name}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p
-                      className={`font-semibold ${
-                        trx.type === 'INCOME' ? 'text-emerald-500' : 'text-red-400'
-                      }`}
-                    >
-                      {trx.type === 'INCOME' ? '+' : '-'}
-                      {formatRupiah(trx.amount)}
-                    </p>
-                    <Badge
-                      variant="outline"
-                      className={`text-xs ${
-                        trx.type === 'INCOME'
-                          ? 'border-emerald-500/50 text-emerald-400'
-                          : trx.type === 'FUEL_PURCHASE'
-                            ? 'border-amber-500/50 text-amber-400'
-                            : 'border-red-500/50 text-red-400'
-                      }`}
-                    >
-                      {trx.type === 'INCOME'
-                        ? 'Pemasukan'
-                        : trx.type === 'FUEL_PURCHASE'
-                          ? 'BBM'
-                          : 'Pengeluaran'}
-                    </Badge>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <Tabs defaultValue="recent" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="recent">Transaksi Terakhir</TabsTrigger>
+              <TabsTrigger value="income">Pemasukan</TabsTrigger>
+              <TabsTrigger value="expense">Pengeluaran</TabsTrigger>
+            </TabsList>
+            <TabsContent value="recent">
+              <TransactionList transactions={transactions} emptyLabel="Belum ada transaksi" />
+            </TabsContent>
+            <TabsContent value="income">
+              <TransactionList transactions={incomeTransactions} emptyLabel="Belum ada pemasukan" />
+            </TabsContent>
+            <TabsContent value="expense">
+              <TransactionList transactions={expenseTransactions} emptyLabel="Belum ada pengeluaran" />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function TransactionList({
+  transactions,
+  emptyLabel,
+}: {
+  transactions: Awaited<ReturnType<typeof getTransactions>>;
+  emptyLabel: string;
+}) {
+  if (transactions.length === 0) {
+    return <p className="text-center text-neutral-500 py-8">{emptyLabel}</p>;
+  }
+
+  return (
+    <div className="space-y-3">
+      {transactions.map((trx) => (
+        <div
+          key={trx.id}
+          className="flex items-center justify-between rounded-lg bg-neutral-800/50 p-4"
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                trx.type === 'INCOME'
+                  ? 'bg-emerald-500/20 text-emerald-500'
+                  : 'bg-red-500/20 text-red-400'
+              }`}
+            >
+              {trx.type === 'INCOME' ? (
+                <ArrowUpRight className="h-5 w-5" />
+              ) : (
+                <ArrowDownRight className="h-5 w-5" />
+              )}
+            </div>
+            <div>
+              <p className="font-medium text-white">
+                {trx.description || `service atau beli sparepart ${trx.expense?.items[0].car?.name ?? ''}`}
+              </p>
+              <p className="text-sm text-neutral-500">
+                {formatDate(trx.date)} • {trx.user?.name}
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p
+              className={`font-semibold ${
+                trx.type === 'INCOME' ? 'text-emerald-500' : 'text-red-400'
+              }`}
+            >
+              {trx.type === 'INCOME' ? '+' : '-'}
+              {formatRupiah(trx.amount)}
+            </p>
+            <Badge
+              variant="outline"
+              className={`text-xs ${
+                trx.type === 'INCOME'
+                  ? 'border-emerald-500/50 text-emerald-400'
+                  : trx.type === 'FUEL_PURCHASE'
+                    ? 'border-amber-500/50 text-amber-400'
+                    : 'border-red-500/50 text-red-400'
+              }`}
+            >
+              {trx.type === 'INCOME'
+                ? 'Pemasukan'
+                : trx.type === 'FUEL_PURCHASE'
+                  ? 'BBM'
+                  : 'Pengeluaran'}
+            </Badge>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
