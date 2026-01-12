@@ -99,7 +99,10 @@ export function Sidebar({ user }: SidebarProps) {
       <ScrollArea className="flex-1 px-3 py-4">
         <nav className="space-y-1">
           {menuItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            // Dashboard should only be active on exact match
+            const isActive = item.href === '/dashboard'
+              ? pathname === '/dashboard'
+              : pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
                 key={item.href}
