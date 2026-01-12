@@ -8,22 +8,27 @@
  */
 
 // import { prisma } from '../src/lib/prisma';
-import { TransactionType, CarStatus, UsageStatus } from '../src/generated/prisma/client';
-import * as fs from 'fs';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '@/generated/prisma/client';
+import {
+  TransactionType,
+  CarStatus,
+  UsageStatus,
+} from "../src/generated/prisma/client";
+import * as fs from "fs";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@/generated/prisma/client";
 
-const connectionString = `postgresql://postgres@localhost:5432/akasia?schema=public`
+const connectionString = `postgresql://azkal:azkal@165.22.106.176:5432/new-akasia-v2?schema=public`;
+// const connectionString = `postgresql://postgres@localhost:5432/akasia?schema=public`
 
-const adapter = new PrismaPg({ connectionString })
-const prisma = new PrismaClient({ adapter })
+const adapter = new PrismaPg({ connectionString });
+const prisma = new PrismaClient({ adapter });
 
 interface OldUser {
   id: string;
   name: string;
   username: string;
   password: string;
-  ROLE: 'USER' | 'ADMIN' | 'DRIVER';
+  ROLE: "USER" | "ADMIN" | "DRIVER";
   createdAt: string;
   updatedAt: string;
   driving: boolean;
@@ -34,7 +39,7 @@ interface OldCar {
   id: string;
   name: string;
   licensePlate: string | null;
-  status: 'AVAILABLE' | 'IN_USE';
+  status: "AVAILABLE" | "IN_USE";
   createdAt: string;
   updatedAt: string;
   barcodeString: string | null;
@@ -83,7 +88,7 @@ interface OldUsageRecord {
   destination: string;
   startTime: string;
   endTime: string | null;
-  status: 'ONGOING' | 'COMPLETED';
+  status: "ONGOING" | "COMPLETED";
   createdAt: string;
   updatedAt: string;
   userId: string | null;
@@ -91,7 +96,7 @@ interface OldUsageRecord {
 
 interface OldCashflow {
   id: string;
-  type: 'INCOME' | 'EXPENSE';
+  type: "INCOME" | "EXPENSE";
   amount: number;
   date: string;
   description: string | null;
@@ -108,7 +113,7 @@ interface OldCashIncome {
 interface OldFuelUsage {
   id: string;
   carId: string;
-  fuelType: 'SOLAR' | 'BENSIN';
+  fuelType: "SOLAR" | "BENSIN";
   receiptFile: string | null;
   notes: string | null;
   cashflowId: string;
@@ -137,7 +142,7 @@ interface OldPerizinan {
   numberOfPassengers: number;
   date: string;
   estimation: number;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: "PENDING" | "APPROVED" | "REJECTED";
   carId: string;
   createdAt: string;
   updatedAt: string;
@@ -146,7 +151,7 @@ interface OldPerizinan {
 interface OldTax {
   id: string;
   carId: string;
-  type: 'ANNUAL' | 'FIVE_YEAR';
+  type: "ANNUAL" | "FIVE_YEAR";
   dueDate: string;
   isPaid: boolean;
   paidAt: string | null;
@@ -181,10 +186,10 @@ interface ExportedData {
 }
 
 async function importData(filepath: string) {
-  console.log('🔄 Starting data import to new database...\n');
+  console.log("🔄 Starting data import to new database...\n");
 
   // Read export file
-  const rawData = fs.readFileSync(filepath, 'utf-8');
+  const rawData = fs.readFileSync(filepath, "utf-8");
   const data: ExportedData = JSON.parse(rawData);
 
   console.log(`📁 Loading export from: ${filepath}`);
@@ -195,7 +200,7 @@ async function importData(filepath: string) {
     // ========================================
     // 1. Import Users
     // ========================================
-    console.log('📦 Importing users...');
+    console.log("📦 Importing users...");
     for (const oldUser of data.users) {
       await prisma.user.upsert({
         where: { id: oldUser.id },
@@ -217,7 +222,7 @@ async function importData(filepath: string) {
     // ========================================
     // 2. Import Cars
     // ========================================
-    console.log('📦 Importing cars...');
+    console.log("📦 Importing cars...");
     for (const oldCar of data.cars) {
       await prisma.car.upsert({
         where: { id: oldCar.id },
@@ -238,11 +243,15 @@ async function importData(filepath: string) {
     // ========================================
     // 3. Import Transactions with Income/Expense
     // ========================================
-    console.log('📦 Importing transactions...');
+    console.log("📦 Importing transactions...");
 
     // Create lookup maps
-    const incomeByTrxId = new Map(data.incomes.map((i) => [i.transactionId, i]));
-    const expenseByTrxId = new Map(data.expenses.map((e) => [e.transactionId, e]));
+    const incomeByTrxId = new Map(
+      data.incomes.map((i) => [i.transactionId, i])
+    );
+    const expenseByTrxId = new Map(
+      data.expenses.map((e) => [e.transactionId, e])
+    );
     const itemsByExpenseId = new Map<string, OldItem[]>();
     for (const item of data.items) {
       if (!itemsByExpenseId.has(item.expenseId)) {
@@ -290,7 +299,7 @@ async function importData(filepath: string) {
             income: {
               create: {
                 id: income.id,
-                source: 'Yayasan', // Default source
+                source: "Yayasan", // Default source
                 notes: income.description,
               },
             },
@@ -301,17 +310,21 @@ async function importData(filepath: string) {
                 id: expense.id,
                 receiptUrl: expense.notaFilePath,
                 items: {
-                  create: (itemsByExpenseId.get(expense.id) ?? []).map((item) => {
-                    const car = item.armada ? carsByName.get(item.armada) : null;
-                    return {
-                      id: item.id,
-                      description: item.description,
-                      quantity: item.quantity,
-                      unitPrice: Math.round(item.total / item.quantity),
-                      total: item.total,
-                      carId: car?.id,
-                    };
-                  }),
+                  create: (itemsByExpenseId.get(expense.id) ?? []).map(
+                    (item) => {
+                      const car = item.armada
+                        ? carsByName.get(item.armada)
+                        : null;
+                      return {
+                        id: item.id,
+                        description: item.description,
+                        quantity: item.quantity,
+                        unitPrice: Math.round(item.total / item.quantity),
+                        total: item.total,
+                        carId: car?.id,
+                      };
+                    }
+                  ),
                 },
               },
             },
@@ -325,11 +338,15 @@ async function importData(filepath: string) {
     // ========================================
     // 4. Import Cashflows as Transactions (Fuel purchases)
     // ========================================
-    console.log('📦 Importing fuel purchases from cashflows...');
+    console.log("📦 Importing fuel purchases from cashflows...");
 
     // Create lookup maps
-    const cashIncomeById = new Map(data.cashIncomes.map((c) => [c.cashflowId, c]));
-    const fuelUsageById = new Map(data.fuelUsages.map((f) => [f.cashflowId, f]));
+    const cashIncomeById = new Map(
+      data.cashIncomes.map((c) => [c.cashflowId, c])
+    );
+    const fuelUsageById = new Map(
+      data.fuelUsages.map((f) => [f.cashflowId, f])
+    );
 
     let fuelCount = 0;
     for (const cashflow of data.cashflows) {
@@ -342,7 +359,8 @@ async function importData(filepath: string) {
           data: {
             type: TransactionType.FUEL_PURCHASE,
             amount: cashflow.amount,
-            description: cashflow.description ?? `Isi BBM ${fuelUsage.fuelType}`,
+            description:
+              cashflow.description ?? `Isi BBM ${fuelUsage.fuelType}`,
             date: new Date(cashflow.date),
             balanceBefore: 0, // Will be recalculated
             balanceAfter: 0, // Will be recalculated
@@ -363,7 +381,7 @@ async function importData(filepath: string) {
           },
         });
         fuelCount++;
-      } else if (cashIncome && cashflow.type === 'INCOME') {
+      } else if (cashIncome && cashflow.type === "INCOME") {
         // This is a cash income - already handled in transactions
         // Skip to avoid duplicates
       }
@@ -373,7 +391,7 @@ async function importData(filepath: string) {
     // ========================================
     // 5. Import Usage Records
     // ========================================
-    console.log('📦 Importing usage records...');
+    console.log("📦 Importing usage records...");
     for (const record of data.usageRecords) {
       if (!record.userId) continue; // Skip records without user
 
@@ -399,9 +417,11 @@ async function importData(filepath: string) {
     // ========================================
     // 6. Import Pengajuans
     // ========================================
-    console.log('📦 Importing pengajuans...');
+    console.log("📦 Importing pengajuans...");
     for (const pengajuan of data.pengajuans) {
-      const items = data.pengajuanItems.filter((i) => i.pengajuanId === pengajuan.id);
+      const items = data.pengajuanItems.filter(
+        (i) => i.pengajuanId === pengajuan.id
+      );
 
       await prisma.pengajuan.upsert({
         where: { id: pengajuan.id },
@@ -409,7 +429,7 @@ async function importData(filepath: string) {
         create: {
           id: pengajuan.id,
           date: new Date(pengajuan.date),
-          status: 'PENDING',
+          status: "PENDING",
           createdAt: new Date(pengajuan.date),
           updatedAt: new Date(pengajuan.date),
           items: {
@@ -429,7 +449,7 @@ async function importData(filepath: string) {
     // ========================================
     // 7. Import Perizinans
     // ========================================
-    console.log('📦 Importing perizinans...');
+    console.log("📦 Importing perizinans...");
     for (const perizinan of data.perizinans) {
       await prisma.perizinan.upsert({
         where: { id: perizinan.id },
@@ -455,7 +475,7 @@ async function importData(filepath: string) {
     // ========================================
     // 8. Import Taxes
     // ========================================
-    console.log('📦 Importing taxes...');
+    console.log("📦 Importing taxes...");
     for (const tax of data.taxes) {
       const payments = data.taxPayments.filter((p) => p.taxId === tax.id);
 
@@ -488,13 +508,13 @@ async function importData(filepath: string) {
     // ========================================
     // 9. Recalculate Running Balances
     // ========================================
-    console.log('\n🔄 Recalculating running balances...');
+    console.log("\n🔄 Recalculating running balances...");
     await recalculateBalances();
-    console.log('   ✅ Balances recalculated');
+    console.log("   ✅ Balances recalculated");
 
-    console.log('\n✅ Import completed successfully!');
+    console.log("\n✅ Import completed successfully!");
   } catch (error) {
-    console.error('\n❌ Import failed:', error);
+    console.error("\n❌ Import failed:", error);
     throw error;
   } finally {
     await prisma.$disconnect();
@@ -505,7 +525,7 @@ async function recalculateBalances() {
   // Get all transactions ordered by date
   const transactions = await prisma.transaction.findMany({
     where: { deletedAt: null },
-    orderBy: { date: 'asc' },
+    orderBy: { date: "asc" },
   });
 
   let balance = 0;
@@ -530,7 +550,7 @@ async function recalculateBalances() {
 // Get filepath from command line
 const filepath = process.argv[2];
 if (!filepath) {
-  console.error('Usage: npx tsx scripts/import-data.ts <path-to-export.json>');
+  console.error("Usage: npx tsx scripts/import-data.ts <path-to-export.json>");
   process.exit(1);
 }
 
