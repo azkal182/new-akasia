@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Car,
   Wallet,
+  ClipboardList,
   Fuel,
   FileText,
   Shield,
@@ -38,6 +39,11 @@ const menuItems = [
     title: 'Keuangan',
     href: '/dashboard/finance',
     icon: Wallet,
+  },
+  {
+    title: 'Anggaran',
+    href: '/spending',
+    icon: ClipboardList,
   },
   {
     title: 'Armada',

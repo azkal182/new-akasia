@@ -99,6 +99,13 @@ async function main() {
     });
     console.log('✓ Created car:', car3.name);
 
+    const wallet = await prisma.wallet.upsert({
+      where: { name: 'Global Wallet' },
+      update: {},
+      create: { name: 'Global Wallet' },
+    });
+    console.log('✓ Ensured wallet:', wallet.name);
+
     console.log('\n🎉 Seeding completed successfully!');
   } finally {
     await prisma.$disconnect();

@@ -1,21 +1,31 @@
-import Link from 'next/link';
-import { Plus, ArrowUpRight, ArrowDownRight, FileText } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { formatRupiah, formatDate } from '@/lib/utils';
-import { getTransactions, getBalance, getMonthlyStats } from '@/features/finance/actions';
-import { TransactionType } from '@/generated/prisma/enums';
+import Link from "next/link";
+import { Plus, ArrowUpRight, ArrowDownRight, FileText } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatRupiah, formatDate } from "@/lib/utils";
+import {
+  getTransactions,
+  getBalance,
+  getMonthlyStats,
+} from "@/features/finance/actions";
+import { TransactionType } from "@/generated/prisma/enums";
 
 export default async function FinancePage() {
   const now = new Date();
-  const [transactions, balance, monthlyStats, incomeTransactions, expenseTransactions] = await Promise.all([
+  const [
+    transactions,
+    balance,
+    monthlyStats,
+    incomeTransactions,
+    expenseTransactions,
+  ] = await Promise.all([
     getTransactions({ limit: 20 }),
     getBalance(),
     getMonthlyStats(now.getFullYear(), now.getMonth() + 1),
-    getTransactions({ type: TransactionType.INCOME }),
-    getTransactions({ type: TransactionType.EXPENSE }),
+    getTransactions({ type: TransactionType.INCOME, limit: 50 }),
+    getTransactions({ type: TransactionType.EXPENSE, limit: 50 }),
   ]);
 
   return (
@@ -23,12 +33,20 @@ export default async function FinancePage() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Keuangan</h1>
-          <p className="text-sm text-muted-foreground">Kelola pemasukan dan pengeluaran</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+            Keuangan
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Kelola pemasukan dan pengeluaran
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/dashboard/finance/report">
-            <Button variant="outline" size="sm" className="border-border hover:bg-muted">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-border hover:bg-muted"
+            >
               <FileText className="mr-1.5 h-4 w-4" />
               <span className="hidden sm:inline">Laporan</span>
             </Button>
@@ -40,7 +58,11 @@ export default async function FinancePage() {
             </Button>
           </Link>
           <Link href="/dashboard/finance/expense">
-            <Button variant="outline" size="sm" className="border-border hover:bg-muted">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-border hover:bg-muted"
+            >
               <Plus className="mr-1.5 h-4 w-4" />
               <span className="hidden sm:inline">Pengeluaran</span>
             </Button>
@@ -96,7 +118,11 @@ export default async function FinancePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${monthlyStats.net >= 0 ? 'text-emerald-500' : 'text-red-400'}`}>
+            <div
+              className={`text-2xl font-bold ${
+                monthlyStats.net >= 0 ? "text-emerald-500" : "text-red-400"
+              }`}
+            >
               {formatRupiah(monthlyStats.net)}
             </div>
           </CardContent>
@@ -116,13 +142,22 @@ export default async function FinancePage() {
               <TabsTrigger value="expense">Pengeluaran</TabsTrigger>
             </TabsList>
             <TabsContent value="recent">
-              <TransactionList transactions={transactions} emptyLabel="Belum ada transaksi" />
+              <TransactionList
+                transactions={transactions}
+                emptyLabel="Belum ada transaksi"
+              />
             </TabsContent>
             <TabsContent value="income">
-              <TransactionList transactions={incomeTransactions} emptyLabel="Belum ada pemasukan" />
+              <TransactionList
+                transactions={incomeTransactions}
+                emptyLabel="Belum ada pemasukan"
+              />
             </TabsContent>
             <TabsContent value="expense">
-              <TransactionList transactions={expenseTransactions} emptyLabel="Belum ada pengeluaran" />
+              <TransactionList
+                transactions={expenseTransactions}
+                emptyLabel="Belum ada pengeluaran"
+              />
             </TabsContent>
           </Tabs>
         </CardContent>
@@ -139,7 +174,9 @@ function TransactionList({
   emptyLabel: string;
 }) {
   if (transactions.length === 0) {
-    return <p className="text-center text-muted-foreground py-8">{emptyLabel}</p>;
+    return (
+      <p className="text-center text-muted-foreground py-8">{emptyLabel}</p>
+    );
   }
 
   return (
@@ -152,12 +189,12 @@ function TransactionList({
           <div className="flex items-center gap-3">
             <div
               className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                trx.type === 'INCOME'
-                  ? 'bg-emerald-500/20 text-emerald-500'
-                  : 'bg-red-500/20 text-red-400'
+                trx.type === "INCOME"
+                  ? "bg-emerald-500/20 text-emerald-500"
+                  : "bg-red-500/20 text-red-400"
               }`}
             >
-              {trx.type === 'INCOME' ? (
+              {trx.type === "INCOME" ? (
                 <ArrowUpRight className="h-5 w-5" />
               ) : (
                 <ArrowDownRight className="h-5 w-5" />
@@ -165,7 +202,10 @@ function TransactionList({
             </div>
             <div>
               <p className="font-medium text-foreground">
-                {trx.description || `service atau beli sparepart ${trx.expense?.items[0].car?.name ?? ''}`}
+                {trx.description ||
+                  `service atau beli sparepart ${
+                    trx.expense?.items[0].car?.name ?? ""
+                  }`}
               </p>
               <p className="text-sm text-muted-foreground">
                 {formatDate(trx.date)} • {trx.user?.name}
@@ -175,27 +215,27 @@ function TransactionList({
           <div className="text-right">
             <p
               className={`font-semibold ${
-                trx.type === 'INCOME' ? 'text-emerald-500' : 'text-red-400'
+                trx.type === "INCOME" ? "text-emerald-500" : "text-red-400"
               }`}
             >
-              {trx.type === 'INCOME' ? '+' : '-'}
+              {trx.type === "INCOME" ? "+" : "-"}
               {formatRupiah(trx.amount)}
             </p>
             <Badge
               variant="outline"
               className={`text-xs ${
-                trx.type === 'INCOME'
-                  ? 'border-emerald-500/50 text-emerald-400'
-                  : trx.type === 'FUEL_PURCHASE'
-                    ? 'border-amber-500/50 text-amber-400'
-                    : 'border-red-500/50 text-red-400'
+                trx.type === "INCOME"
+                  ? "border-emerald-500/50 text-emerald-400"
+                  : trx.type === "FUEL_PURCHASE"
+                  ? "border-amber-500/50 text-amber-400"
+                  : "border-red-500/50 text-red-400"
               }`}
             >
-              {trx.type === 'INCOME'
-                ? 'Pemasukan'
-                : trx.type === 'FUEL_PURCHASE'
-                  ? 'BBM'
-                  : 'Pengeluaran'}
+              {trx.type === "INCOME"
+                ? "Pemasukan"
+                : trx.type === "FUEL_PURCHASE"
+                ? "BBM"
+                : "Pengeluaran"}
             </Badge>
           </div>
         </div>

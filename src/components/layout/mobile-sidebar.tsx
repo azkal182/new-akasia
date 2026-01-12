@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Car,
   Wallet,
+  ClipboardList,
   Fuel,
   FileText,
   Shield,
@@ -39,6 +40,7 @@ interface MobileSidebarProps {
 const menuItems = [
   { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { title: 'Keuangan', href: '/dashboard/finance', icon: Wallet },
+  { title: 'Anggaran', href: '/spending', icon: ClipboardList },
   { title: 'Armada', href: '/dashboard/cars', icon: Car },
   { title: 'BBM', href: '/dashboard/fuel', icon: Fuel },
   { title: 'Pengajuan', href: '/dashboard/pengajuan', icon: FileText },

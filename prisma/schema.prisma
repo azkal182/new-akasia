@@ -27,8 +27,11 @@ model User {
     deletedAt DateTime?
 
     // Relations
-    transactions Transaction[]
-    usageRecords UsageRecord[]
+    transactions         Transaction[]
+    usageRecords         UsageRecord[]
+    spendingTasksCreated SpendingTask[]
+    walletEntriesCreated WalletEntry[]
+    cashbacksCreated     Cashback[]
 
     @@index([username])
     @@index([role])
@@ -329,4 +332,205 @@ model PerizinanToken {
 enum TokenType {
     FORM // For public form submission
     APPROVE // For approval link
+}
+
+// ============================================
+// SPENDING TASKS (Budgeted Spending)
+// ============================================
+enum SpendingTaskStatus {
+    DRAFT
+    FUNDED
+    SPENDING
+    NEEDS_REFUND
+    NEEDS_REIMBURSE
+    SETTLED
+}
+
+enum SettlementType {
+    REFUND
+    REIMBURSE
+}
+
+enum SettlementStatus {
+    PENDING
+    DONE
+}
+
+enum WalletEntryType {
+    CREDIT
+    DEBIT
+}
+
+enum WalletEntrySource {
+    CASHBACK
+    MANUAL
+}
+
+model SpendingTask {
+    id          String             @id @default(uuid())
+    title       String
+    description String?
+    status      SpendingTaskStatus @default(DRAFT)
+
+    createdById String
+    createdBy   User   @relation(fields: [createdById], references: [id])
+
+    funding     TaskFunding?
+    receipts    Receipt[]
+    settlements TaskSettlement[]
+
+    createdAt     DateTime      @default(now())
+    updatedAt     DateTime      @updatedAt
+    walletEntries WalletEntry[]
+
+    @@index([status])
+    @@index([createdAt])
+    @@index([createdById])
+}
+
+model TaskFunding {
+    id         String   @id @default(uuid())
+    amount     Int
+    receivedAt DateTime @default(now())
+    source     String   @default("Yayasan")
+    notes      String?
+
+    taskId String       @unique
+    task   SpendingTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([receivedAt])
+}
+
+model Receipt {
+    id          String    @id @default(uuid())
+    vendor      String?
+    receiptNo   String?
+    receiptDate DateTime?
+    notes       String?
+
+    totalAmount Int
+
+    taskId String
+    task   SpendingTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+    attachments ReceiptAttachment[]
+    items       ReceiptItem[]
+    cashbacks   Cashback[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([taskId])
+    @@index([receiptDate])
+}
+
+model ReceiptAttachment {
+    id        String  @id @default(uuid())
+    fileUrl   String
+    fileName  String?
+    mimeType  String?
+    sizeBytes Int?
+
+    receiptId String
+    receipt   Receipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+
+    @@index([receiptId])
+}
+
+model ReceiptItem {
+    id          String @id @default(uuid())
+    description String
+    quantity    Int    @default(1)
+    unitPrice   Int
+    total       Int
+
+    receiptId String
+    receipt   Receipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([receiptId])
+}
+
+model TaskSettlement {
+    id     String           @id @default(uuid())
+    type   SettlementType
+    amount Int
+    status SettlementStatus @default(PENDING)
+    doneAt DateTime?
+    notes  String?
+
+    taskId String
+    task   SpendingTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([taskId, type])
+    @@index([status])
+}
+
+model Wallet {
+    id   String @id @default(uuid())
+    name String @unique @default("Global Wallet")
+
+    entries WalletEntry[]
+
+    createdAt DateTime @default(now())
+}
+
+model WalletEntry {
+    id          String            @id @default(uuid())
+    type        WalletEntryType
+    source      WalletEntrySource
+    amount      Int
+    description String?
+    occurredAt  DateTime          @default(now())
+
+    attachmentUrl String?
+
+    walletId String
+    wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+    taskId String?
+    task   SpendingTask? @relation(fields: [taskId], references: [id])
+
+    cashbackId String?   @unique
+    cashback   Cashback? @relation(fields: [cashbackId], references: [id])
+
+    createdById String
+    createdBy   User   @relation(fields: [createdById], references: [id])
+
+    createdAt DateTime @default(now())
+
+    @@index([walletId, occurredAt])
+    @@index([type])
+    @@index([source])
+}
+
+model Cashback {
+    id         String   @id @default(uuid())
+    amount     Int
+    vendor     String?
+    notes      String?
+    occurredAt DateTime @default(now())
+
+    receiptId String
+    receipt   Receipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+
+    walletEntry WalletEntry?
+
+    createdById String
+    createdBy   User   @relation(fields: [createdById], references: [id])
+
+    createdAt DateTime @default(now())
+
+    @@index([receiptId])
+    @@index([occurredAt])
 }
