@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ArrowLeft, Fuel, Upload } from 'lucide-react';
@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { purchaseFuel } from '@/features/fuel/actions';
 import { getCars } from '@/features/cars/actions';
 import { formatRupiah } from '@/lib/utils';
+import { NominalInput } from '@/components/inputs/nominal-input';
 
 const fuelSchema = z.object({
   carId: z.string().uuid('Pilih kendaraan'),
@@ -137,12 +138,19 @@ export default function FuelPurchasePage() {
                 <Label htmlFor="totalAmount" className="text-foreground">
                   Total Biaya (Rp)
                 </Label>
-                <Input
-                  id="totalAmount"
-                  type="number"
-                  {...form.register('totalAmount', { valueAsNumber: true })}
-                  placeholder="500000"
-                  className="border-border bg-muted/60 text-foreground"
+                <Controller
+                  control={form.control}
+                  name="totalAmount"
+                  render={({ field }) => (
+                    <NominalInput
+                      value={field.value ?? 0}
+                      onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                      name={field.name}
+                      onBlur={field.onBlur}
+                      placeholder="0"
+                      className="border-border bg-muted/60 text-foreground"
+                    />
+                  )}
                 />
                 {form.formState.errors.totalAmount && (
                   <p className="text-sm text-red-400">{form.formState.errors.totalAmount.message}</p>

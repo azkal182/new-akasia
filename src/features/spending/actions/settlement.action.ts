@@ -9,7 +9,7 @@ import { getTaskSummary, recomputeTask } from '../utils';
 export async function markRefundDone(taskId: string, notes?: string) {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: 'Unauthorized' };
+    return { error: 'Tidak memiliki akses' };
   }
 
   const summary = await getTaskSummary(taskId);
@@ -18,7 +18,7 @@ export async function markRefundDone(taskId: string, notes?: string) {
   }
 
   if (summary.refundDue <= 0) {
-    return { error: 'SETTLEMENT_NOT_REQUIRED' };
+    return { error: 'Tidak ada pengembalian yang perlu diproses' };
   }
 
   await prisma.taskSettlement.upsert({
@@ -54,7 +54,7 @@ export async function markRefundDone(taskId: string, notes?: string) {
 export async function markReimburseDone(taskId: string, notes?: string) {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: 'Unauthorized' };
+    return { error: 'Tidak memiliki akses' };
   }
 
   const summary = await getTaskSummary(taskId);
@@ -63,7 +63,7 @@ export async function markReimburseDone(taskId: string, notes?: string) {
   }
 
   if (summary.reimburseDue <= 0) {
-    return { error: 'SETTLEMENT_NOT_REQUIRED' };
+    return { error: 'Tidak ada penggantian yang perlu diproses' };
   }
 
   await prisma.taskSettlement.upsert({

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createCashbackSchema, type CreateCashbackInput } from "../schemas";
 import { createCashback } from "../actions";
+import { NominalInput } from "@/components/inputs/nominal-input";
 
 interface CashbackFormProps {
   receiptId: string;
@@ -67,11 +68,19 @@ export function CashbackForm({ receiptId, isLocked }: CashbackFormProps) {
       <div className="grid gap-3 md:grid-cols-2">
         <div className="space-y-2">
           <Label className="text-foreground">Jumlah</Label>
-          <Input
-            type="number"
-            {...form.register("amount", { valueAsNumber: true })}
-            className="border-border bg-muted/60 text-foreground"
-            disabled={isLocked}
+          <Controller
+            control={form.control}
+            name="amount"
+            render={({ field }) => (
+              <NominalInput
+                value={field.value ?? 0}
+                onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                name={field.name}
+                onBlur={field.onBlur}
+                className="border-border bg-muted/60 text-foreground"
+                disabled={isLocked}
+              />
+            )}
           />
         </div>
         <div className="space-y-2">
@@ -117,7 +126,7 @@ export function CashbackForm({ receiptId, isLocked }: CashbackFormProps) {
         disabled={isSubmitting || isLocked}
         className="bg-emerald-600 hover:bg-emerald-500"
       >
-        {isSubmitting ? "Menyimpan..." : "Tambah Pengembalian"}
+        {isSubmitting ? "Menyimpan..." : "Tambah Cashback"}
       </Button>
     </form>
   );

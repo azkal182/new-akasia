@@ -10,7 +10,7 @@ import { getOrCreateWallet, getTaskSummary } from '../utils';
 export async function createCashback(receiptId: string, data: CreateCashbackInput) {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: 'Unauthorized' };
+    return { error: 'Tidak memiliki akses' };
   }
 
   const validated = createCashbackSchema.safeParse(data);
@@ -37,7 +37,7 @@ export async function createCashback(receiptId: string, data: CreateCashbackInpu
   }
 
   if (summary.isLocked) {
-    return { error: 'TASK_LOCKED' };
+    return { error: 'Anggaran sudah dikunci' };
   }
 
   const wallet = await getOrCreateWallet();

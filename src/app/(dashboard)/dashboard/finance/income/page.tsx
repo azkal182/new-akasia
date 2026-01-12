@@ -18,6 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { NominalInput } from '@/components/inputs/nominal-input';
 import {
   Card,
   CardContent,
@@ -132,10 +133,11 @@ export default function IncomePage() {
                   <FormItem>
                     <FormLabel className="text-foreground">Jumlah (Rp)</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      <NominalInput
+                        value={field.value ?? 0}
+                        onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                        name={field.name}
+                        onBlur={field.onBlur}
                         placeholder="0"
                         disabled={isLoading}
                         className="border-border bg-muted/60 text-foreground"

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { Controller, useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ArrowLeft, FileCheck, Plus, Trash2 } from 'lucide-react';
@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { createPengajuan } from '@/features/pengajuan/actions';
 import { getCars } from '@/features/cars/actions';
 import { formatRupiah } from '@/lib/utils';
+import { NominalInput } from '@/components/inputs/nominal-input';
 
 const pengajuanSchema = z.object({
   notes: z.string().optional(),
@@ -155,11 +156,19 @@ export default function NewPengajuanPage() {
                     </div>
                     <div className="space-y-2">
                       <Label className="text-foreground">Estimasi (Rp)</Label>
-                      <Input
-                        type="number"
-                        {...form.register(`items.${index}.estimation`, { valueAsNumber: true })}
-                        placeholder="100000"
-                        className="border-border bg-muted/60 text-foreground"
+                      <Controller
+                        control={form.control}
+                        name={`items.${index}.estimation`}
+                        render={({ field }) => (
+                          <NominalInput
+                            value={field.value ?? 0}
+                            onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                            name={field.name}
+                            onBlur={field.onBlur}
+                            placeholder="0"
+                            className="border-border bg-muted/60 text-foreground"
+                          />
+                        )}
                       />
                     </div>
                   </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { WalletEntryType } from '@/generated/prisma/enums';
+import { NominalInput } from '@/components/inputs/nominal-input';
 import { createWalletEntrySchema, type CreateWalletEntryInput } from '../schemas';
 import { createWalletEntry } from '../actions';
 
@@ -71,10 +72,18 @@ export function WalletEntryForm() {
         </div>
         <div className="space-y-2">
           <Label className="text-foreground">Jumlah</Label>
-          <Input
-            type="number"
-            {...form.register('amount', { valueAsNumber: true })}
-            className="border-border bg-muted/60 text-foreground"
+          <Controller
+            control={form.control}
+            name="amount"
+            render={({ field }) => (
+              <NominalInput
+                value={field.value ?? 0}
+                onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                name={field.name}
+                onBlur={field.onBlur}
+                className="border-border bg-muted/60 text-foreground"
+              />
+            )}
           />
         </div>
       </div>

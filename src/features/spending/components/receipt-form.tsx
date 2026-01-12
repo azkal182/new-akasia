@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { Controller, useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { Plus, Trash2, Upload } from 'lucide-react';
@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { createReceiptSchema, type CreateReceiptInput } from '../schemas';
 import { createReceipt } from '../actions';
 import { formatRupiah } from '@/lib/utils';
+import { NominalInput } from '@/components/inputs/nominal-input';
 
 interface ReceiptFormProps {
   taskId: string;
@@ -228,11 +229,19 @@ export function ReceiptForm({ taskId, isLocked }: ReceiptFormProps) {
             <div className="space-y-1 flex items-end gap-2">
               <div className="flex-1">
                 <Label className="text-xs text-muted-foreground">Harga</Label>
-                <Input
-                  type="number"
-                  {...form.register(`items.${index}.unitPrice`, { valueAsNumber: true })}
-                  className="border-border bg-muted/60 text-foreground"
-                  disabled={isLocked}
+                <Controller
+                  control={form.control}
+                  name={`items.${index}.unitPrice`}
+                  render={({ field }) => (
+                    <NominalInput
+                      value={field.value ?? 0}
+                      onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                      name={field.name}
+                      onBlur={field.onBlur}
+                      className="border-border bg-muted/60 text-foreground"
+                      disabled={isLocked}
+                    />
+                  )}
                 />
               </div>
               {fields.length > 1 && (

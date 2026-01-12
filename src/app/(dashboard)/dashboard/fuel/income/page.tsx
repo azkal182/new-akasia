@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ArrowLeft, ArrowUpRight } from 'lucide-react';
@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { receiveFuelIncome } from '@/features/fuel/actions';
 import { formatRupiah } from '@/lib/utils';
+import { NominalInput } from '@/components/inputs/nominal-input';
 
 const incomeSchema = z.object({
   amount: z.coerce.number().int().positive('Jumlah wajib diisi'),
@@ -92,12 +93,19 @@ export default function FuelIncomePage() {
               <Label htmlFor="amount" className="text-foreground">
                 Jumlah (Rp)
               </Label>
-              <Input
-                id="amount"
-                type="number"
-                {...form.register('amount', { valueAsNumber: true })}
-                placeholder="1000000"
-                className="border-border bg-muted/60 text-foreground"
+              <Controller
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <NominalInput
+                    value={field.value ?? 0}
+                    onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                    name={field.name}
+                    onBlur={field.onBlur}
+                    placeholder="0"
+                    className="border-border bg-muted/60 text-foreground"
+                  />
+                )}
               />
               {form.formState.errors.amount && (
                 <p className="text-sm text-red-400">{form.formState.errors.amount.message}</p>

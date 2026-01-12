@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { Plus, ArrowUpRight, ArrowDownRight, FileText } from "lucide-react";
+import {
+  ArrowUpRight,
+  ArrowDownRight,
+  FileText,
+  Download,
+  Upload,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +17,7 @@ import {
   getMonthlyStats,
 } from "@/features/finance/actions";
 import { TransactionType } from "@/generated/prisma/enums";
+import { TransactionActions } from "@/features/finance/components/transaction-actions";
 
 export default async function FinancePage() {
   const now = new Date();
@@ -53,7 +60,7 @@ export default async function FinancePage() {
           </Link>
           <Link href="/dashboard/finance/income">
             <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500">
-              <Plus className="mr-1.5 h-4 w-4" />
+              <Download className="mr-1.5 h-4 w-4" />
               <span className="hidden sm:inline">Pemasukan</span>
             </Button>
           </Link>
@@ -63,7 +70,7 @@ export default async function FinancePage() {
               size="sm"
               className="border-border hover:bg-muted"
             >
-              <Plus className="mr-1.5 h-4 w-4" />
+              <Upload className="mr-1.5 h-4 w-4" />
               <span className="hidden sm:inline">Pengeluaran</span>
             </Button>
           </Link>
@@ -212,31 +219,34 @@ function TransactionList({
               </p>
             </div>
           </div>
-          <div className="text-right">
-            <p
-              className={`font-semibold ${
-                trx.type === "INCOME" ? "text-emerald-500" : "text-red-400"
-              }`}
-            >
-              {trx.type === "INCOME" ? "+" : "-"}
-              {formatRupiah(trx.amount)}
-            </p>
-            <Badge
-              variant="outline"
-              className={`text-xs ${
-                trx.type === "INCOME"
-                  ? "border-emerald-500/50 text-emerald-400"
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p
+                className={`font-semibold ${
+                  trx.type === "INCOME" ? "text-emerald-500" : "text-red-400"
+                }`}
+              >
+                {trx.type === "INCOME" ? "+" : "-"}
+                {formatRupiah(trx.amount)}
+              </p>
+              <Badge
+                variant="outline"
+                className={`text-xs ${
+                  trx.type === "INCOME"
+                    ? "border-emerald-500/50 text-emerald-400"
+                    : trx.type === "FUEL_PURCHASE"
+                    ? "border-amber-500/50 text-amber-400"
+                    : "border-red-500/50 text-red-400"
+                }`}
+              >
+                {trx.type === "INCOME"
+                  ? "Pemasukan"
                   : trx.type === "FUEL_PURCHASE"
-                  ? "border-amber-500/50 text-amber-400"
-                  : "border-red-500/50 text-red-400"
-              }`}
-            >
-              {trx.type === "INCOME"
-                ? "Pemasukan"
-                : trx.type === "FUEL_PURCHASE"
-                ? "BBM"
-                : "Pengeluaran"}
-            </Badge>
+                  ? "BBM"
+                  : "Pengeluaran"}
+              </Badge>
+            </div>
+            <TransactionActions transaction={trx} />
           </div>
         </div>
       ))}

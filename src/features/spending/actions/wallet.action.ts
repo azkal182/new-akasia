@@ -37,7 +37,7 @@ export async function getWalletOverview(limit = 25) {
 export async function createWalletEntry(data: CreateWalletEntryInput) {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: 'Unauthorized' };
+    return { error: 'Tidak memiliki akses' };
   }
 
   const validated = createWalletEntrySchema.safeParse(data);

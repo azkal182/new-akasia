@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { NominalInput } from '@/components/inputs/nominal-input';
 import { createFundingSchema, type CreateFundingInput } from '../schemas';
 import { createTaskFunding, updateTaskFunding } from '../actions';
 
@@ -68,11 +69,19 @@ export function FundingForm({ taskId, funding, isLocked }: FundingFormProps) {
       <div className="grid gap-3 md:grid-cols-2">
         <div className="space-y-2">
           <Label className="text-foreground">Jumlah</Label>
-          <Input
-            type="number"
-            {...form.register('amount', { valueAsNumber: true })}
-            className="border-border bg-muted/60 text-foreground"
-            disabled={isLocked}
+          <Controller
+            control={form.control}
+            name="amount"
+            render={({ field }) => (
+              <NominalInput
+                value={field.value ?? 0}
+                onValueChange={(values) => field.onChange(values.floatValue ?? 0)}
+                name={field.name}
+                onBlur={field.onBlur}
+                className="border-border bg-muted/60 text-foreground"
+                disabled={isLocked}
+              />
+            )}
           />
         </div>
         <div className="space-y-2">

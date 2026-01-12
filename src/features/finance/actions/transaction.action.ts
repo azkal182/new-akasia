@@ -3,8 +3,14 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { TransactionType } from '@/generated/prisma/enums';
-import { createIncomeSchema, type CreateIncomeInput } from '../schemas/transaction.schema';
+import {
+  createIncomeSchema,
+  updateIncomeSchema,
+  type CreateIncomeInput,
+  type UpdateIncomeInput,
+} from '../schemas/transaction.schema';
 import { auth } from '@/lib/auth';
+import { calculateBalanceBefore } from './balance.util';
 
 export async function createIncome(data: CreateIncomeInput) {
   const session = await auth();
@@ -57,6 +63,92 @@ export async function createIncome(data: CreateIncomeInput) {
   } catch (error) {
     console.error('Failed to create income:', error);
     return { error: 'Gagal menyimpan pemasukan' };
+  }
+}
+
+export async function updateIncome(transactionId: string, data: UpdateIncomeInput) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: 'Unauthorized' };
+  }
+
+  const validated = updateIncomeSchema.safeParse(data);
+  if (!validated.success) {
+    return { error: validated.error.errors[0].message };
+  }
+
+  const existing = await prisma.transaction.findUnique({
+    where: { id: transactionId },
+    select: { id: true, type: true, income: { select: { id: true } } },
+  });
+
+  if (!existing || existing.type !== TransactionType.INCOME || !existing.income) {
+    return { error: 'Transaksi pemasukan tidak ditemukan' };
+  }
+
+  const { amount, source, date, notes } = validated.data;
+  const entryDate = new Date(date);
+  const balanceBefore = await calculateBalanceBefore(entryDate, transactionId);
+  const balanceAfter = balanceBefore + amount;
+
+  try {
+    const transaction = await prisma.transaction.update({
+      where: { id: transactionId },
+      data: {
+        amount,
+        description: source,
+        date: entryDate,
+        balanceBefore,
+        balanceAfter,
+        income: {
+          update: {
+            source,
+            notes: notes ?? null,
+          },
+        },
+      },
+      include: {
+        income: true,
+      },
+    });
+
+    revalidatePath('/dashboard');
+    revalidatePath('/dashboard/finance');
+
+    return { success: true, transaction };
+  } catch (error) {
+    console.error('Failed to update income:', error);
+    return { error: 'Gagal memperbarui pemasukan' };
+  }
+}
+
+export async function deleteIncome(transactionId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: 'Unauthorized' };
+  }
+
+  const existing = await prisma.transaction.findUnique({
+    where: { id: transactionId },
+    select: { id: true, type: true },
+  });
+
+  if (!existing || existing.type !== TransactionType.INCOME) {
+    return { error: 'Transaksi pemasukan tidak ditemukan' };
+  }
+
+  try {
+    await prisma.transaction.delete({
+      where: { id: transactionId },
+    });
+
+    revalidatePath('/dashboard');
+    revalidatePath('/dashboard/finance');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to delete income:', error);
+    return { error: 'Gagal menghapus pemasukan' };
   }
 }
 

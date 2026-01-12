@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import { NominalInput } from '@/components/inputs/nominal-input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { payTax } from '@/features/tax/actions';
@@ -19,11 +19,11 @@ export function TaxPaymentButton({ taxId, carLabel }: TaxPaymentButtonProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
 
   async function handleSubmit() {
-    if (!amount || Number(amount) <= 0) {
+    if (!amount || amount <= 0) {
       toast.error('Jumlah pembayaran wajib diisi');
       return;
     }
@@ -32,7 +32,7 @@ export function TaxPaymentButton({ taxId, carLabel }: TaxPaymentButtonProps) {
     try {
       const result = await payTax({
         taxId,
-        amount: Number(amount),
+        amount,
         notes: notes.trim() || undefined,
       });
       if (result.error) {
@@ -40,7 +40,7 @@ export function TaxPaymentButton({ taxId, carLabel }: TaxPaymentButtonProps) {
       } else {
         toast.success('Pembayaran pajak berhasil disimpan');
         setOpen(false);
-        setAmount('');
+        setAmount(null);
         setNotes('');
         router.refresh();
       }
@@ -71,11 +71,9 @@ export function TaxPaymentButton({ taxId, carLabel }: TaxPaymentButtonProps) {
             </div>
             <div className="space-y-2">
               <Label className="text-foreground">Jumlah (Rp)</Label>
-              <Input
-                type="number"
-                value={amount}
-                onChange={(event) => setAmount(event.target.value)}
-                placeholder="1000000"
+              <NominalInput
+                value={amount ?? ''}
+                onValueChange={(values) => setAmount(values.floatValue ?? null)}
                 className="border-border bg-muted/60 text-foreground"
               />
             </div>

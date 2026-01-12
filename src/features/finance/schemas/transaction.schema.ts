@@ -21,6 +21,9 @@ export const createExpenseSchema = z.object({
   notes: z.string().optional(),
 });
 
+export const updateIncomeSchema = createIncomeSchema;
+export const updateExpenseSchema = createExpenseSchema;
+
 export const transactionFilterSchema = z.object({
   year: z.coerce.number().int().min(2000).max(2100),
   month: z.coerce.number().int().min(1).max(12),
@@ -33,6 +36,8 @@ export const hijriFilterSchema = z.object({
 
 export type CreateIncomeInput = z.infer<typeof createIncomeSchema>;
 export type CreateExpenseInput = z.infer<typeof createExpenseSchema>;
+export type UpdateIncomeInput = z.infer<typeof updateIncomeSchema>;
+export type UpdateExpenseInput = z.infer<typeof updateExpenseSchema>;
 export type ExpenseItemInput = z.infer<typeof expenseItemSchema>;
 export type TransactionFilter = z.infer<typeof transactionFilterSchema>;
 export type HijriFilter = z.infer<typeof hijriFilterSchema>;
