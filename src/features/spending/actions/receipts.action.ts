@@ -14,7 +14,7 @@ export async function createReceipt(
 ) {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: 'Unauthorized' };
+    return { error: 'Tidak memiliki akses' };
   }
 
   const summary = await getTaskSummary(taskId);
@@ -23,11 +23,11 @@ export async function createReceipt(
   }
 
   if (summary.isLocked) {
-    return { error: 'TASK_LOCKED' };
+    return { error: 'Anggaran sudah dikunci' };
   }
 
   if (summary.budget <= 0) {
-    return { error: 'FUNDING_REQUIRED' };
+    return { error: 'Pendanaan wajib diisi' };
   }
 
   const validated = createReceiptSchema.safeParse(data);
@@ -36,7 +36,7 @@ export async function createReceipt(
   }
 
   if (!files || files.length === 0) {
-    return { error: 'Attachment wajib diupload' };
+    return { error: 'Lampiran wajib diunggah' };
   }
 
   const itemsTotal = validated.data.items.reduce(
@@ -93,7 +93,7 @@ export async function createReceipt(
 export async function deleteReceipt(receiptId: string) {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: 'Unauthorized' };
+    return { error: 'Tidak memiliki akses' };
   }
 
   const receipt = await prisma.receipt.findUnique({
@@ -111,7 +111,7 @@ export async function deleteReceipt(receiptId: string) {
   }
 
   if (summary.isLocked) {
-    return { error: 'TASK_LOCKED' };
+    return { error: 'Anggaran sudah dikunci' };
   }
 
   await prisma.receipt.delete({

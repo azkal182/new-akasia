@@ -10,7 +10,7 @@ import { getTaskSummary } from '../utils';
 export async function createSpendingTask(data: CreateTaskInput) {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: 'Unauthorized' };
+    return { error: 'Tidak memiliki akses' };
   }
 
   const validated = createTaskSchema.safeParse(data);
@@ -33,7 +33,7 @@ export async function createSpendingTask(data: CreateTaskInput) {
 export async function updateSpendingTask(taskId: string, data: UpdateTaskInput) {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: 'Unauthorized' };
+    return { error: 'Tidak memiliki akses' };
   }
 
   const summary = await getTaskSummary(taskId);
@@ -42,7 +42,7 @@ export async function updateSpendingTask(taskId: string, data: UpdateTaskInput) 
   }
 
   if (summary.isLocked) {
-    return { error: 'TASK_LOCKED' };
+    return { error: 'Anggaran sudah dikunci' };
   }
 
   const validated = updateTaskSchema.safeParse(data);

@@ -9,7 +9,7 @@ import { getTaskSummary, recomputeTask } from '../utils';
 export async function createTaskFunding(taskId: string, data: CreateFundingInput) {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: 'Unauthorized' };
+    return { error: 'Tidak memiliki akses' };
   }
 
   const summary = await getTaskSummary(taskId);
@@ -18,7 +18,7 @@ export async function createTaskFunding(taskId: string, data: CreateFundingInput
   }
 
   if (summary.isLocked) {
-    return { error: 'TASK_LOCKED' };
+    return { error: 'Anggaran sudah dikunci' };
   }
 
   const existingFunding = await prisma.taskFunding.findUnique({
@@ -53,7 +53,7 @@ export async function createTaskFunding(taskId: string, data: CreateFundingInput
 export async function updateTaskFunding(taskId: string, data: CreateFundingInput) {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: 'Unauthorized' };
+    return { error: 'Tidak memiliki akses' };
   }
 
   const summary = await getTaskSummary(taskId);
@@ -62,7 +62,7 @@ export async function updateTaskFunding(taskId: string, data: CreateFundingInput
   }
 
   if (summary.isLocked) {
-    return { error: 'TASK_LOCKED' };
+    return { error: 'Anggaran sudah dikunci' };
   }
 
   const validated = createFundingSchema.safeParse(data);
