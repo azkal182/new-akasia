@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { Plus, Fuel, ArrowUpRight, ArrowDownRight, Calendar } from 'lucide-react';
+import { Plus, Fuel, ArrowUpRight, ArrowDownRight, Calendar, ClipboardList } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -92,11 +92,10 @@ async function FuelTransactionsList() {
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                      trx.type === 'INCOME'
+                    className={`flex h-10 w-10 items-center justify-center rounded-full ${trx.type === 'INCOME'
                         ? 'bg-emerald-500/20 text-emerald-500'
                         : 'bg-amber-500/20 text-amber-400'
-                    }`}
+                      }`}
                   >
                     {trx.type === 'INCOME' ? (
                       <ArrowUpRight className="h-5 w-5" />
@@ -119,20 +118,18 @@ async function FuelTransactionsList() {
                 </div>
                 <div className="text-right">
                   <p
-                    className={`font-semibold ${
-                      trx.type === 'INCOME' ? 'text-emerald-500' : 'text-amber-400'
-                    }`}
+                    className={`font-semibold ${trx.type === 'INCOME' ? 'text-emerald-500' : 'text-amber-400'
+                      }`}
                   >
                     {trx.type === 'INCOME' ? '+' : '-'}
                     {formatRupiah(trx.amount)}
                   </p>
                   <Badge
                     variant="outline"
-                    className={`text-xs ${
-                      trx.type === 'INCOME'
+                    className={`text-xs ${trx.type === 'INCOME'
                         ? 'border-emerald-500/50 text-emerald-400'
                         : 'border-amber-500/50 text-amber-400'
-                    }`}
+                      }`}
                   >
                     {trx.type === 'INCOME' ? 'Pemasukan' : 'BBM'}
                   </Badge>
@@ -156,6 +153,12 @@ export default async function FuelPage() {
           <p className="text-muted-foreground">Kelola cashflow BBM (kalender Hijri)</p>
         </div>
         <div className="flex gap-2">
+          <Link href="/dashboard/fuel/report">
+            <Button variant="outline" className="border-border hover:bg-muted">
+              <ClipboardList className="mr-2 h-4 w-4" />
+              Laporan
+            </Button>
+          </Link>
           <Link href="/dashboard/fuel/income">
             <Button className="bg-emerald-600 hover:bg-emerald-500">
               <Plus className="mr-2 h-4 w-4" />

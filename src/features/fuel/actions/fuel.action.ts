@@ -229,8 +229,8 @@ export async function getFuelMonthlyReport(hijriYear: number, hijriMonth: number
 
     // Validate dates are reasonable
     if (startDate.getFullYear() < 1900 || startDate.getFullYear() > 2200 ||
-        endDate.getFullYear() < 1900 || endDate.getFullYear() > 2200 ||
-        isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      endDate.getFullYear() < 1900 || endDate.getFullYear() > 2200 ||
+      isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       throw new Error('Invalid date range from Hijri conversion');
     }
   } catch (err) {
@@ -314,3 +314,120 @@ export async function getCurrentHijriDate() {
     hijriDate: now.format('iD iMMMM iYYYY'),
   };
 }
+
+// Helper function to convert Hijri date range to Gregorian
+function getHijriMonthRange(hijriYear: number, hijriMonth: number) {
+  try {
+    const startStr = `${hijriYear}/${hijriMonth}/1`;
+    const startHijri = moment(startStr, 'iYYYY/iM/iD');
+
+    let nextMonth = hijriMonth + 1;
+    let nextYear = hijriYear;
+    if (nextMonth > 12) {
+      nextMonth = 1;
+      nextYear++;
+    }
+    const endStr = `${nextYear}/${nextMonth}/1`;
+    const endHijri = moment(endStr, 'iYYYY/iM/iD').subtract(1, 'day').endOf('day');
+
+    const startDate = startHijri.toDate();
+    const endDate = endHijri.toDate();
+
+    if (startDate.getFullYear() < 1900 || startDate.getFullYear() > 2200 ||
+      endDate.getFullYear() < 1900 || endDate.getFullYear() > 2200 ||
+      isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      throw new Error('Invalid date range from Hijri conversion');
+    }
+
+    return { startDate, endDate };
+  } catch (err) {
+    console.warn('Hijri conversion failed:', err, 'Using Gregorian month fallback');
+    const now = new Date();
+    return {
+      startDate: new Date(now.getFullYear(), now.getMonth(), 1),
+      endDate: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999),
+    };
+  }
+}
+
+/**
+ * Get fuel purchases by Hijri month with stats for report
+ */
+export async function getFuelPurchasesByHijriMonth(hijriYear: number, hijriMonth: number, carId?: string) {
+  const { startDate, endDate } = getHijriMonthRange(hijriYear, hijriMonth);
+
+  const fuelWhere: Record<string, unknown> = {
+    createdAt: { gte: startDate, lte: endDate },
+  };
+
+  if (carId) {
+    fuelWhere.carId = carId;
+  }
+
+  // Get fuel purchases
+  const purchases = await prisma.fuelPurchase.findMany({
+    where: fuelWhere,
+    orderBy: { createdAt: 'desc' },
+    include: {
+      car: { select: { id: true, name: true, licensePlate: true } },
+      transaction: {
+        include: {
+          user: { select: { name: true } },
+        },
+      },
+    },
+  });
+
+  // Calculate stats
+  const totalPurchases = purchases.length;
+  const totalAmount = purchases.reduce((sum, p) => sum + p.totalAmount, 0);
+
+  // Get income for this period (fuel fund)
+  const incomeTotal = await prisma.transaction.aggregate({
+    where: {
+      type: TransactionType.INCOME,
+      date: { gte: startDate, lte: endDate },
+      deletedAt: null,
+    },
+    _sum: { amount: true },
+  });
+  const totalIncome = incomeTotal._sum.amount ?? 0;
+
+  // Unique cars
+  const uniqueCars = new Set(purchases.map((p) => p.carId)).size;
+
+  // Fuel by car summary
+  const fuelByCarMap = new Map<string, { name: string; plate: string | null; amount: number; count: number }>();
+  for (const p of purchases) {
+    const existing = fuelByCarMap.get(p.carId);
+    if (existing) {
+      existing.amount += p.totalAmount;
+      existing.count += 1;
+    } else {
+      fuelByCarMap.set(p.carId, {
+        name: p.car.name,
+        plate: p.car.licensePlate,
+        amount: p.totalAmount,
+        count: 1,
+      });
+    }
+  }
+  const fuelByCar = Array.from(fuelByCarMap.values()).sort((a, b) => b.amount - a.amount);
+
+  return {
+    purchases,
+    stats: {
+      totalPurchases,
+      totalAmount,
+      totalIncome,
+      balance: totalIncome - totalAmount,
+      uniqueCars,
+    },
+    fuelByCar,
+    dateRange: {
+      startDate,
+      endDate,
+    },
+  };
+}
+
