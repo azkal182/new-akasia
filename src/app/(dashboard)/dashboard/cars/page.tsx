@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Plus, Car, Fuel, FileText, MoreHorizontal } from 'lucide-react';
+import { Plus, Car, Fuel, FileText, MoreHorizontal, ClipboardList } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,12 @@ export default async function CarsPage() {
           <p className="text-sm text-muted-foreground">Kelola kendaraan operasional</p>
         </div>
         <div className="flex gap-2">
+          <Link href="/dashboard/cars/report">
+            <Button variant="outline" size="sm" className="border-border hover:bg-muted">
+              <ClipboardList className="mr-1.5 h-4 w-4" />
+              <span className="hidden sm:inline">Laporan</span>
+            </Button>
+          </Link>
           <Link href="/dashboard/cars/usage">
             <Button variant="outline" size="sm" className="border-border hover:bg-muted">
               <Car className="mr-1.5 h-4 w-4" />
@@ -97,66 +103,65 @@ export default async function CarsPage() {
             return (
               <Link key={car.id} href={`/dashboard/cars/${car.id}`} className="block">
                 <Card className="border-border bg-card/60 hover:border-border hover:bg-muted/60 transition-colors cursor-pointer">
-                <CardHeader className="flex flex-row items-start justify-between pb-2">
-                  <div className="flex items-center gap-3">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                      isInUse ? 'bg-amber-500/20' : 'bg-blue-500/20'
-                    }`}>
-                      <Car className={`h-5 w-5 ${isInUse ? 'text-amber-500' : 'text-blue-500'}`} />
+                  <CardHeader className="flex flex-row items-start justify-between pb-2">
+                    <div className="flex items-center gap-3">
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isInUse ? 'bg-amber-500/20' : 'bg-blue-500/20'
+                        }`}>
+                        <Car className={`h-5 w-5 ${isInUse ? 'text-amber-500' : 'text-blue-500'}`} />
+                      </div>
+                      <div>
+                        <CardTitle className="text-base text-foreground">{car.name}</CardTitle>
+                        <p className="text-sm text-muted-foreground">{car.licensePlate}</p>
+                      </div>
                     </div>
-                    <div>
-                      <CardTitle className="text-base text-foreground">{car.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{car.licensePlate}</p>
-                    </div>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-muted-foreground">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="border-border bg-card">
-                      <DropdownMenuItem className="text-foreground">
-                        <Link href={`/dashboard/cars/${car.id}`}>Lihat Detail</Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-foreground">
-                        <Link href={`/dashboard/cars/${car.id}/edit`}>Edit</Link>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Badge
-                        variant="outline"
-                        className={isInUse
-                          ? 'border-amber-500/50 text-amber-400'
-                          : 'border-emerald-500/50 text-emerald-400'
-                        }
-                      >
-                        {isInUse ? 'Digunakan' : 'Tersedia'}
-                      </Badge>
-                      {isInUse && car.usageRecords[0]?.user && (
-                        <span className="text-xs text-muted-foreground">
-                          oleh {car.usageRecords[0].user.name}
-                        </span>
-                      )}
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-muted-foreground">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="border-border bg-card">
+                        <DropdownMenuItem className="text-foreground">
+                          <Link href={`/dashboard/cars/${car.id}`}>Lihat Detail</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-foreground">
+                          <Link href={`/dashboard/cars/${car.id}/edit`}>Edit</Link>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Badge
+                          variant="outline"
+                          className={isInUse
+                            ? 'border-amber-500/50 text-amber-400'
+                            : 'border-emerald-500/50 text-emerald-400'
+                          }
+                        >
+                          {isInUse ? 'Digunakan' : 'Tersedia'}
+                        </Badge>
+                        {isInUse && car.usageRecords[0]?.user && (
+                          <span className="text-xs text-muted-foreground">
+                            oleh {car.usageRecords[0].user.name}
+                          </span>
+                        )}
+                      </div>
 
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Fuel className="h-4 w-4" />
-                        <span>{car._count.fuelPurchases} BBM</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <FileText className="h-4 w-4" />
-                        <span>{car._count.taxes} Pajak</span>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Fuel className="h-4 w-4" />
+                          <span>{car._count.fuelPurchases} BBM</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <FileText className="h-4 w-4" />
+                          <span>{car._count.taxes} Pajak</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-              </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
               </Link>
             );
           })

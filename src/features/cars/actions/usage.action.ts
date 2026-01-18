@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { CarStatus } from '@/generated/prisma/enums';
 import { z } from 'zod';
+import moment from 'moment-hijri';
 
 const createUsageRecordSchema = z.object({
   carId: z.string().uuid('Pilih kendaraan'),
@@ -198,4 +199,99 @@ export async function endCarUsage(data: EndUsageRecordInput) {
     console.error('Failed to end car usage:', error);
     return { error: 'Gagal mengakhiri penggunaan kendaraan' };
   }
+}
+
+// Helper function to convert Hijri date range to Gregorian
+function getHijriMonthRange(hijriYear: number, hijriMonth: number) {
+  try {
+    const startStr = `${hijriYear}/${hijriMonth}/1`;
+    const startHijri = moment(startStr, 'iYYYY/iM/iD');
+
+    let nextMonth = hijriMonth + 1;
+    let nextYear = hijriYear;
+    if (nextMonth > 12) {
+      nextMonth = 1;
+      nextYear++;
+    }
+    const endStr = `${nextYear}/${nextMonth}/1`;
+    const endHijri = moment(endStr, 'iYYYY/iM/iD').subtract(1, 'day').endOf('day');
+
+    const startDate = startHijri.toDate();
+    const endDate = endHijri.toDate();
+
+    if (startDate.getFullYear() < 1900 || startDate.getFullYear() > 2200 ||
+      endDate.getFullYear() < 1900 || endDate.getFullYear() > 2200 ||
+      isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      throw new Error('Invalid date range from Hijri conversion');
+    }
+
+    return { startDate, endDate };
+  } catch (err) {
+    console.warn('Hijri conversion failed:', err, 'Using Gregorian month fallback');
+    const now = new Date();
+    return {
+      startDate: new Date(now.getFullYear(), now.getMonth(), 1),
+      endDate: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999),
+    };
+  }
+}
+
+/**
+ * Get usage records by Hijri month with statistics
+ */
+export async function getUsageRecordsByHijriMonth(hijriYear: number, hijriMonth: number, carId?: string) {
+  const { startDate, endDate } = getHijriMonthRange(hijriYear, hijriMonth);
+
+  const where: Record<string, unknown> = {
+    startTime: { gte: startDate, lte: endDate },
+  };
+
+  if (carId) {
+    where.carId = carId;
+  }
+
+  const records = await prisma.usageRecord.findMany({
+    where,
+    orderBy: { startTime: 'desc' },
+    include: {
+      car: { select: { id: true, name: true, licensePlate: true } },
+      user: { select: { id: true, name: true, username: true } },
+    },
+  });
+
+  // Calculate stats
+  const totalTrips = records.length;
+  const completedTrips = records.filter((r) => r.endTime !== null).length;
+  const ongoingTrips = records.filter((r) => r.endTime === null).length;
+
+  // Calculate total duration for completed trips (in hours)
+  const totalDurationMs = records
+    .filter((r) => r.endTime !== null)
+    .reduce((sum, r) => {
+      const duration = r.endTime!.getTime() - r.startTime.getTime();
+      return sum + duration;
+    }, 0);
+  const totalDurationHours = Math.round(totalDurationMs / (1000 * 60 * 60) * 10) / 10;
+
+  // Get unique cars used
+  const uniqueCars = new Set(records.map((r) => r.carId)).size;
+
+  // Get unique drivers
+  const uniqueDrivers = new Set(records.map((r) => r.userId)).size;
+
+  return {
+    records,
+    stats: {
+      totalTrips,
+      completedTrips,
+      ongoingTrips,
+      totalDurationHours,
+      uniqueCars,
+      uniqueDrivers,
+    },
+    dateRange: {
+      startDate,
+      endDate,
+    },
+  };
 }
