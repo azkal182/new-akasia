@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import moment from 'moment-hijri';
-import { ArrowLeft, FileText, Filter, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { ArrowLeft, FileText, Filter, ArrowUpRight, ArrowDownRight, Download, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -45,8 +45,29 @@ export default function FinanceReportPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [stats, setStats] = useState({ totalIncome: 0, totalExpense: 0, openingBalance: 0, closingBalance: 0, previousMonthBalance: 0 });
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
 
   const years = Array.from({ length: 7 }, (_, i) => currentHijriYear - 5 + i);
+
+  const handleDownloadPDF = async () => {
+    setGenerating(true);
+    try {
+      const response = await fetch(`/api/reports/finance?year=${hijriYear}&month=${hijriMonth}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Laporan-Keuangan-${hijriYear}-${hijriMonth}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -66,18 +87,37 @@ export default function FinanceReportPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard/finance">
-          <Button variant="ghost" size="icon" className="text-muted-foreground">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Laporan Keuangan</h1>
-          <p className="text-muted-foreground">
-            {hijriMonths.find((m) => m.value === hijriMonth)?.label} {hijriYear}H
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard/finance">
+            <Button variant="ghost" size="icon" className="text-muted-foreground">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Laporan Keuangan</h1>
+            <p className="text-muted-foreground">
+              {hijriMonths.find((m) => m.value === hijriMonth)?.label} {hijriYear}H
+            </p>
+          </div>
         </div>
+        <Button
+          onClick={handleDownloadPDF}
+          disabled={generating}
+          className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50"
+        >
+          {generating ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Download className="mr-2 h-4 w-4" />
+              Download PDF
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Filter */}
@@ -216,11 +256,10 @@ export default function FinanceReportPage() {
                           <TableCell className="text-foreground">{formatDate(trx.date)}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <div className={`flex h-6 w-6 items-center justify-center rounded-full ${
-                                trx.type === 'INCOME'
-                                  ? 'bg-emerald-500/20 text-emerald-500'
-                                  : 'bg-red-500/20 text-red-400'
-                              }`}>
+                              <div className={`flex h-6 w-6 items-center justify-center rounded-full ${trx.type === 'INCOME'
+                                ? 'bg-emerald-500/20 text-emerald-500'
+                                : 'bg-red-500/20 text-red-400'
+                                }`}>
                                 {trx.type === 'INCOME' ? (
                                   <ArrowUpRight className="h-3 w-3" />
                                 ) : (

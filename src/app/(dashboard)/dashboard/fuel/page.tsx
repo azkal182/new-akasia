@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { Plus, Fuel, ArrowUpRight, ArrowDownRight, Calendar, ClipboardList } from 'lucide-react';
+import { Plus, Fuel, ArrowUpRight, Calendar, ClipboardList } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -93,8 +93,8 @@ async function FuelTransactionsList() {
                 <div className="flex items-center gap-3">
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-full ${trx.type === 'INCOME'
-                        ? 'bg-emerald-500/20 text-emerald-500'
-                        : 'bg-amber-500/20 text-amber-400'
+                      ? 'bg-emerald-500/20 text-emerald-500'
+                      : 'bg-amber-500/20 text-amber-400'
                       }`}
                   >
                     {trx.type === 'INCOME' ? (
@@ -127,8 +127,8 @@ async function FuelTransactionsList() {
                   <Badge
                     variant="outline"
                     className={`text-xs ${trx.type === 'INCOME'
-                        ? 'border-emerald-500/50 text-emerald-400'
-                        : 'border-amber-500/50 text-amber-400'
+                      ? 'border-emerald-500/50 text-emerald-400'
+                      : 'border-amber-500/50 text-amber-400'
                       }`}
                   >
                     {trx.type === 'INCOME' ? 'Pemasukan' : 'BBM'}
