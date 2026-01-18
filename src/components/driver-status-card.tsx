@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { formatDate, formatRupiah } from '@/lib/utils';
 import { endCarUsage, getCurrentUserDrivingStatus } from '@/features/cars/actions';
 import { purchaseFuel } from '@/features/fuel/actions';
+import { QRCodeDisplay } from '@/components/ui/qrcode-display';
 
 type DrivingStatus = Awaited<ReturnType<typeof getCurrentUserDrivingStatus>>;
 
@@ -143,6 +144,16 @@ export function DriverStatusCard({ drivingStatus, onStatusChange }: DriverStatus
           </div>
         </CardContent>
       </Card>
+
+      {/* QR Code Display */}
+      {drivingStatus.car.barcodeString && (
+        <QRCodeDisplay
+          value={drivingStatus.car.barcodeString}
+          carName={drivingStatus.car.name}
+          licensePlate={drivingStatus.car.licensePlate}
+          className="mt-4"
+        />
+      )}
 
       {/* End Usage Dialog */}
       <Dialog open={showEndDialog} onOpenChange={setShowEndDialog}>

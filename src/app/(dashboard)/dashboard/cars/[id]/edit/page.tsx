@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { getCarById, updateCar } from '@/features/cars/actions';
+import { BarcodeScanner } from '@/components/inputs/barcode-scanner';
 
 const carSchema = z.object({
   name: z.string().min(1, 'Nama mobil wajib diisi'),
@@ -153,6 +154,14 @@ export default function EditCarPage({ params }: EditCarPageProps) {
                 placeholder="CAR-001"
                 className="border-border bg-muted/60 text-foreground"
               />
+              <div className="pt-2">
+                <p className="mb-2 text-xs text-muted-foreground">
+                  Atau scan dari foto:
+                </p>
+                <BarcodeScanner
+                  onDetected={(code) => form.setValue('barcodeString', code)}
+                />
+              </div>
             </div>
 
             <div className="flex gap-3 pt-4">

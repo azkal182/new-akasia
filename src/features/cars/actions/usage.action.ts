@@ -79,7 +79,7 @@ export async function getCurrentUserDrivingStatus() {
       endTime: null,
     },
     include: {
-      car: { select: { id: true, name: true, licensePlate: true } },
+      car: { select: { id: true, name: true, licensePlate: true, barcodeString: true } },
     },
   });
 

@@ -18,6 +18,7 @@ import { purchaseFuel } from '@/features/fuel/actions';
 import { getCars } from '@/features/cars/actions';
 import { formatRupiah } from '@/lib/utils';
 import { NominalInput } from '@/components/inputs/nominal-input';
+import { QRCodeDisplay } from '@/components/ui/qrcode-display';
 
 const fuelSchema = z.object({
   carId: z.string().uuid('Pilih kendaraan'),
@@ -27,12 +28,13 @@ const fuelSchema = z.object({
 });
 
 type FuelFormData = z.infer<typeof fuelSchema>;
-type Car = { id: string; name: string; licensePlate: string | null };
+type Car = { id: string; name: string; licensePlate: string | null; barcodeString: string | null };
 
 export default function FuelPurchasePage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cars, setCars] = useState<Car[]>([]);
+  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const receiptInputRef = useRef<HTMLInputElement>(null);
@@ -116,7 +118,11 @@ export default function FuelPurchasePage() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label className="text-foreground">Kendaraan</Label>
-              <Select onValueChange={(v) => form.setValue('carId', v)}>
+              <Select onValueChange={(v) => {
+                form.setValue('carId', v);
+                const car = cars.find((c) => c.id === v);
+                setSelectedCar(car || null);
+              }}>
                 <SelectTrigger className="border-border bg-muted/60 text-foreground">
                   <SelectValue placeholder="Pilih kendaraan" />
                 </SelectTrigger>
@@ -132,6 +138,15 @@ export default function FuelPurchasePage() {
                 <p className="text-sm text-red-400">{form.formState.errors.carId.message}</p>
               )}
             </div>
+
+            {/* QR Code Display */}
+            {selectedCar?.barcodeString && (
+              <QRCodeDisplay
+                value={selectedCar.barcodeString}
+                carName={selectedCar.name}
+                licensePlate={selectedCar.licensePlate}
+              />
+            )}
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
@@ -233,10 +248,10 @@ export default function FuelPurchasePage() {
             </div>
 
             <div className="flex gap-3 pt-4">
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-amber-600 hover:bg-amber-500"
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-amber-600 hover:bg-amber-500"
               >
                 {isSubmitting ? 'Menyimpan...' : 'Simpan'}
               </Button>

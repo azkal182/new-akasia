@@ -23,6 +23,7 @@ import {
   endCarUsage,
 } from '@/features/cars/actions';
 import { purchaseFuel } from '@/features/fuel/actions';
+import { QRCodeDisplay } from '@/components/ui/qrcode-display';
 
 type DrivingStatus = Awaited<ReturnType<typeof getCurrentUserDrivingStatus>>;
 type CarItem = { id: string; name: string; licensePlate: string | null; status: string };
@@ -319,6 +320,15 @@ export function DriverView() {
             <span>Selesai Mengendarai</span>
           </Button>
         </div>
+
+        {/* QR Code Display */}
+        {drivingStatus.car.barcodeString && (
+          <QRCodeDisplay
+            value={drivingStatus.car.barcodeString}
+            carName={drivingStatus.car.name}
+            licensePlate={drivingStatus.car.licensePlate}
+          />
+        )}
       </div>
 
       {/* End Driving Dialog */}
