@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { PerizinanStatus, TokenType } from "@/generated/prisma/enums";
 import { z } from "zod";
 import { randomUUID } from "crypto";
+import { sendWhatsApp, formatPerizinanMessage } from "@/lib/whatsapp";
 
 // ============================================
 // TOKEN GENERATION
@@ -165,6 +166,12 @@ export async function submitPublicPerizinan(
   }
 
   try {
+    // Get car info for notification
+    const car = await prisma.car.findUnique({
+      where: { id: validated.data.carId },
+      select: { name: true, licensePlate: true },
+    });
+
     const perizinan = await prisma.$transaction(async (tx) => {
       // Create the perizinan
       const newPerizinan = await tx.perizinan.create({
@@ -191,6 +198,38 @@ export async function submitPublicPerizinan(
       });
 
       return newPerizinan;
+    });
+
+    // Generate approval token for WhatsApp notification
+    const approvalToken = await prisma.perizinanToken.create({
+      data: {
+        token: randomUUID(),
+        type: TokenType.APPROVE,
+        perizinanId: perizinan.id,
+        expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48 hours
+      },
+    });
+
+    // Build approval URL
+    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const approvalUrl = `${baseUrl}/perizinan/approve/${approvalToken.token}`;
+
+    // Send WhatsApp notification (non-blocking)
+    const message = formatPerizinanMessage({
+      name: validated.data.name,
+      carName: car?.name || "Unknown",
+      licensePlate: car?.licensePlate || null,
+      purpose: validated.data.purpose,
+      destination: validated.data.destination,
+      date: validated.data.date,
+      numberOfPassengers: validated.data.numberOfPassengers,
+      estimation: validated.data.estimation,
+      approvalUrl,
+    });
+
+    // Send async without blocking the response
+    sendWhatsApp(message).catch((err) => {
+      console.error("WhatsApp notification failed:", err);
     });
 
     return { success: true, perizinan };
