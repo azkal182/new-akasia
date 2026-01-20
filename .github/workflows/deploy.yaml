@@ -200,6 +200,15 @@ jobs:
           echo "NEXT_PUBLIC_IS_PRODUCTION=production" >> .env
           echo "NEXT_PUBLIC_APP_VERSION=${{ needs.start_notify.outputs.project_version || '1.0.0' }}" >> .env
 
+          # setup nvm
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+          nvm use 24
+          node -v
+          pnpm -v
+          pnpm install --production
+
           # install prod deps
           if command -v pnpm >/dev/null 2>&1; then
             pnpm install --production
