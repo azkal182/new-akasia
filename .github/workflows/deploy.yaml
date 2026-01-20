@@ -207,14 +207,16 @@ jobs:
           nvm use 24
           node -v
           pnpm -v
-          pnpm install --production
+
 
           # install prod deps
           if command -v pnpm >/dev/null 2>&1; then
-            pnpm install --frozen-lockfile
+            # pnpm install --frozen-lockfile
+            pnpm install --production
           else
             npm i -g pnpm
-            pnpm install --frozen-lockfile
+            # pnpm install --frozen-lockfile
+            pnpm install --production
           fi
 
           # restart pm2
