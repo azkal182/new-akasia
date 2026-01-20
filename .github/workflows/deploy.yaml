@@ -98,8 +98,8 @@ jobs:
           echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env
 
           echo "HUSKY=0" >> .env
-          echo "NODE_ENV=production" >> .env
-          echo "NEXT_PUBLIC_IS_PRODUCTION=production" >> .env
+          # echo "NODE_ENV=production" >> .env
+          # echo "NEXT_PUBLIC_IS_PRODUCTION=production" >> .env
           echo "NEXT_PUBLIC_APP_VERSION=${{ needs.start_notify.outputs.project_version || '1.0.0' }}" >> .env
 
       - name: Install dependencies
@@ -196,8 +196,8 @@ jobs:
           echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env
 
           echo "HUSKY=0" >> .env
-          echo "NODE_ENV=production" >> .env
-          echo "NEXT_PUBLIC_IS_PRODUCTION=production" >> .env
+          # echo "NODE_ENV=production" >> .env
+          # echo "NEXT_PUBLIC_IS_PRODUCTION=production" >> .env
           echo "NEXT_PUBLIC_APP_VERSION=${{ needs.start_notify.outputs.project_version || '1.0.0' }}" >> .env
 
           # setup nvm
@@ -212,7 +212,7 @@ jobs:
           # install prod deps
           if command -v pnpm >/dev/null 2>&1; then
             pnpm install --frozen-lockfile
-            pnpm install --production
+            # pnpm install --production
           else
             npm i -g pnpm
             pnpm install --frozen-lockfile
