@@ -211,10 +211,10 @@ jobs:
 
           # install prod deps
           if command -v pnpm >/dev/null 2>&1; then
-            pnpm install --production
+            pnpm install --frozen-lockfile
           else
             npm i -g pnpm
-            pnpm install --production
+            pnpm install --frozen-lockfile
           fi
 
           # restart pm2
