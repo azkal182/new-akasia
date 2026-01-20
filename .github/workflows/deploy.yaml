@@ -151,24 +151,24 @@ jobs:
 
       - name: Clone or pull on VPS
         run: |
-          ssh -tt ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << 'EOF'
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << EOF
           set -e
           APP_DIR="/home/${{ secrets.VPS_USER }}/project/new-akasia"
 
-          if [ ! -d "$APP_DIR/.git" ]; then
+          if [ ! -d "\$APP_DIR/.git" ]; then
             echo "Directory not found or not a git repo, cloning..."
-            rm -rf "$APP_DIR"
+            rm -rf "\$APP_DIR"
             GIT_URL="https://${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git"
-            git clone "$GIT_URL" "$APP_DIR"
-            cd "$APP_DIR"
+            git clone "\$GIT_URL" "\$APP_DIR"
+            cd "\$APP_DIR"
             git checkout main
           else
             echo "Directory exists, pulling latest code..."
-            cd "$APP_DIR"
+            cd "\$APP_DIR"
             git pull origin main
           fi
-          exit
           EOF
+
 
       - name: Deploy to VPS
         run: |
