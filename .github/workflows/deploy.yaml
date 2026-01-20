@@ -174,7 +174,7 @@ jobs:
         run: |
           rsync -avz build-files.tar.gz ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }}:/home/${{ secrets.VPS_USER }}/project/new-akasia/
 
-          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << 'EOF'
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_IP }} << EOF
           set -e
           APP_DIR="/home/${{ secrets.VPS_USER }}/project/new-akasia"
           cd "$APP_DIR"
