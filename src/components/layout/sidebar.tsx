@@ -78,11 +78,11 @@ const adminMenuItems = [
     href: "/dashboard/users",
     icon: Users,
   },
-  {
-    title: "Pengaturan",
-    href: "/dashboard/settings",
-    icon: Settings,
-  },
+  //   {
+  //     title: "Pengaturan",
+  //     href: "/dashboard/settings",
+  //     icon: Settings,
+  //   },
 ];
 
 export function Sidebar({ user }: SidebarProps) {
@@ -119,7 +119,7 @@ export function Sidebar({ user }: SidebarProps) {
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
                   isActive
                     ? "bg-gradient-to-r from-blue-600/20 to-cyan-600/20 text-blue-400"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
                 )}
               >
                 <item.icon className="h-4 w-4" />
@@ -146,7 +146,7 @@ export function Sidebar({ user }: SidebarProps) {
                       "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
                       isActive
                         ? "bg-gradient-to-r from-blue-600/20 to-cyan-600/20 text-blue-400"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
                     )}
                   >
                     <item.icon className="h-4 w-4" />

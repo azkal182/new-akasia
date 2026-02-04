@@ -187,13 +187,13 @@ function TransactionList({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4 sm:space-y-3">
       {transactions.map((trx) => (
         <div
           key={trx.id}
-          className="flex items-center justify-between rounded-lg bg-muted/60 p-4"
+          className="flex flex-col gap-3 rounded-lg bg-muted/60 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-start gap-3 sm:items-center">
             <div
               className={`flex h-10 w-10 items-center justify-center rounded-full ${
                 trx.type === "INCOME"
@@ -219,8 +219,8 @@ function TransactionList({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-right">
+          <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-start">
+            <div className="text-left sm:text-right">
               <p
                 className={`font-semibold ${
                   trx.type === "INCOME" ? "text-emerald-500" : "text-red-400"

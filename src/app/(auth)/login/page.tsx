@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'sonner';
-import { Loader2, Car } from 'lucide-react';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { Loader2, Car } from "lucide-react";
 
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -14,18 +14,21 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 
-import { loginSchema, type LoginInput } from '@/features/auth/schemas/auth.schema';
-import { login } from '@/features/auth/actions/login.action';
+import {
+  loginSchema,
+  type LoginInput,
+} from "@/features/auth/schemas/auth.schema";
+import { login } from "@/features/auth/actions/login.action";
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -33,8 +36,8 @@ export default function LoginPage() {
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: '',
-      password: '',
+      username: "",
+      password: "",
     },
   });
 
@@ -45,10 +48,11 @@ export default function LoginPage() {
       if (result?.error) {
         toast.error(result.error);
       }
-    } catch {
-      toast.error('Terjadi kesalahan. Silakan coba lagi.');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      if (e == "Error: NEXT_REDIRECT") return; // biarkan redirect jalan
+      toast.error("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
-
       setIsLoading(false);
     }
   }
@@ -119,7 +123,7 @@ export default function LoginPage() {
                   Memproses...
                 </>
               ) : (
-                'Masuk'
+                "Masuk"
               )}
             </Button>
           </form>

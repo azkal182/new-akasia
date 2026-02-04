@@ -147,28 +147,28 @@ export default async function FuelPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Bahan Bakar</h1>
-          <p className="text-muted-foreground">Kelola cashflow BBM (kalender Hijri)</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Bahan Bakar</h1>
+          <p className="text-sm text-muted-foreground">Kelola cashflow BBM (kalender Hijri)</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Link href="/dashboard/fuel/report">
-            <Button variant="outline" className="border-border hover:bg-muted">
-              <ClipboardList className="mr-2 h-4 w-4" />
-              Laporan
+            <Button variant="outline" size="sm" className="border-border hover:bg-muted">
+              <ClipboardList className="mr-1.5 h-4 w-4" />
+              <span className="hidden sm:inline">Laporan</span>
             </Button>
           </Link>
           <Link href="/dashboard/fuel/income">
-            <Button className="bg-emerald-600 hover:bg-emerald-500">
-              <Plus className="mr-2 h-4 w-4" />
-              Pemasukan
+            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500">
+              <Plus className="mr-1.5 h-4 w-4" />
+              <span className="hidden sm:inline">Pemasukan</span>
             </Button>
           </Link>
           <Link href="/dashboard/fuel/purchase">
-            <Button variant="outline" className="border-border hover:bg-muted">
-              <Fuel className="mr-2 h-4 w-4" />
-              Isi BBM
+            <Button variant="outline" size="sm" className="border-border hover:bg-muted">
+              <Fuel className="mr-1.5 h-4 w-4" />
+              <span className="hidden sm:inline">Isi BBM</span>
             </Button>
           </Link>
         </div>
