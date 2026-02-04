@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import moment from 'moment-hijri';
-import { ArrowLeft, FileText, Filter, Car, Clock, Users, MapPin } from 'lucide-react';
+import { ArrowLeft, FileText, Filter, Car, Clock, Users, MapPin, Download, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -56,12 +56,40 @@ export default function CarsReportPage() {
         uniqueDrivers: 0,
     });
     const [loading, setLoading] = useState(true);
+    const [generating, setGenerating] = useState(false);
 
     const years = Array.from({ length: 7 }, (_, i) => currentHijriYear - 5 + i);
 
     useEffect(() => {
         getCars().then((data) => setCars(data));
     }, []);
+
+    const handleDownloadPDF = async () => {
+        setGenerating(true);
+        try {
+            const params = new URLSearchParams({
+                year: hijriYear.toString(),
+                month: hijriMonth.toString(),
+            });
+            if (selectedCarId !== 'all') {
+                params.set('carId', selectedCarId);
+            }
+            const response = await fetch(`/api/reports/cars?${params.toString()}`);
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Laporan-Armada-${hijriYear}-${hijriMonth}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }
+        } finally {
+            setGenerating(false);
+        }
+    };
 
     const loadData = useCallback(async () => {
         setLoading(true);
@@ -96,18 +124,37 @@ export default function CarsReportPage() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center gap-4">
-                <Link href="/dashboard/cars">
-                    <Button variant="ghost" size="icon" className="text-muted-foreground">
-                        <ArrowLeft className="h-5 w-5" />
-                    </Button>
-                </Link>
-                <div>
-                    <h1 className="text-2xl font-bold text-foreground">Laporan Riwayat Armada</h1>
-                    <p className="text-muted-foreground">
-                        {hijriMonths.find((m) => m.value === hijriMonth)?.label} {hijriYear}H
-                    </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
+                    <Link href="/dashboard/cars">
+                        <Button variant="ghost" size="icon" className="text-muted-foreground">
+                            <ArrowLeft className="h-5 w-5" />
+                        </Button>
+                    </Link>
+                    <div>
+                        <h1 className="text-2xl font-bold text-foreground">Laporan Riwayat Armada</h1>
+                        <p className="text-muted-foreground">
+                            {hijriMonths.find((m) => m.value === hijriMonth)?.label} {hijriYear}H
+                        </p>
+                    </div>
                 </div>
+                <Button
+                    onClick={handleDownloadPDF}
+                    disabled={generating}
+                    className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50"
+                >
+                    {generating ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Generating...
+                        </>
+                    ) : (
+                        <>
+                            <Download className="mr-2 h-4 w-4" />
+                            Download PDF
+                        </>
+                    )}
+                </Button>
             </div>
 
             {/* Filter */}

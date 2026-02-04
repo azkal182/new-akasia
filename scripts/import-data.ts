@@ -249,10 +249,10 @@ async function importData(filepath: string) {
 
     // Create lookup maps
     const incomeByTrxId = new Map(
-      data.incomes.map((i) => [i.transactionId, i])
+      data.incomes.map((i) => [i.transactionId, i]),
     );
     const expenseByTrxId = new Map(
-      data.expenses.map((e) => [e.transactionId, e])
+      data.expenses.map((e) => [e.transactionId, e]),
     );
     const itemsByExpenseId = new Map<string, OldItem[]>();
     for (const item of data.items) {
@@ -325,7 +325,7 @@ async function importData(filepath: string) {
                         total: item.total,
                         carId: car?.id,
                       };
-                    }
+                    },
                   ),
                 },
               },
@@ -344,10 +344,10 @@ async function importData(filepath: string) {
 
     // Create lookup maps
     const cashIncomeById = new Map(
-      data.cashIncomes.map((c) => [c.cashflowId, c])
+      data.cashIncomes.map((c) => [c.cashflowId, c]),
     );
     const fuelUsageById = new Map(
-      data.fuelUsages.map((f) => [f.cashflowId, f])
+      data.fuelUsages.map((f) => [f.cashflowId, f]),
     );
 
     let fuelCount = 0;
@@ -378,6 +378,7 @@ async function importData(filepath: string) {
                 literAmount: 0, // Not available in old data
                 pricePerLiter: 0, // Not available in old data
                 totalAmount: cashflow.amount, // Total amount from cashflow
+                createdAt: new Date(cashflow.date),
               },
             },
           },
@@ -422,7 +423,7 @@ async function importData(filepath: string) {
     console.log("📦 Importing pengajuans...");
     for (const pengajuan of data.pengajuans) {
       const items = data.pengajuanItems.filter(
-        (i) => i.pengajuanId === pengajuan.id
+        (i) => i.pengajuanId === pengajuan.id,
       );
 
       await prisma.pengajuan.upsert({

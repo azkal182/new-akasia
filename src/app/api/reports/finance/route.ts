@@ -195,8 +195,51 @@ export async function GET(request: NextRequest) {
     doc.text(formatRupiah(openingBalance), 43 + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4], y + 4, { width: colWidths[5] - 6, align: 'right' });
     y += rowHeight;
 
+    type ReceiptMeta = { date: Date; total: number; url: string };
+    type ReceiptResult = {
+        receipt: ReceiptMeta;
+        ok: boolean;
+        buffer?: Buffer;
+        status?: number;
+        error?: unknown;
+    };
+
+    async function prefetchReceipts(receipts: ReceiptMeta[], concurrency: number) {
+        const results: ReceiptResult[] = new Array(receipts.length);
+        let index = 0;
+
+        async function worker() {
+            while (true) {
+                const currentIndex = index++;
+                if (currentIndex >= receipts.length) {
+                    break;
+                }
+                const receipt = receipts[currentIndex];
+                try {
+                    console.log('[reports/finance] fetching receipt', receipt.url);
+                    const response = await fetch(receipt.url);
+                    if (!response.ok) {
+                        console.warn('[reports/finance] receipt fetch failed', receipt.url, response.status);
+                        results[currentIndex] = { receipt, ok: false, status: response.status };
+                        continue;
+                    }
+                    const buffer = Buffer.from(await response.arrayBuffer());
+                    results[currentIndex] = { receipt, ok: true, buffer };
+                } catch (err) {
+                    console.warn('[reports/finance] receipt fetch error', receipt.url, err);
+                    results[currentIndex] = { receipt, ok: false, error: err };
+                }
+            }
+        }
+
+        const workerCount = Math.max(1, Math.min(concurrency, receipts.length));
+        const workers = Array.from({ length: workerCount }, () => worker());
+        await Promise.all(workers);
+        return results;
+    }
+
     // Track receipts for attachment section
-    const receipts: { date: Date; total: number; url: string }[] = [];
+    const receipts: ReceiptMeta[] = [];
 
     for (const trx of transactions) {
         // Collect receipt if expense has one
@@ -323,6 +366,8 @@ export async function GET(request: NextRequest) {
 
     // Section 2: Receipt Attachments (new page)
     if (receipts.length > 0) {
+        const receiptResults = await prefetchReceipts(receipts, 3);
+
         doc.addPage();
         addWatermark();
         doc.fontSize(16).font('Helvetica-Bold').text('Lampiran Nota', { align: 'center' });
@@ -333,7 +378,8 @@ export async function GET(request: NextRequest) {
         const pageWidth = 515;
         let imageCount = 0;
 
-        for (const receipt of receipts) {
+        for (const result of receiptResults) {
+            const receipt = result.receipt;
             // Check if need new page (2 images per page)
             if (imageCount >= 2) {
                 doc.addPage();
@@ -350,24 +396,16 @@ export async function GET(request: NextRequest) {
             doc.text(`Total: Rp ${formatRupiah(receipt.total)}`, { align: 'center' });
             doc.moveDown(0.5);
 
-            // Try to fetch and embed image
-            try {
-                const imageResponse = await fetch(receipt.url);
-                if (imageResponse.ok) {
-                    const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
-                    // Calculate center position for image
-                    const imageX = 40 + (pageWidth - maxImageWidth) / 2;
-                    doc.image(imageBuffer, imageX, doc.y, {
-                        fit: [maxImageWidth, maxImageHeight],
-                        align: 'center',
-                    });
-                    doc.y += maxImageHeight + 10;
-                } else {
-                    doc.fontSize(9).font('Helvetica').text(`[Gambar tidak tersedia]`, { align: 'center' });
-                    doc.moveDown(2);
-                }
-            } catch {
-                doc.fontSize(9).font('Helvetica').text(`[Gagal memuat gambar]`, { align: 'center' });
+            if (result.ok && result.buffer) {
+                // Calculate center position for image
+                const imageX = 40 + (pageWidth - maxImageWidth) / 2;
+                doc.image(result.buffer, imageX, doc.y, {
+                    fit: [maxImageWidth, maxImageHeight],
+                    align: 'center',
+                });
+                doc.y += maxImageHeight + 10;
+            } else {
+                doc.fontSize(9).font('Helvetica').text(`[Gambar tidak tersedia]`, { align: 'center' });
                 doc.moveDown(2);
             }
 
