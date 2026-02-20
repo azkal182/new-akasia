@@ -148,7 +148,7 @@ export default function FinanceReportPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-end gap-4">
+          <div className="flex flex-wrap items-end gap-4">
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Tahun</Label>
               <Select value={hijriYear.toString()} onValueChange={(v) => setHijriYear(parseInt(v))}>
