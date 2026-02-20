@@ -236,7 +236,7 @@ export function DriverView() {
                   onChange={(e) => setDestination(e.target.value)}
                   placeholder="Jakarta, Bandung, dll"
                   className="border-border bg-muted/60 text-foreground"
-                  inputMode="numeric"
+                  
                 />
               </div>
               <div className="space-y-2">
@@ -249,6 +249,7 @@ export function DriverView() {
                   onChange={(e) => setEstimatedDays(e.target.value)}
                   placeholder="Contoh: 1 (untuk harian), 2, dst"
                   className="border-border bg-muted/60 text-foreground"
+                  inputMode="numeric"
                 />
               </div>
             </div>
