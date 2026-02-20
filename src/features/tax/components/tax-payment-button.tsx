@@ -12,15 +12,24 @@ import { payTax } from '@/features/tax/actions';
 
 interface TaxPaymentButtonProps {
   taxId: string;
+  taxType: string;
   carLabel: string;
+  dueDate: Date;
 }
 
-export function TaxPaymentButton({ taxId, carLabel }: TaxPaymentButtonProps) {
+export function TaxPaymentButton({ taxId, taxType, carLabel, dueDate }: TaxPaymentButtonProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [amount, setAmount] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
+  const [generateNextTax, setGenerateNextTax] = useState(true);
+
+  // Pre-calculate next year's due date
+  const defaultNextDate = new Date(dueDate);
+  defaultNextDate.setFullYear(defaultNextDate.getFullYear() + 1);
+  const nextDateString = defaultNextDate.toISOString().split('T')[0];
+  const [nextDueDate, setNextDueDate] = useState<string>(nextDateString);
 
   async function handleSubmit() {
     if (!amount || amount <= 0) {
@@ -34,6 +43,7 @@ export function TaxPaymentButton({ taxId, carLabel }: TaxPaymentButtonProps) {
         taxId,
         amount,
         notes: notes.trim() || undefined,
+        nextDueDate: generateNextTax && nextDueDate ? new Date(nextDueDate) : undefined,
       });
       if (result.error) {
         toast.error(result.error);
@@ -85,6 +95,43 @@ export function TaxPaymentButton({ taxId, carLabel }: TaxPaymentButtonProps) {
                 placeholder="Nomor kwitansi, lokasi pembayaran, dll"
                 className="border-border bg-muted/60 text-foreground"
               />
+            </div>
+
+            <div className="space-y-3 pt-4 border-t border-border">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="generateNextTax"
+                  checked={generateNextTax}
+                  onChange={(e) => setGenerateNextTax(e.target.checked)}
+                  className="rounded border-border text-emerald-600 focus:ring-emerald-500"
+                />
+                <Label htmlFor="generateNextTax" className="text-foreground font-medium">
+                  {taxType === 'FIVE_YEAR' 
+                    ? 'Buat Siklus Pajak 5 Tahun Berikutnya' 
+                    : 'Buat Jadwal Pajak Tahun Depan'}
+                </Label>
+              </div>
+              
+              {generateNextTax && (
+                <div className="space-y-2 pl-6">
+                  <Label htmlFor="nextDueDate" className="text-sm text-muted-foreground">
+                    Tgl. Jatuh Tempo Berikutnya
+                  </Label>
+                  <input
+                    id="nextDueDate"
+                    type="date"
+                    value={nextDueDate}
+                    onChange={(e) => setNextDueDate(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-border bg-muted/60 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {taxType === 'FIVE_YEAR'
+                      ? 'Akan otomatis menjadwalkan 4 Pajak Tahunan dan diakhiri dengan 1 Pajak 5 Tahunan.'
+                      : 'Otomatis dijadwalkan untuk tipe Pajak Tahunan (ANNUAL)'}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>

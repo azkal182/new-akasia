@@ -13,15 +13,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { createTax } from '@/features/tax/actions';
 import { getCars } from '@/features/cars/actions';
 
 const taxSchema = z.object({
   carId: z.string().uuid('Pilih kendaraan'),
-  type: z.enum(['ANNUAL', 'FIVE_YEAR']),
+  type: z.literal('FIVE_YEAR'),
   dueDate: z.string().min(1, 'Tanggal jatuh tempo wajib diisi'),
   notes: z.string().optional(),
+  generateCycle: z.boolean().optional(),
 });
 
 type TaxFormData = z.infer<typeof taxSchema>;
@@ -41,9 +43,10 @@ export default function NewTaxPage() {
     resolver: zodResolver(taxSchema),
     defaultValues: {
       carId: '',
-      type: 'ANNUAL',
+      type: 'FIVE_YEAR',
       dueDate: '',
       notes: '',
+      generateCycle: true,
     },
   });
 
@@ -52,9 +55,10 @@ export default function NewTaxPage() {
     try {
       const result = await createTax({
         carId: data.carId,
-        type: data.type as 'ANNUAL' | 'FIVE_YEAR',
+        type: 'FIVE_YEAR',
         dueDate: new Date(data.dueDate),
         notes: data.notes,
+        generateCycle: data.generateCycle,
       });
       if (result.error) {
         toast.error(result.error);
@@ -94,6 +98,14 @@ export default function NewTaxPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <Alert className="bg-blue-50/50 border-blue-200 text-blue-800">
+              <FileText className="h-4 w-4 stroke-blue-600" />
+              <AlertTitle>Informasi Pendataan Pajak</AlertTitle>
+              <AlertDescription className="text-blue-700/90 text-sm">
+                Formulir ini khusus untuk mendata tanggal acuan <strong>Pajak 5 Tahunan (STNK / Ganti Plat)</strong>. Pajak tahunan di antaranya akan dibuatkan atau otomatis ter-<em>generate</em> ketika Anda melakukan pembayaran.
+              </AlertDescription>
+            </Alert>
+
             <div className="space-y-2">
               <Label className="text-foreground">Kendaraan</Label>
               <Select onValueChange={(v) => form.setValue('carId', v)}>
@@ -114,21 +126,8 @@ export default function NewTaxPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-foreground">Jenis Pajak</Label>
-              <Select defaultValue="ANNUAL" onValueChange={(v) => form.setValue('type', v as 'ANNUAL' | 'FIVE_YEAR')}>
-                <SelectTrigger className="border-border bg-muted/60 text-foreground">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="border-border bg-card">
-                  <SelectItem value="ANNUAL">Pajak Tahunan</SelectItem>
-                  <SelectItem value="FIVE_YEAR">STNK 5 Tahunan</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="dueDate" className="text-foreground">
-                Tanggal Jatuh Tempo
+                Tanggal Jatuh Tempo STNK 5 Tahunan
               </Label>
               <Input
                 id="dueDate"
@@ -141,7 +140,24 @@ export default function NewTaxPage() {
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="flex items-center space-x-2 pt-2">
+              <input
+                type="checkbox"
+                id="generateCycle"
+                {...form.register('generateCycle')}
+                className="rounded border-border text-blue-600 focus:ring-blue-500"
+              />
+              <div className="space-y-1 leading-none">
+                <Label htmlFor="generateCycle" className="text-foreground font-medium">
+                  Generate Pajak Tahunan Sebelumnya (Backfill)
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Akan otomatis mengisi riwayat pajak Tahunan (ANNUAL) ke belakang dari tanggal STNK 5 Tahunan hingga tahun saat ini.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-2">
               <Label htmlFor="notes" className="text-foreground">
                 Catatan (Opsional)
               </Label>

@@ -134,7 +134,9 @@ export default async function TaxPage() {
                         {!tax.isPaid && (
                           <TaxPaymentButton
                             taxId={tax.id}
+                            taxType={tax.type}
                             carLabel={`${tax.car.name} • ${tax.car.licensePlate ?? '-'}`}
+                            dueDate={tax.dueDate}
                           />
                         )}
                       </div>

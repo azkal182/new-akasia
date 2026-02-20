@@ -11,12 +11,14 @@ const createTaxSchema = z.object({
   type: z.nativeEnum(TaxType),
   dueDate: z.coerce.date(),
   notes: z.string().optional(),
+  generateCycle: z.boolean().optional(),
 });
 
 const payTaxSchema = z.object({
   taxId: z.string().uuid(),
   amount: z.coerce.number().int().positive("Amount must be positive"),
   notes: z.string().optional(),
+  nextDueDate: z.coerce.date().optional(),
 });
 
 export type CreateTaxInput = z.infer<typeof createTaxSchema>;
@@ -75,14 +77,50 @@ export async function createTax(data: CreateTaxInput) {
   }
 
   try {
-    const tax = await prisma.tax.create({
-      data: {
+    let tax;
+    if (validated.data.generateCycle) {
+      const taxesToCreate = [];
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
+
+      // 1. The initial tax
+      taxesToCreate.push({
         carId: validated.data.carId,
         type: validated.data.type,
         dueDate: validated.data.dueDate,
         notes: validated.data.notes ?? null,
-      },
-    });
+      });
+
+      // 2. Backfill annual taxes until current date if type is FIVE_YEAR
+      if (validated.data.type === TaxType.FIVE_YEAR) {
+        const backfillDate = new Date(validated.data.dueDate);
+        backfillDate.setFullYear(backfillDate.getFullYear() - 1);
+
+        while (backfillDate > currentDate) {
+          taxesToCreate.push({
+            carId: validated.data.carId,
+            type: TaxType.ANNUAL,
+            dueDate: new Date(backfillDate),
+            notes: "Auto-generated backfill from future 5-year tax",
+          });
+          backfillDate.setFullYear(backfillDate.getFullYear() - 1);
+        }
+      }
+
+      const txResult = await prisma.$transaction(
+        taxesToCreate.map((data) => prisma.tax.create({ data })),
+      );
+      tax = txResult[0]; // Return the first one representing the current input
+    } else {
+      tax = await prisma.tax.create({
+        data: {
+          carId: validated.data.carId,
+          type: validated.data.type,
+          dueDate: validated.data.dueDate,
+          notes: validated.data.notes ?? null,
+        },
+      });
+    }
 
     revalidatePath("/dashboard/tax");
     return { success: true, tax };
@@ -104,8 +142,18 @@ export async function payTax(data: PayTaxInput) {
   }
 
   try {
-    // Create payment and update tax status
-    await prisma.$transaction([
+    const existingTax = await prisma.tax.findUnique({
+      where: { id: validated.data.taxId },
+    });
+
+    if (!existingTax) {
+      return { error: "Pajak tidak ditemukan" };
+    }
+
+    const transactions = [];
+
+    // 1. Create payment
+    transactions.push(
       prisma.taxPayment.create({
         data: {
           taxId: validated.data.taxId,
@@ -113,6 +161,10 @@ export async function payTax(data: PayTaxInput) {
           notes: validated.data.notes ?? null,
         },
       }),
+    );
+
+    // 2. Update current tax to paid
+    transactions.push(
       prisma.tax.update({
         where: { id: validated.data.taxId },
         data: {
@@ -120,7 +172,83 @@ export async function payTax(data: PayTaxInput) {
           paidAt: new Date(),
         },
       }),
-    ]);
+    );
+
+    // 3. Create next tax if requested
+    if (validated.data.nextDueDate) {
+      if (existingTax.type === TaxType.FIVE_YEAR) {
+        // Generate 5-year cycle: 4 annual, 1 five-year
+        const cycleTaxes = [];
+        for (let i = 0; i < 4; i++) {
+          const nextDate = new Date(validated.data.nextDueDate);
+          nextDate.setFullYear(nextDate.getFullYear() + i);
+          cycleTaxes.push({
+            carId: existingTax.carId,
+            type: TaxType.ANNUAL,
+            dueDate: nextDate,
+            notes: "Auto-generated from 5-Year payment",
+          });
+        }
+
+        const fifthDate = new Date(validated.data.nextDueDate);
+        fifthDate.setFullYear(fifthDate.getFullYear() + 4);
+        cycleTaxes.push({
+          carId: existingTax.carId,
+          type: TaxType.FIVE_YEAR,
+          dueDate: fifthDate,
+          notes: "Auto-generated from 5-Year payment",
+        });
+
+        for (const data of cycleTaxes) {
+          transactions.push(prisma.tax.create({ data }));
+        }
+      } else {
+        // For ANNUAL tax, check if ANY future tax (ANNUAL or FIVE_YEAR) already exists that month
+        const targetYear = validated.data.nextDueDate.getFullYear();
+        const targetMonth = validated.data.nextDueDate.getMonth();
+
+        const startOfMonth = new Date(targetYear, targetMonth, 1);
+        const endOfMonth = new Date(targetYear, targetMonth + 1, 1);
+
+        const existingFutureTax = await prisma.tax.findFirst({
+          where: {
+            carId: existingTax.carId,
+            isPaid: false,
+            dueDate: {
+              gte: startOfMonth,
+              lt: endOfMonth,
+            },
+          },
+        });
+
+        if (existingFutureTax) {
+          // Hanya update tanggalnya saja, biarkan tipe pajaknya (bisa jadi memang FIVE_YEAR)
+          transactions.push(
+            prisma.tax.update({
+              where: { id: existingFutureTax.id },
+              data: {
+                dueDate: validated.data.nextDueDate,
+                // optionally update notes to reflect it was synced
+              },
+            }),
+          );
+        } else {
+          // Jika tidak ada data sama sekali tahun depan, default buat ANNUAL
+          transactions.push(
+            prisma.tax.create({
+              data: {
+                carId: existingTax.carId,
+                type: TaxType.ANNUAL,
+                dueDate: validated.data.nextDueDate,
+                notes: "Auto-generated from previous payment",
+              },
+            }),
+          );
+        }
+      }
+    }
+
+    await prisma.$transaction(transactions);
 
     revalidatePath("/dashboard/tax");
     revalidatePath("/dashboard");
