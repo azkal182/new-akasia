@@ -78,7 +78,7 @@ export default async function FinancePage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -86,7 +86,7 @@ export default async function FinancePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">
+            <div className="text-xl font-bold text-foreground">
               {formatRupiah(balance)}
             </div>
           </CardContent>
@@ -99,7 +99,7 @@ export default async function FinancePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-500">
+            <div className="text-xl font-bold text-emerald-500">
               {formatRupiah(monthlyStats.totalIncome)}
             </div>
           </CardContent>
@@ -112,7 +112,7 @@ export default async function FinancePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-400">
+            <div className="text-xl font-bold text-red-400">
               {formatRupiah(monthlyStats.totalExpense)}
             </div>
           </CardContent>
@@ -126,7 +126,7 @@ export default async function FinancePage() {
           </CardHeader>
           <CardContent>
             <div
-              className={`text-2xl font-bold ${
+              className={`text-xl font-bold ${
                 monthlyStats.net >= 0 ? "text-emerald-500" : "text-red-400"
               }`}
             >

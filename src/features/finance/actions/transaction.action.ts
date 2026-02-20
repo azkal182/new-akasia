@@ -1,21 +1,21 @@
-'use server';
+"use server";
 
-import { revalidatePath } from 'next/cache';
-import { prisma } from '@/lib/prisma';
-import { TransactionType } from '@/generated/prisma/enums';
+import { revalidatePath } from "next/cache";
+import { prisma } from "@/lib/prisma";
+import { TransactionType } from "@/generated/prisma/enums";
 import {
   createIncomeSchema,
   updateIncomeSchema,
   type CreateIncomeInput,
   type UpdateIncomeInput,
-} from '../schemas/transaction.schema';
-import { auth } from '@/lib/auth';
-import { calculateBalanceBefore } from './balance.util';
+} from "../schemas/transaction.schema";
+import { auth } from "@/lib/auth";
+import { calculateBalanceBefore } from "./balance.util";
 
 export async function createIncome(data: CreateIncomeInput) {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: 'Unauthorized' };
+    return { error: "Unauthorized" };
   }
 
   const validated = createIncomeSchema.safeParse(data);
@@ -28,7 +28,7 @@ export async function createIncome(data: CreateIncomeInput) {
   try {
     // Get recent transaction for balance calculation
     const lastTransaction = await prisma.transaction.findFirst({
-      orderBy: { date: 'desc' },
+      orderBy: { date: "desc" },
     });
 
     const balanceBefore = lastTransaction?.balanceAfter ?? 0;
@@ -56,20 +56,23 @@ export async function createIncome(data: CreateIncomeInput) {
       },
     });
 
-    revalidatePath('/dashboard');
-    revalidatePath('/dashboard/finance');
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/finance");
 
     return { success: true, transaction };
   } catch (error) {
-    console.error('Failed to create income:', error);
-    return { error: 'Gagal menyimpan pemasukan' };
+    console.error("Failed to create income:", error);
+    return { error: "Gagal menyimpan pemasukan" };
   }
 }
 
-export async function updateIncome(transactionId: string, data: UpdateIncomeInput) {
+export async function updateIncome(
+  transactionId: string,
+  data: UpdateIncomeInput,
+) {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: 'Unauthorized' };
+    return { error: "Unauthorized" };
   }
 
   const validated = updateIncomeSchema.safeParse(data);
@@ -82,8 +85,12 @@ export async function updateIncome(transactionId: string, data: UpdateIncomeInpu
     select: { id: true, type: true, income: { select: { id: true } } },
   });
 
-  if (!existing || existing.type !== TransactionType.INCOME || !existing.income) {
-    return { error: 'Transaksi pemasukan tidak ditemukan' };
+  if (
+    !existing ||
+    existing.type !== TransactionType.INCOME ||
+    !existing.income
+  ) {
+    return { error: "Transaksi pemasukan tidak ditemukan" };
   }
 
   const { amount, source, date, notes } = validated.data;
@@ -112,20 +119,20 @@ export async function updateIncome(transactionId: string, data: UpdateIncomeInpu
       },
     });
 
-    revalidatePath('/dashboard');
-    revalidatePath('/dashboard/finance');
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/finance");
 
     return { success: true, transaction };
   } catch (error) {
-    console.error('Failed to update income:', error);
-    return { error: 'Gagal memperbarui pemasukan' };
+    console.error("Failed to update income:", error);
+    return { error: "Gagal memperbarui pemasukan" };
   }
 }
 
 export async function deleteIncome(transactionId: string) {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: 'Unauthorized' };
+    return { error: "Unauthorized" };
   }
 
   const existing = await prisma.transaction.findUnique({
@@ -134,7 +141,7 @@ export async function deleteIncome(transactionId: string) {
   });
 
   if (!existing || existing.type !== TransactionType.INCOME) {
-    return { error: 'Transaksi pemasukan tidak ditemukan' };
+    return { error: "Transaksi pemasukan tidak ditemukan" };
   }
 
   try {
@@ -142,13 +149,13 @@ export async function deleteIncome(transactionId: string) {
       where: { id: transactionId },
     });
 
-    revalidatePath('/dashboard');
-    revalidatePath('/dashboard/finance');
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/finance");
 
     return { success: true };
   } catch (error) {
-    console.error('Failed to delete income:', error);
-    return { error: 'Gagal menghapus pemasukan' };
+    console.error("Failed to delete income:", error);
+    return { error: "Gagal menghapus pemasukan" };
   }
 }
 
@@ -177,17 +184,17 @@ export async function getTransactions(options?: {
 
   const transactions = await prisma.transaction.findMany({
     where,
-    orderBy: { date: 'desc' },
+    orderBy: { date: "desc" },
     take: limit ?? undefined,
     include: {
       income: true,
       expense: {
         include: {
           items: {
-            include:{
-                car:true
-            }
-          }
+            include: {
+              car: true,
+            },
+          },
         },
       },
       fuelPurchase: {
@@ -262,13 +269,13 @@ export async function getMonthlyStats(year: number, month: number) {
 
 // Helper function to convert Hijri date range to Gregorian with validation
 async function getHijriMonthRange(hijriYear: number, hijriMonth: number) {
-  const moment = (await import('moment-hijri')).default;
+  const moment = (await import("moment-hijri")).default;
 
   try {
     // Build start and end of the requested Hijri month
     // Format: iYYYY/iM/iD - padded for proper parsing
     const startStr = `${hijriYear}/${hijriMonth}/1`;
-    const startHijri = moment(startStr, 'iYYYY/iM/iD');
+    const startHijri = moment(startStr, "iYYYY/iM/iD");
 
     // For end date, go to first of next month and subtract 1 day
     let nextMonth = hijriMonth + 1;
@@ -278,40 +285,121 @@ async function getHijriMonthRange(hijriYear: number, hijriMonth: number) {
       nextYear++;
     }
     const endStr = `${nextYear}/${nextMonth}/1`;
-    const endHijri = moment(endStr, 'iYYYY/iM/iD').subtract(1, 'day').endOf('day');
+    const endHijri = moment(endStr, "iYYYY/iM/iD")
+      .subtract(1, "day")
+      .endOf("day");
 
     const startDate = startHijri.toDate();
     const endDate = endHijri.toDate();
 
     // Validate dates are reasonable (between year 1900 and 2200)
-    if (startDate.getFullYear() < 1900 || startDate.getFullYear() > 2200 ||
-        endDate.getFullYear() < 1900 || endDate.getFullYear() > 2200 ||
-        isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      throw new Error('Invalid date range from Hijri conversion');
+    if (
+      startDate.getFullYear() < 1900 ||
+      startDate.getFullYear() > 2200 ||
+      endDate.getFullYear() < 1900 ||
+      endDate.getFullYear() > 2200 ||
+      isNaN(startDate.getTime()) ||
+      isNaN(endDate.getTime())
+    ) {
+      throw new Error("Invalid date range from Hijri conversion");
     }
 
     return { startDate, endDate };
   } catch (err) {
     // Fallback to current Gregorian month
-    console.warn('Hijri conversion failed:', err, 'Using Gregorian month fallback');
+    console.warn(
+      "Hijri conversion failed:",
+      err,
+      "Using Gregorian month fallback",
+    );
     const now = new Date();
     return {
       startDate: new Date(now.getFullYear(), now.getMonth(), 1),
-      endDate: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999),
+      endDate: new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+        999,
+      ),
     };
   }
 }
 
-export async function getTransactionsByHijriMonth(hijriYear: number, hijriMonth: number) {
-  const { startDate, endDate } = await getHijriMonthRange(hijriYear, hijriMonth);
+export async function getTransactionsByHijriMonth(
+  hijriYear: number,
+  hijriMonth: number,
+  carId?: string | null,
+) {
+  const { startDate, endDate } = await getHijriMonthRange(
+    hijriYear,
+    hijriMonth,
+  );
 
-  // DEBUG: Log date range
-  console.log('=== DEBUG: getTransactionsByHijriMonth ===');
-  console.log('Input:', { hijriYear, hijriMonth });
-  console.log('Date Range:', {
-    startDate: startDate.toISOString(),
-    endDate: endDate.toISOString()
-  });
+  if (carId && carId !== "all") {
+    // IF CAR FILTER IS ACTIVE
+    // Only return EXPENSE transactions that involve the selected car
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        date: { gte: startDate, lte: endDate },
+        type: TransactionType.EXPENSE,
+        deletedAt: null,
+        expense: {
+          items: {
+            some: {
+              carId,
+            },
+          },
+        },
+      },
+      orderBy: { date: "asc" },
+      include: {
+        income: true,
+        expense: {
+          include: {
+            items: {
+              where: { carId },
+              include: { car: true },
+            },
+          },
+        },
+        fuelPurchase: {
+          include: { car: true },
+        },
+        user: {
+          select: { name: true, username: true },
+        },
+      },
+    });
+
+    // Override the transaction amount to only include the items for the selected car
+    const filteredTransactions = transactions.map((trx) => {
+      const itemsTotal =
+        trx.expense?.items.reduce((sum, item) => sum + item.total, 0) ?? 0;
+      return {
+        ...trx,
+        amount: itemsTotal,
+      };
+    });
+
+    const totalExpense = filteredTransactions.reduce(
+      (sum, t) => sum + t.amount,
+      0,
+    );
+
+    return {
+      transactions: filteredTransactions,
+      stats: {
+        totalIncome: 0,
+        totalExpense,
+        openingBalance: 0,
+        closingBalance: -totalExpense,
+        previousMonthBalance: 0,
+      },
+    };
+  }
 
   // Calculate opening balance from all transactions BEFORE this month
   // This is the sum of all income minus expenses before startDate
@@ -335,15 +423,8 @@ export async function getTransactionsByHijriMonth(hijriYear: number, hijriMonth:
     }),
   ]);
 
-  // DEBUG: Log aggregate results
-  console.log('Income Before startDate:', incomeBefore._sum.amount ?? 0);
-  console.log('Expense Before startDate (excluding BBM):', expenseBefore._sum.amount ?? 0);
-
-  const previousMonthBalance = (incomeBefore._sum.amount ?? 0) - (expenseBefore._sum.amount ?? 0);
-
-  // DEBUG: Log calculated balance
-  console.log('Saldo Bulan Lalu (calculated):', previousMonthBalance);
-  console.log('=========================================');
+  const previousMonthBalance =
+    (incomeBefore._sum.amount ?? 0) - (expenseBefore._sum.amount ?? 0);
 
   // Get transactions for the Hijri month (INCOME and EXPENSE only, not FUEL_PURCHASE)
   const transactions = await prisma.transaction.findMany({
@@ -352,12 +433,12 @@ export async function getTransactionsByHijriMonth(hijriYear: number, hijriMonth:
       type: { in: [TransactionType.INCOME, TransactionType.EXPENSE] },
       deletedAt: null,
     },
-    orderBy: { date: 'asc' },
+    orderBy: { date: "asc" },
     include: {
       income: true,
       expense: {
         include: {
-          items: true,
+          items: { include: { car: true } },
         },
       },
       fuelPurchase: {

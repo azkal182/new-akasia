@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/table';
 import { formatRupiah, formatDate } from '@/lib/utils';
 import { getTransactionsByHijriMonth } from '@/features/finance/actions';
+import { getCars } from '@/features/cars/actions';
 
 const hijriMonths = [
   { value: 1, label: 'Muharram' },
@@ -35,6 +36,7 @@ const hijriMonths = [
 ];
 
 type Transaction = Awaited<ReturnType<typeof getTransactionsByHijriMonth>>['transactions'][number];
+type CarItem = { id: string; name: string };
 
 export default function FinanceReportPage() {
   const currentHijriYear = moment().iYear();
@@ -42,6 +44,8 @@ export default function FinanceReportPage() {
 
   const [hijriYear, setHijriYear] = useState(currentHijriYear);
   const [hijriMonth, setHijriMonth] = useState(currentHijriMonth);
+  const [selectedCarId, setSelectedCarId] = useState<string>('all');
+  const [cars, setCars] = useState<CarItem[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [stats, setStats] = useState({ totalIncome: 0, totalExpense: 0, openingBalance: 0, closingBalance: 0, previousMonthBalance: 0 });
   const [loading, setLoading] = useState(true);
@@ -49,10 +53,21 @@ export default function FinanceReportPage() {
 
   const years = Array.from({ length: 7 }, (_, i) => currentHijriYear - 5 + i);
 
+  useEffect(() => {
+    getCars().then((data) => setCars(data));
+  }, []);
+
   const handleDownloadPDF = async () => {
     setGenerating(true);
     try {
-      const response = await fetch(`/api/reports/finance?year=${hijriYear}&month=${hijriMonth}`);
+      const params = new URLSearchParams({
+        year: hijriYear.toString(),
+        month: hijriMonth.toString(),
+      });
+      if (selectedCarId !== 'all') {
+        params.set('carId', selectedCarId);
+      }
+      const response = await fetch(`/api/reports/finance?${params.toString()}`);
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -72,13 +87,17 @@ export default function FinanceReportPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await getTransactionsByHijriMonth(hijriYear, hijriMonth);
+      const result = await getTransactionsByHijriMonth(
+        hijriYear, 
+        hijriMonth, 
+        selectedCarId === 'all' ? undefined : selectedCarId
+      );
       setTransactions(result.transactions);
       setStats(result.stats);
     } finally {
       setLoading(false);
     }
-  }, [hijriYear, hijriMonth]);
+  }, [hijriYear, hijriMonth, selectedCarId]);
 
   useEffect(() => {
     loadData();
@@ -155,6 +174,22 @@ export default function FinanceReportPage() {
                   {hijriMonths.map((m) => (
                     <SelectItem key={m.value} value={m.value.toString()}>
                       {m.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Kendaraan</Label>
+              <Select value={selectedCarId} onValueChange={setSelectedCarId}>
+                <SelectTrigger className="w-48 border-border bg-muted/60 text-foreground">
+                  <SelectValue placeholder="Semua kendaraan" />
+                </SelectTrigger>
+                <SelectContent className="border-border bg-card">
+                  <SelectItem value="all">Semua kendaraan</SelectItem>
+                  {cars.map((car) => (
+                    <SelectItem key={car.id} value={car.id}>
+                      {car.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
