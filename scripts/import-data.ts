@@ -407,6 +407,7 @@ async function importData(filepath: string) {
           userId: record.userId,
           purpose: record.purpose,
           destination: record.destination,
+          estimatedDays: 1,
           startTime: new Date(record.startTime),
           endTime: record.endTime ? new Date(record.endTime) : null,
           status: record.status as UsageStatus,

@@ -39,10 +39,10 @@ export function DriverView() {
   const [showEndDialog, setShowEndDialog] = useState(false);
   const [showRefuelDialog, setShowRefuelDialog] = useState(false);
 
-  // Start driving form
   const [selectedCarId, setSelectedCarId] = useState('');
   const [purpose, setPurpose] = useState('');
   const [destination, setDestination] = useState('');
+  const [estimatedDays, setEstimatedDays] = useState('');
 
   // Refuel form
   const [totalAmount, setTotalAmount] = useState('');
@@ -69,8 +69,8 @@ export function DriverView() {
   }, [loadData]);
 
   async function handleStartDriving() {
-    if (!selectedCarId || !purpose || !destination) {
-      toast.error('Lengkapi semua field');
+    if (!selectedCarId || !purpose || !destination || !estimatedDays) {
+      toast.error('Lengkapi semua field termasuk estimasi penggunaan');
       return;
     }
 
@@ -79,6 +79,7 @@ export function DriverView() {
       carId: selectedCarId,
       purpose,
       destination,
+      estimatedDays: Number(estimatedDays),
       startTime: new Date(),
     });
 
@@ -90,6 +91,7 @@ export function DriverView() {
       setSelectedCarId('');
       setPurpose('');
       setDestination('');
+      setEstimatedDays('');
       loadData();
     }
     setIsSubmitting(false);
@@ -234,6 +236,19 @@ export function DriverView() {
                   onChange={(e) => setDestination(e.target.value)}
                   placeholder="Jakarta, Bandung, dll"
                   className="border-border bg-muted/60 text-foreground"
+                  inputMode="numeric"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-foreground">Estimasi Penggunaan (Hari)</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  required
+                  value={estimatedDays}
+                  onChange={(e) => setEstimatedDays(e.target.value)}
+                  placeholder="Contoh: 1 (untuk harian), 2, dst"
+                  className="border-border bg-muted/60 text-foreground"
                 />
               </div>
             </div>
@@ -243,7 +258,7 @@ export function DriverView() {
               </Button>
               <Button
                 onClick={handleStartDriving}
-                disabled={isSubmitting || !selectedCarId}
+                disabled={isSubmitting || !selectedCarId || !purpose || !destination || !estimatedDays}
                 className="bg-blue-600 hover:bg-blue-500"
               >
                 {isSubmitting ? 'Memulai...' : 'Mulai'}
@@ -293,9 +308,14 @@ export function DriverView() {
                 </div>
               </div>
 
-              <p className="text-xs text-muted-foreground">
-                Mulai: {formatDate(drivingStatus.startTime)}
-              </p>
+              <div className="flex items-center justify-between text-xs text-muted-foreground mt-2 border-t border-border/50 pt-3">
+                <p>Mulai: {formatDate(drivingStatus.startTime)}</p>
+                {drivingStatus.estimatedDays && (
+                  <p className="font-medium text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                    Estimasi: {drivingStatus.estimatedDays} Hari
+                  </p>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>

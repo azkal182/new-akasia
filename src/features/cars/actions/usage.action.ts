@@ -1,16 +1,20 @@
-'use server';
+"use server";
 
-import { revalidatePath } from 'next/cache';
-import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
-import { CarStatus } from '@/generated/prisma/enums';
-import { z } from 'zod';
-import moment from 'moment-hijri';
+import { revalidatePath } from "next/cache";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { CarStatus } from "@/generated/prisma/enums";
+import { z } from "zod";
+import moment from "moment-hijri";
 
 const createUsageRecordSchema = z.object({
-  carId: z.string().uuid('Pilih kendaraan'),
-  purpose: z.string().min(1, 'Tujuan penggunaan wajib diisi'),
-  destination: z.string().min(1, 'Tempat tujuan wajib diisi'),
+  carId: z.string().uuid("Pilih kendaraan"),
+  purpose: z.string().min(1, "Tujuan penggunaan wajib diisi"),
+  destination: z.string().min(1, "Tempat tujuan wajib diisi"),
+  estimatedDays: z.coerce
+    .number()
+    .int()
+    .min(1, "Estimasi minimal 1 hari wajib diisi"),
   startTime: z.coerce.date(),
 });
 
@@ -43,10 +47,12 @@ export async function getUsageRecords(options?: {
 
   const records = await prisma.usageRecord.findMany({
     where,
-    orderBy: { startTime: 'desc' },
+    orderBy: { startTime: "desc" },
     take: limit,
     include: {
-      car: { select: { id: true, name: true, licensePlate: true, status: true } },
+      car: {
+        select: { id: true, name: true, licensePlate: true, status: true },
+      },
       user: { select: { id: true, name: true, username: true } },
     },
   });
@@ -57,7 +63,7 @@ export async function getUsageRecords(options?: {
 export async function getActiveUsageRecords() {
   const records = await prisma.usageRecord.findMany({
     where: { endTime: null },
-    orderBy: { startTime: 'desc' },
+    orderBy: { startTime: "desc" },
     include: {
       car: { select: { id: true, name: true, licensePlate: true } },
       user: { select: { name: true, username: true } },
@@ -80,7 +86,14 @@ export async function getCurrentUserDrivingStatus() {
       endTime: null,
     },
     include: {
-      car: { select: { id: true, name: true, licensePlate: true, barcodeString: true } },
+      car: {
+        select: {
+          id: true,
+          name: true,
+          licensePlate: true,
+          barcodeString: true,
+        },
+      },
     },
   });
 
@@ -90,7 +103,7 @@ export async function getCurrentUserDrivingStatus() {
 export async function startCarUsage(data: CreateUsageRecordInput) {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: 'Unauthorized' };
+    return { error: "Unauthorized" };
   }
 
   const validated = createUsageRecordSchema.safeParse(data);
@@ -108,7 +121,9 @@ export async function startCarUsage(data: CreateUsageRecordInput) {
   });
 
   if (existingUsage) {
-    return { error: `Anda masih mengendarai ${existingUsage.car.name}. Selesaikan dulu sebelum menggunakan kendaraan lain.` };
+    return {
+      error: `Anda masih mengendarai ${existingUsage.car.name}. Selesaikan dulu sebelum menggunakan kendaraan lain.`,
+    };
   }
 
   // Check if car is available
@@ -118,7 +133,7 @@ export async function startCarUsage(data: CreateUsageRecordInput) {
   });
 
   if (!car) {
-    return { error: 'Kendaraan tidak ditemukan' };
+    return { error: "Kendaraan tidak ditemukan" };
   }
 
   if (car.status !== CarStatus.AVAILABLE) {
@@ -134,6 +149,7 @@ export async function startCarUsage(data: CreateUsageRecordInput) {
           userId: session.user.id,
           purpose: validated.data.purpose,
           destination: validated.data.destination,
+          estimatedDays: validated.data.estimatedDays,
           startTime: validated.data.startTime,
         },
       }),
@@ -143,19 +159,19 @@ export async function startCarUsage(data: CreateUsageRecordInput) {
       }),
     ]);
 
-    revalidatePath('/dashboard/cars');
-    revalidatePath('/dashboard');
+    revalidatePath("/dashboard/cars");
+    revalidatePath("/dashboard");
     return { success: true, record };
   } catch (error) {
-    console.error('Failed to start car usage:', error);
-    return { error: 'Gagal memulai penggunaan kendaraan' };
+    console.error("Failed to start car usage:", error);
+    return { error: "Gagal memulai penggunaan kendaraan" };
   }
 }
 
 export async function endCarUsage(data: EndUsageRecordInput) {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: 'Unauthorized' };
+    return { error: "Unauthorized" };
   }
 
   const validated = endUsageRecordSchema.safeParse(data);
@@ -170,11 +186,11 @@ export async function endCarUsage(data: EndUsageRecordInput) {
   });
 
   if (!record) {
-    return { error: 'Record tidak ditemukan' };
+    return { error: "Record tidak ditemukan" };
   }
 
   if (record.endTime) {
-    return { error: 'Penggunaan sudah selesai' };
+    return { error: "Penggunaan sudah selesai" };
   }
 
   try {
@@ -192,12 +208,12 @@ export async function endCarUsage(data: EndUsageRecordInput) {
       }),
     ]);
 
-    revalidatePath('/dashboard/cars');
-    revalidatePath('/dashboard');
+    revalidatePath("/dashboard/cars");
+    revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
-    console.error('Failed to end car usage:', error);
-    return { error: 'Gagal mengakhiri penggunaan kendaraan' };
+    console.error("Failed to end car usage:", error);
+    return { error: "Gagal mengakhiri penggunaan kendaraan" };
   }
 }
 
@@ -205,7 +221,7 @@ export async function endCarUsage(data: EndUsageRecordInput) {
 function getHijriMonthRange(hijriYear: number, hijriMonth: number) {
   try {
     const startStr = `${hijriYear}/${hijriMonth}/1`;
-    const startHijri = moment(startStr, 'iYYYY/iM/iD');
+    const startHijri = moment(startStr, "iYYYY/iM/iD");
 
     let nextMonth = hijriMonth + 1;
     let nextYear = hijriYear;
@@ -214,24 +230,43 @@ function getHijriMonthRange(hijriYear: number, hijriMonth: number) {
       nextYear++;
     }
     const endStr = `${nextYear}/${nextMonth}/1`;
-    const endHijri = moment(endStr, 'iYYYY/iM/iD').subtract(1, 'day').endOf('day');
+    const endHijri = moment(endStr, "iYYYY/iM/iD")
+      .subtract(1, "day")
+      .endOf("day");
 
     const startDate = startHijri.toDate();
     const endDate = endHijri.toDate();
 
-    if (startDate.getFullYear() < 1900 || startDate.getFullYear() > 2200 ||
-      endDate.getFullYear() < 1900 || endDate.getFullYear() > 2200 ||
-      isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      throw new Error('Invalid date range from Hijri conversion');
+    if (
+      startDate.getFullYear() < 1900 ||
+      startDate.getFullYear() > 2200 ||
+      endDate.getFullYear() < 1900 ||
+      endDate.getFullYear() > 2200 ||
+      isNaN(startDate.getTime()) ||
+      isNaN(endDate.getTime())
+    ) {
+      throw new Error("Invalid date range from Hijri conversion");
     }
 
     return { startDate, endDate };
   } catch (err) {
-    console.warn('Hijri conversion failed:', err, 'Using Gregorian month fallback');
+    console.warn(
+      "Hijri conversion failed:",
+      err,
+      "Using Gregorian month fallback",
+    );
     const now = new Date();
     return {
       startDate: new Date(now.getFullYear(), now.getMonth(), 1),
-      endDate: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999),
+      endDate: new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+        999,
+      ),
     };
   }
 }
@@ -239,7 +274,11 @@ function getHijriMonthRange(hijriYear: number, hijriMonth: number) {
 /**
  * Get usage records by Hijri month with statistics
  */
-export async function getUsageRecordsByHijriMonth(hijriYear: number, hijriMonth: number, carId?: string) {
+export async function getUsageRecordsByHijriMonth(
+  hijriYear: number,
+  hijriMonth: number,
+  carId?: string,
+) {
   const { startDate, endDate } = getHijriMonthRange(hijriYear, hijriMonth);
 
   const where: Record<string, unknown> = {
@@ -252,7 +291,7 @@ export async function getUsageRecordsByHijriMonth(hijriYear: number, hijriMonth:
 
   const records = await prisma.usageRecord.findMany({
     where,
-    orderBy: { startTime: 'desc' },
+    orderBy: { startTime: "desc" },
     include: {
       car: { select: { id: true, name: true, licensePlate: true } },
       user: { select: { id: true, name: true, username: true } },
@@ -271,7 +310,8 @@ export async function getUsageRecordsByHijriMonth(hijriYear: number, hijriMonth:
       const duration = r.endTime!.getTime() - r.startTime.getTime();
       return sum + duration;
     }, 0);
-  const totalDurationHours = Math.round(totalDurationMs / (1000 * 60 * 60) * 10) / 10;
+  const totalDurationHours =
+    Math.round((totalDurationMs / (1000 * 60 * 60)) * 10) / 10;
 
   // Get unique cars used
   const uniqueCars = new Set(records.map((r) => r.carId)).size;

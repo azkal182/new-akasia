@@ -148,12 +148,13 @@ enum CarStatus {
 }
 
 model UsageRecord {
-    id          String      @id @default(uuid())
-    purpose     String
-    destination String
-    startTime   DateTime    @default(now())
-    endTime     DateTime?
-    status      UsageStatus @default(ONGOING)
+    id            String      @id @default(uuid())
+    purpose       String
+    destination   String
+    estimatedDays Int
+    startTime     DateTime    @default(now())
+    endTime       DateTime?
+    status        UsageStatus @default(ONGOING)
 
     carId String
     car   Car    @relation(fields: [carId], references: [id])
