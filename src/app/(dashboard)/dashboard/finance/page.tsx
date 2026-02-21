@@ -16,8 +16,15 @@ import {
   getBalance,
   getMonthlyStats,
 } from "@/features/finance/actions";
+import { getCars } from "@/features/cars/actions";
 import { TransactionType } from "@/generated/prisma/enums";
 import { TransactionActions } from "@/features/finance/components/transaction-actions";
+
+type CarOption = {
+  id: string;
+  name: string;
+  licensePlate: string | null;
+};
 
 export default async function FinancePage() {
   const now = new Date();
@@ -27,13 +34,21 @@ export default async function FinancePage() {
     monthlyStats,
     incomeTransactions,
     expenseTransactions,
+    cars,
   ] = await Promise.all([
     getTransactions({ limit: 20 }),
     getBalance(),
     getMonthlyStats(now.getFullYear(), now.getMonth() + 1),
     getTransactions({ type: TransactionType.INCOME, limit: 50 }),
     getTransactions({ type: TransactionType.EXPENSE, limit: 50 }),
+    getCars(),
   ]);
+
+  const carOptions: CarOption[] = cars.map((car) => ({
+    id: car.id,
+    name: car.name,
+    licensePlate: car.licensePlate,
+  }));
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -151,18 +166,21 @@ export default async function FinancePage() {
             <TabsContent value="recent">
               <TransactionList
                 transactions={transactions}
+                cars={carOptions}
                 emptyLabel="Belum ada transaksi"
               />
             </TabsContent>
             <TabsContent value="income">
               <TransactionList
                 transactions={incomeTransactions}
+                cars={carOptions}
                 emptyLabel="Belum ada pemasukan"
               />
             </TabsContent>
             <TabsContent value="expense">
               <TransactionList
                 transactions={expenseTransactions}
+                cars={carOptions}
                 emptyLabel="Belum ada pengeluaran"
               />
             </TabsContent>
@@ -175,9 +193,11 @@ export default async function FinancePage() {
 
 function TransactionList({
   transactions,
+  cars,
   emptyLabel,
 }: {
   transactions: Awaited<ReturnType<typeof getTransactions>>;
+  cars: CarOption[];
   emptyLabel: string;
 }) {
   if (transactions.length === 0) {
@@ -246,7 +266,7 @@ function TransactionList({
                   : "Pengeluaran"}
               </Badge>
             </div>
-            <TransactionActions transaction={trx} />
+            <TransactionActions transaction={trx} cars={cars} />
           </div>
         </div>
       ))}

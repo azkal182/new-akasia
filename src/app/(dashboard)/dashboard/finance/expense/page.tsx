@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,6 +26,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 
 import {
@@ -33,11 +40,19 @@ import {
   type CreateExpenseInput,
 } from "@/features/finance/schemas/transaction.schema";
 import { createExpense } from "@/features/finance/actions";
+import { getCars } from "@/features/cars/actions";
 import { formatRupiah } from "@/lib/utils";
+
+type CarOption = {
+  id: string;
+  name: string;
+  licensePlate: string | null;
+};
 
 export default function ExpensePage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [cars, setCars] = useState<CarOption[]>([]);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -48,9 +63,27 @@ export default function ExpensePage() {
       date: new Date(),
       description: "",
       notes: "",
-      items: [{ description: "", quantity: 1, unitPrice: 0 }],
+      items: [{ description: "", quantity: 1, unitPrice: 0, carId: null }],
     },
   });
+
+  useEffect(() => {
+    let mounted = true;
+
+    getCars()
+      .then((data) => {
+        if (mounted) {
+          setCars(data);
+        }
+      })
+      .catch(() => {
+        toast.error("Gagal memuat daftar armada");
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -230,7 +263,12 @@ export default function ExpensePage() {
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      append({ description: "", quantity: 1, unitPrice: 0 })
+                      append({
+                        description: "",
+                        quantity: 1,
+                        unitPrice: 0,
+                        carId: null,
+                      })
                     }
                     className="border-border"
                   >
@@ -242,7 +280,7 @@ export default function ExpensePage() {
                 {fields.map((field, index) => (
                   <div
                     key={field.id}
-                    className="grid gap-3 rounded-lg bg-muted/40 p-4 md:grid-cols-4"
+                    className="grid gap-3 rounded-lg bg-muted/40 p-4 md:grid-cols-7"
                   >
                     <FormField
                       control={form.control}
@@ -289,7 +327,49 @@ export default function ExpensePage() {
                       )}
                     />
 
-                    <div className="flex items-end gap-2">
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.carId`}
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel className="text-muted-foreground text-sm">
+                            Armada
+                          </FormLabel>
+                          <Select
+                            value={field.value ?? "none"}
+                            onValueChange={(value) =>
+                              field.onChange(value === "none" ? null : value)
+                            }
+                            disabled={isLoading}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="border-border bg-muted/60 text-foreground">
+                                <SelectValue placeholder="Pilih armada (opsional)" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="border-border bg-card">
+                              <SelectItem value="none">Tanpa armada</SelectItem>
+                              {cars.length === 0 && (
+                                <SelectItem value="no-car" disabled>
+                                  Belum ada armada
+                                </SelectItem>
+                              )}
+                              {cars.map((car) => (
+                                <SelectItem key={car.id} value={car.id}>
+                                  {car.name}
+                                  {car.licensePlate
+                                    ? ` - ${car.licensePlate}`
+                                    : ""}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="flex items-end gap-2 md:col-span-2">
                       <FormField
                         control={form.control}
                         name={`items.${index}.unitPrice`}

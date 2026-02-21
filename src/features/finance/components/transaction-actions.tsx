@@ -9,6 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { NominalInput } from "@/components/inputs/nominal-input";
 import {
   Dialog,
@@ -57,7 +64,14 @@ type TransactionItem = {
 
 interface TransactionActionsProps {
   transaction: TransactionItem;
+  cars: CarOption[];
 }
+
+type CarOption = {
+  id: string;
+  name: string;
+  licensePlate: string | null;
+};
 
 function getDateInputValue(value: Date | string) {
   const date = value instanceof Date ? value : new Date(value);
@@ -67,7 +81,7 @@ function getDateInputValue(value: Date | string) {
   return date.toISOString().split("T")[0];
 }
 
-export function TransactionActions({ transaction }: TransactionActionsProps) {
+export function TransactionActions({ transaction, cars }: TransactionActionsProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -97,8 +111,8 @@ export function TransactionActions({ transaction }: TransactionActionsProps) {
         description: item.description,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
-        carId: item.carId ?? undefined,
-      })) ?? [{ description: "", quantity: 1, unitPrice: 0 }],
+        carId: item.carId ?? null,
+      })) ?? [{ description: "", quantity: 1, unitPrice: 0, carId: null }],
     }),
     [transaction]
   );
@@ -367,7 +381,12 @@ export function TransactionActions({ transaction }: TransactionActionsProps) {
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      append({ description: "", quantity: 1, unitPrice: 0 })
+                      append({
+                        description: "",
+                        quantity: 1,
+                        unitPrice: 0,
+                        carId: null,
+                      })
                     }
                     className="border-border"
                   >
@@ -379,7 +398,7 @@ export function TransactionActions({ transaction }: TransactionActionsProps) {
                 {fields.map((field, index) => (
                   <div
                     key={field.id}
-                    className="grid gap-3 rounded-lg bg-muted/40 p-3 md:grid-cols-5"
+                    className="grid gap-3 rounded-lg bg-muted/40 p-3 md:grid-cols-7"
                   >
                     <div className="md:col-span-2 space-y-1">
                       <Label className="text-xs text-muted-foreground">
@@ -404,6 +423,44 @@ export function TransactionActions({ transaction }: TransactionActionsProps) {
                         disabled={isSaving}
                       />
                     </div>
+                    <div className="md:col-span-2 space-y-1">
+                      <Label className="text-xs text-muted-foreground">
+                        Armada
+                      </Label>
+                      <Controller
+                        control={expenseForm.control}
+                        name={`items.${index}.carId`}
+                        render={({ field }) => (
+                          <Select
+                            value={field.value ?? "none"}
+                            onValueChange={(value) =>
+                              field.onChange(value === "none" ? null : value)
+                            }
+                            disabled={isSaving}
+                          >
+                            <SelectTrigger className="border-border bg-muted/60 text-foreground">
+                              <SelectValue placeholder="Pilih armada (opsional)" />
+                            </SelectTrigger>
+                            <SelectContent className="border-border bg-card">
+                              <SelectItem value="none">Tanpa armada</SelectItem>
+                              {cars.length === 0 && (
+                                <SelectItem value="no-car" disabled>
+                                  Belum ada armada
+                                </SelectItem>
+                              )}
+                              {cars.map((car) => (
+                                <SelectItem key={car.id} value={car.id}>
+                                  {car.name}
+                                  {car.licensePlate
+                                    ? ` - ${car.licensePlate}`
+                                    : ""}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    </div>
                     <div className="space-y-1 flex items-end gap-2 md:col-span-2">
                       <div className="flex-1 space-y-1">
                         <Label className="text-xs text-muted-foreground">
@@ -426,10 +483,6 @@ export function TransactionActions({ transaction }: TransactionActionsProps) {
                           )}
                         />
                       </div>
-                      <Input
-                        type="hidden"
-                        {...expenseForm.register(`items.${index}.carId`)}
-                      />
                       {fields.length > 1 && (
                         <Button
                           type="button"
