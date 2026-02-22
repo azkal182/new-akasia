@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import moment from 'moment-hijri';
-import { ArrowLeft, FileText, Filter, ArrowUpRight, ArrowDownRight, Download, Loader2 } from 'lucide-react';
+import { ArrowLeft, FileText, Filter, ArrowUpRight, ArrowDownRight, Download, Loader2, FileImage } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -50,6 +51,7 @@ export default function FinanceReportPage() {
   const [stats, setStats] = useState({ totalIncome: 0, totalExpense: 0, openingBalance: 0, closingBalance: 0, previousMonthBalance: 0 });
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [receiptPreview, setReceiptPreview] = useState<{ url: string; label: string } | null>(null);
 
   const years = Array.from({ length: 7 }, (_, i) => currentHijriYear - 5 + i);
 
@@ -306,13 +308,32 @@ export default function FinanceReportPage() {
                           </TableCell>
                           <TableCell className="max-w-xs">
                             {trx.expense?.items && trx.expense.items.length > 0 ? (
-                              <ul className="text-xs text-muted-foreground space-y-0.5">
-                                {trx.expense.items.map((item, i) => (
-                                  <li key={i}>
-                                    {item.description} (x{item.quantity}) - {formatRupiah(item.total)}
-                                  </li>
-                                ))}
-                              </ul>
+                              <div className="space-y-2">
+                                <ul className="text-xs text-muted-foreground space-y-0.5">
+                                  {trx.expense.items.map((item, i) => (
+                                    <li key={i}>
+                                      {item.description} (x{item.quantity}) - {formatRupiah(item.total)}
+                                    </li>
+                                  ))}
+                                </ul>
+                                {trx.expense?.receiptUrl && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                                    onClick={() =>
+                                      setReceiptPreview({
+                                        url: trx.expense?.receiptUrl ?? '',
+                                        label: trx.description ?? 'Pengeluaran',
+                                      })
+                                    }
+                                  >
+                                    <FileImage className="mr-1.5 h-3.5 w-3.5" />
+                                    Lihat nota
+                                  </Button>
+                                )}
+                              </div>
                             ) : trx.income ? (
                               <span className="text-xs text-muted-foreground">{trx.income.source}</span>
                             ) : trx.fuelPurchase ? (
@@ -350,6 +371,39 @@ export default function FinanceReportPage() {
           )}
         </CardContent>
       </Card>
+
+      {receiptPreview && (
+        <Dialog open={!!receiptPreview} onOpenChange={(open) => !open && setReceiptPreview(null)}>
+          <DialogContent className="max-w-3xl border-border bg-card">
+            <DialogHeader>
+              <DialogTitle className="text-foreground">Nota Pengeluaran</DialogTitle>
+              <DialogDescription>
+                Pratinjau nota untuk {receiptPreview.label}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div className="rounded-lg bg-muted/40 p-3">
+                <img
+                  src={receiptPreview.url}
+                  alt={`Nota ${receiptPreview.label}`}
+                  className="max-h-[70vh] w-full rounded-md object-contain"
+                  loading="lazy"
+                />
+              </div>
+              <div className="flex justify-end">
+                <a
+                  href={receiptPreview.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-blue-400 hover:text-blue-300"
+                >
+                  Buka di tab baru
+                </a>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
