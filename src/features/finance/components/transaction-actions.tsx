@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Pencil, Trash2, Upload, Plus } from "lucide-react";
+import { Pencil, Trash2, Upload, Plus, FileImage } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,6 +84,7 @@ function getDateInputValue(value: Date | string) {
 export function TransactionActions({ transaction, cars }: TransactionActionsProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [receiptOpen, setReceiptOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
@@ -91,6 +92,7 @@ export function TransactionActions({ transaction, cars }: TransactionActionsProp
 
   const isIncome = transaction.type === TransactionType.INCOME;
   const isExpense = transaction.type === TransactionType.EXPENSE;
+  const receiptUrl = transaction.expense?.receiptUrl ?? null;
 
   const incomeDefaults = useMemo<UpdateIncomeInput>(
     () => ({
@@ -216,6 +218,18 @@ export function TransactionActions({ transaction, cars }: TransactionActionsProp
       >
         <Pencil className="h-4 w-4" />
       </Button>
+      {isExpense && receiptUrl && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-foreground"
+          onClick={() => setReceiptOpen(true)}
+          aria-label="Lihat nota"
+        >
+          <FileImage className="h-4 w-4" />
+        </Button>
+      )}
       <Button
         type="button"
         variant="ghost"
@@ -225,6 +239,39 @@ export function TransactionActions({ transaction, cars }: TransactionActionsProp
       >
         <Trash2 className="h-4 w-4" />
       </Button>
+
+      {receiptUrl && (
+        <Dialog open={receiptOpen} onOpenChange={setReceiptOpen}>
+          <DialogContent className="max-w-3xl border-border bg-card">
+            <DialogHeader>
+              <DialogTitle className="text-foreground">Nota Pengeluaran</DialogTitle>
+              <DialogDescription>
+                Pratinjau nota transaksi pengeluaran.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div className="rounded-lg bg-muted/40 p-3">
+                <img
+                  src={receiptUrl}
+                  alt={`Nota ${transaction.description ?? "pengeluaran"}`}
+                  className="max-h-[70vh] w-full rounded-md object-contain"
+                  loading="lazy"
+                />
+              </div>
+              <div className="flex justify-end">
+                <a
+                  href={receiptUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-blue-400 hover:text-blue-300"
+                >
+                  Buka di tab baru
+                </a>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto border-border bg-card">
