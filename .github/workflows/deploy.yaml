@@ -96,6 +96,10 @@ jobs:
           echo "AUTH_SECRET=${{ secrets.AUTH_SECRET }}" >> .env
           echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env
           echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env
+          echo "INTEGRATION_API_BASE_URL=${{ secrets.INTEGRATION_API_BASE_URL }}" >> .env
+          echo "INTEGRATION_API_KEY=${{ secrets.INTEGRATION_API_KEY }}" >> .env
+          echo "INTEGRATION_DIVISION_ID=${{ secrets.INTEGRATION_DIVISION_ID }}" >> .env
+          echo "INTEGRATION_API_TIMEOUT_MS=${{ secrets.INTEGRATION_API_TIMEOUT_MS }}" >> .env
 
           echo "HUSKY=0" >> .env
           # echo "NODE_ENV=production" >> .env
@@ -194,6 +198,10 @@ jobs:
           echo "AUTH_SECRET=${{ secrets.AUTH_SECRET }}" >> .env
           echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env
           echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env
+          echo "INTEGRATION_API_BASE_URL=${{ secrets.INTEGRATION_API_BASE_URL }}" >> .env
+          echo "INTEGRATION_API_KEY=${{ secrets.INTEGRATION_API_KEY }}" >> .env
+          echo "INTEGRATION_DIVISION_ID=${{ secrets.INTEGRATION_DIVISION_ID }}" >> .env
+          echo "INTEGRATION_API_TIMEOUT_MS=${{ secrets.INTEGRATION_API_TIMEOUT_MS }}" >> .env
 
           echo "HUSKY=0" >> .env
           # echo "NODE_ENV=production" >> .env

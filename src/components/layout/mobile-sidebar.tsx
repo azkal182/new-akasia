@@ -11,6 +11,8 @@ import {
   FileText,
   Shield,
   Receipt,
+  CalendarCheck2,
+  CalendarDays,
   Users,
   Settings,
   LogOut,
@@ -51,6 +53,12 @@ const menuItems = [
 const adminMenuItems = [
   { title: "Pengguna", href: "/dashboard/users", icon: Users },
   { title: "Pengaturan", href: "/dashboard/settings", icon: Settings },
+];
+
+const programKerjaItems = [
+  { title: "Overview", href: "/dashboard/program-kerja", icon: CalendarCheck2 },
+  { title: "Field Hari Ini", href: "/dashboard/program-kerja/today", icon: CalendarCheck2 },
+  { title: "Jadwal Divisi", href: "/dashboard/program-kerja/schedules", icon: CalendarDays },
 ];
 
 export function MobileSidebar({
@@ -95,6 +103,34 @@ export function MobileSidebar({
                   onClick={handleLinkClick}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all",
+                    isActive
+                      ? "bg-gradient-to-r from-blue-600/20 to-cyan-600/20 text-blue-400"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                  )}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.title}
+                </Link>
+              );
+            })}
+
+            <Separator className="my-4 bg-border" />
+            <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Program Kerja
+            </p>
+            {programKerjaItems.map((item) => {
+              const isActive =
+                item.href === "/dashboard/program-kerja"
+                  ? pathname === "/dashboard/program-kerja"
+                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={handleLinkClick}
+                  className={cn(
+                    "ml-2 flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all",
                     isActive
                       ? "bg-gradient-to-r from-blue-600/20 to-cyan-600/20 text-blue-400"
                       : "text-muted-foreground hover:bg-accent hover:text-foreground"
