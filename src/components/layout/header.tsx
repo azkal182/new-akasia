@@ -1,7 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { Bell, Search, Menu, Car as DriverIcon } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  Bell,
+  Search,
+  Menu,
+  Car as DriverIcon,
+  LayoutGrid,
+  CalendarCheck2,
+  CalendarDays,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,6 +29,7 @@ import { signOut } from 'next-auth/react';
 import { MobileSidebar } from './mobile-sidebar';
 import { useDriverMode } from '@/contexts/driver-mode-context';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { cn } from '@/lib/utils';
 
 interface HeaderProps {
   user: {
@@ -28,14 +39,50 @@ interface HeaderProps {
   };
 }
 
+// Nav items yang muncul di dalam Driver Mode
+const driverNavItems = [
+  {
+    title: 'Operasional',
+    href: '/dashboard',
+    icon: DriverIcon,
+    // aktif jika BUKAN di halaman program-kerja
+    matchFn: (pathname: string) => !pathname.startsWith('/dashboard/program-kerja'),
+  },
+  {
+    title: 'Overview',
+    href: '/dashboard/program-kerja',
+    icon: LayoutGrid,
+    matchFn: (pathname: string) => pathname === '/dashboard/program-kerja',
+  },
+  {
+    title: 'Field Hari Ini',
+    href: '/dashboard/program-kerja/today',
+    icon: CalendarCheck2,
+    matchFn: (pathname: string) =>
+      pathname === '/dashboard/program-kerja/today' ||
+      pathname.startsWith('/dashboard/program-kerja/today/'),
+  },
+  {
+    title: 'Jadwal Divisi',
+    href: '/dashboard/program-kerja/schedules',
+    icon: CalendarDays,
+    matchFn: (pathname: string) =>
+      pathname === '/dashboard/program-kerja/schedules' ||
+      pathname.startsWith('/dashboard/program-kerja/schedules/'),
+  },
+];
+
 export function Header({ user }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isDriverMode, toggleDriverMode } = useDriverMode();
+  const { isDriverMode, isForced, toggleDriverMode } = useDriverMode();
+  const pathname = usePathname();
 
   return (
     <>
       <header className="flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/70 px-3 sm:px-6 backdrop-blur-sm">
-        <div className="flex items-center gap-2 sm:gap-4">
+        {/* ── Kiri: hamburger / driver mode indicator + nav ── */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Hamburger — hanya saat bukan driver mode */}
           {!isDriverMode && (
             <Button
               variant="ghost"
@@ -46,14 +93,47 @@ export function Header({ user }: HeaderProps) {
               <Menu className="h-5 w-5" />
             </Button>
           )}
+
           {isDriverMode ? (
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500">
-                <DriverIcon className="h-4 w-4 text-white" />
+            /* ── Driver Mode: badge + nav tabs ── */
+            <div className="flex items-center gap-2 sm:gap-4">
+              {/* Driver Mode badge */}
+              <div className="flex items-center gap-1.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500">
+                  <DriverIcon className="h-3.5 w-3.5 text-white" />
+                </div>
+                <span className="hidden text-sm font-semibold text-foreground sm:block">
+                  Driver
+                </span>
               </div>
-              <span className="font-semibold text-foreground">Driver Mode</span>
+
+              {/* Divider */}
+              <div className="hidden h-5 w-px bg-border sm:block" />
+
+              {/* Program Kerja navigation tabs */}
+              <nav className="flex items-center gap-0.5">
+                {driverNavItems.map((item) => {
+                  const isActive = item.matchFn(pathname);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all sm:text-sm',
+                        isActive
+                          ? 'bg-gradient-to-r from-blue-600/20 to-cyan-600/20 text-blue-400'
+                          : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                      )}
+                    >
+                      <item.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:block">{item.title}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
             </div>
           ) : (
+            /* ── Normal mode: search bar ── */
             <div className="relative hidden sm:block">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -64,21 +144,26 @@ export function Header({ user }: HeaderProps) {
           )}
         </div>
 
+        {/* ── Kanan: toggle + theme + notif + user ── */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Driver Mode Toggle */}
-          <div className="flex items-center gap-2 rounded-full bg-muted/60 px-2 py-1 sm:px-3 sm:py-1.5">
-            <DriverIcon className={`h-4 w-4 ${isDriverMode ? 'text-blue-400' : 'text-muted-foreground'}`} />
-            <Switch
-              checked={isDriverMode}
-              onCheckedChange={toggleDriverMode}
-              className="data-[state=checked]:bg-blue-600"
-            />
-          </div>
+          {/* Driver Mode Toggle — disembunyikan untuk role DRIVER (isForced) */}
+          {!isForced && (
+            <div className="flex items-center gap-2 rounded-full bg-muted/60 px-2 py-1 sm:px-3 sm:py-1.5">
+              <DriverIcon
+                className={`h-4 w-4 ${isDriverMode ? 'text-blue-400' : 'text-muted-foreground'}`}
+              />
+              <Switch
+                checked={isDriverMode}
+                onCheckedChange={toggleDriverMode}
+                className="data-[state=checked]:bg-blue-600"
+              />
+            </div>
+          )}
 
           <ThemeToggle />
 
+          {/* Notifikasi — hanya saat bukan driver mode */}
           {!isDriverMode && (
-            /* Notifications */
             <Button
               variant="ghost"
               size="icon"
@@ -106,10 +191,7 @@ export function Header({ user }: HeaderProps) {
                 </div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-56 border-border bg-popover"
-            >
+            <DropdownMenuContent align="end" className="w-56 border-border bg-popover">
               <DropdownMenuLabel className="text-muted-foreground">
                 Akun Saya
               </DropdownMenuLabel>
@@ -132,7 +214,7 @@ export function Header({ user }: HeaderProps) {
         </div>
       </header>
 
-      {/* Mobile Sidebar - only when not in driver mode */}
+      {/* Mobile Sidebar — hanya saat bukan driver mode */}
       {!isDriverMode && (
         <MobileSidebar
           user={user}
@@ -143,3 +225,4 @@ export function Header({ user }: HeaderProps) {
     </>
   );
 }
+

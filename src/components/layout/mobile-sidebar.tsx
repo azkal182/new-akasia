@@ -28,6 +28,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { signOut } from "next-auth/react";
+import { can, type UserRole } from "@/lib/permissions";
 
 interface MobileSidebarProps {
   user: {
@@ -89,7 +90,7 @@ export function MobileSidebar({
 
         <ScrollArea className="h-[calc(100vh-8rem)] px-3 py-4">
           <nav className="space-y-1">
-            {menuItems.map((item) => {
+            {can.viewMainMenu((user.role as UserRole) ?? 'USER') && menuItems.map((item) => {
               // Dashboard should only be active on exact match
               const isActive =
                 item.href === "/dashboard"

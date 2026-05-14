@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { signOut } from "next-auth/react";
+import { can, type UserRole } from "@/lib/permissions";
 
 interface SidebarProps {
   user: {
@@ -123,7 +124,7 @@ export function Sidebar({ user }: SidebarProps) {
       {/* Navigation */}
       <ScrollArea className="flex-1 px-3 py-4">
         <nav className="space-y-1">
-          {menuItems.map((item) => {
+          {can.viewMainMenu((user.role as UserRole) ?? 'USER') && menuItems.map((item) => {
             // Dashboard should only be active on exact match
             const isActive =
               item.href === "/dashboard"

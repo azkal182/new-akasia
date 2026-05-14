@@ -19,6 +19,8 @@ import {
 import { getCars } from "@/features/cars/actions";
 import { TransactionType } from "@/generated/prisma/enums";
 import { TransactionActions } from "@/features/finance/components/transaction-actions";
+import { auth } from "@/lib/auth";
+import { can, type UserRole } from "@/lib/permissions";
 
 type CarOption = {
   id: string;
@@ -27,6 +29,11 @@ type CarOption = {
 };
 
 export default async function FinancePage() {
+  const session = await auth();
+  const role = (session?.user?.role as UserRole) ?? 'USER';
+  const showSummary = can.viewFinanceSummary(role);
+  const showReports = can.viewReports(role);
+
   const now = new Date();
   const [
     transactions,
@@ -37,8 +44,8 @@ export default async function FinancePage() {
     cars,
   ] = await Promise.all([
     getTransactions({ limit: 20 }),
-    getBalance(),
-    getMonthlyStats(now.getFullYear(), now.getMonth() + 1),
+    showSummary ? getBalance() : Promise.resolve(0),
+    showSummary ? getMonthlyStats(now.getFullYear(), now.getMonth() + 1) : Promise.resolve({ totalIncome: 0, totalExpense: 0, net: 0 }),
     getTransactions({ type: TransactionType.INCOME, limit: 50 }),
     getTransactions({ type: TransactionType.EXPENSE, limit: 50 }),
     getCars(),
@@ -63,16 +70,18 @@ export default async function FinancePage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/dashboard/finance/report">
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-border hover:bg-muted"
-            >
-              <FileText className="mr-1.5 h-4 w-4" />
-              <span className="hidden sm:inline">Laporan</span>
-            </Button>
-          </Link>
+          {showReports && (
+            <Link href="/dashboard/finance/report">
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-border hover:bg-muted"
+              >
+                <FileText className="mr-1.5 h-4 w-4" />
+                <span className="hidden sm:inline">Laporan</span>
+              </Button>
+            </Link>
+          )}
           <Link href="/dashboard/finance/income">
             <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500">
               <Download className="mr-1.5 h-4 w-4" />
@@ -92,64 +101,66 @@ export default async function FinancePage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="border-border bg-card/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Saldo Saat Ini
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-foreground">
-              {formatRupiah(balance)}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stats Cards — hanya ADMIN */}
+      {showSummary && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <Card className="border-border bg-card/60">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Saldo Saat Ini
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl font-bold text-foreground">
+                {formatRupiah(balance)}
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="border-border bg-card/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pemasukan Bulan Ini
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-emerald-500">
-              {formatRupiah(monthlyStats.totalIncome)}
-            </div>
-          </CardContent>
-        </Card>
+          <Card className="border-border bg-card/60">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Pemasukan Bulan Ini
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl font-bold text-emerald-500">
+                {formatRupiah(monthlyStats.totalIncome)}
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="border-border bg-card/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pengeluaran Bulan Ini
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-red-400">
-              {formatRupiah(monthlyStats.totalExpense)}
-            </div>
-          </CardContent>
-        </Card>
+          <Card className="border-border bg-card/60">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Pengeluaran Bulan Ini
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl font-bold text-red-400">
+                {formatRupiah(monthlyStats.totalExpense)}
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="border-border bg-card/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Net Bulan Ini
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`text-xl font-bold ${
-                monthlyStats.net >= 0 ? "text-emerald-500" : "text-red-400"
-              }`}
-            >
-              {formatRupiah(monthlyStats.net)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="border-border bg-card/60">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Net Bulan Ini
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div
+                className={`text-xl font-bold ${
+                  monthlyStats.net >= 0 ? "text-emerald-500" : "text-red-400"
+                }`}
+              >
+                {formatRupiah(monthlyStats.net)}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Transactions List */}
       <Card className="border-border bg-card/60">

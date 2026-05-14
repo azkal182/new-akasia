@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import moment from 'moment-hijri';
 import { ArrowLeft, FileText, Filter, ArrowUpRight, ArrowDownRight, Download, Loader2, FileImage } from 'lucide-react';
@@ -40,8 +42,26 @@ type Transaction = Awaited<ReturnType<typeof getTransactionsByHijriMonth>>['tran
 type CarItem = { id: string; name: string };
 
 export default function FinanceReportPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const currentHijriYear = moment().iYear();
   const currentHijriMonth = moment().iMonth() + 1;
+
+  // Guard: hanya ADMIN yang boleh akses halaman ini
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role !== 'ADMIN') {
+      router.replace('/dashboard');
+    }
+  }, [session, status, router]);
+
+  // Tampilkan loading saat session belum diketahui
+  if (status === 'loading' || (status === 'authenticated' && session?.user?.role !== 'ADMIN')) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-border border-t-blue-500" />
+      </div>
+    );
+  }
 
   const [hijriYear, setHijriYear] = useState(currentHijriYear);
   const [hijriMonth, setHijriMonth] = useState(currentHijriMonth);

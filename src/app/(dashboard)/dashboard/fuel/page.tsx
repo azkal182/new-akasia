@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatRupiah, formatDate } from '@/lib/utils';
 import { getFuelTransactions, getCurrentHijriDate, getFuelMonthlyReport } from '@/features/fuel/actions';
+import { auth } from '@/lib/auth';
+import { can, type UserRole } from '@/lib/permissions';
 
 async function FuelStats() {
   const hijri = await getCurrentHijriDate();
@@ -144,6 +146,11 @@ async function FuelTransactionsList() {
 }
 
 export default async function FuelPage() {
+  const session = await auth();
+  const role = (session?.user?.role as UserRole) ?? 'USER';
+  const showSummary = can.viewFuelSummary(role);
+  const showReports = can.viewReports(role);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -153,12 +160,14 @@ export default async function FuelPage() {
           <p className="text-sm text-muted-foreground">Kelola cashflow BBM (kalender Hijri)</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/dashboard/fuel/report">
-            <Button variant="outline" size="sm" className="border-border hover:bg-muted">
-              <ClipboardList className="mr-1.5 h-4 w-4" />
-              <span className="hidden sm:inline">Laporan</span>
-            </Button>
-          </Link>
+          {showReports && (
+            <Link href="/dashboard/fuel/report">
+              <Button variant="outline" size="sm" className="border-border hover:bg-muted">
+                <ClipboardList className="mr-1.5 h-4 w-4" />
+                <span className="hidden sm:inline">Laporan</span>
+              </Button>
+            </Link>
+          )}
           <Link href="/dashboard/fuel/income">
             <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500">
               <Plus className="mr-1.5 h-4 w-4" />
@@ -174,10 +183,12 @@ export default async function FuelPage() {
         </div>
       </div>
 
-      {/* Stats */}
-      <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-muted" />}>
-        <FuelStats />
-      </Suspense>
+      {/* Stats — hanya ADMIN */}
+      {showSummary && (
+        <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-muted" />}>
+          <FuelStats />
+        </Suspense>
+      )}
 
       {/* Transactions */}
       <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-muted" />}>

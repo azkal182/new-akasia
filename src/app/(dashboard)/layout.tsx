@@ -17,10 +17,13 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
+  const isDriver = session.user.role === 'DRIVER';
+
   return (
-    <DriverModeProvider>
+    // forceEnabled=true untuk role DRIVER: otomatis masuk driver mode dan tidak bisa toggle off
+    <DriverModeProvider forceEnabled={isDriver}>
       <div className="flex h-screen bg-background text-foreground">
-        {/* Desktop Sidebar - hidden on mobile and in driver mode */}
+        {/* Desktop Sidebar — tersembunyi saat driver mode aktif (via SidebarWrapper) */}
         <SidebarWrapper>
           <Sidebar user={session.user} />
         </SidebarWrapper>
