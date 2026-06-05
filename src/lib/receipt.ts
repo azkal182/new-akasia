@@ -1,5 +1,5 @@
 import sharp from 'sharp';
-import { supabase } from '@/lib/supabase';
+import { uploadStorageObject } from '@/lib/storage';
 import { randomString } from '@/lib/utils';
 
 const DEFAULT_BUCKET = 'akasia';
@@ -37,21 +37,15 @@ export async function uploadCompressedAttachment(
   const safeFolder = folder.replace(/\/+$/, '');
   const fileName = `${safeFolder}/${Date.now()}-${randomString(10)}.jpg`;
 
-  const { error: uploadError } = await supabase.storage
-    .from(DEFAULT_BUCKET)
-    .upload(fileName, compressedBuffer, {
-      contentType: 'image/jpeg',
-      upsert: false,
-    });
-
-  if (uploadError) {
-    throw new Error(`Failed to upload file: ${uploadError.message}`);
-  }
-
-  const { data: urlData } = supabase.storage.from(DEFAULT_BUCKET).getPublicUrl(fileName);
+  const fileUrl = await uploadStorageObject({
+    body: compressedBuffer,
+    bucket: DEFAULT_BUCKET,
+    contentType: 'image/jpeg',
+    key: fileName,
+  });
 
   return {
-    fileUrl: urlData.publicUrl,
+    fileUrl,
     fileName,
     mimeType: 'image/jpeg',
     sizeBytes: compressedBuffer.length,
