@@ -4,7 +4,7 @@ import moment from 'moment-hijri';
 import path from 'path';
 import fs from 'fs';
 import { prisma } from '@/lib/prisma';
-import { TransactionType } from '@/generated/prisma/enums';
+import { TransactionLedger, TransactionType } from '@/generated/prisma/enums';
 
 const DEBUG_PREFIX = '[reports/fuel]';
 
@@ -160,6 +160,7 @@ export async function GET(request: NextRequest) {
     prisma.transaction.aggregate({
       where: {
         type: TransactionType.INCOME,
+        ledger: TransactionLedger.FUEL,
         date: { gte: startDate, lte: endDate },
         deletedAt: null,
       },

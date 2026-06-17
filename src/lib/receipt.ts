@@ -1,8 +1,7 @@
 import sharp from 'sharp';
-import { uploadStorageObject } from '@/lib/storage';
+import { uploadObject } from '@/lib/storage';
 import { randomString } from '@/lib/utils';
 
-const DEFAULT_BUCKET = 'akasia';
 const DEFAULT_WIDTH = 1024;
 const DEFAULT_QUALITY = 70;
 
@@ -37,11 +36,10 @@ export async function uploadCompressedAttachment(
   const safeFolder = folder.replace(/\/+$/, '');
   const fileName = `${safeFolder}/${Date.now()}-${randomString(10)}.jpg`;
 
-  const fileUrl = await uploadStorageObject({
-    body: compressedBuffer,
-    bucket: DEFAULT_BUCKET,
-    contentType: 'image/jpeg',
+  const fileUrl = await uploadObject({
     key: fileName,
+    body: compressedBuffer,
+    contentType: 'image/jpeg',
   });
 
   return {

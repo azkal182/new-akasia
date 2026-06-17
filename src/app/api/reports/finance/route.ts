@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import PDFDocument from "pdfkit";
 import { prisma } from "@/lib/prisma";
-import { TransactionType } from "@/generated/prisma/enums";
+import { TransactionLedger, TransactionType } from "@/generated/prisma/enums";
+import { financeTransactionWhere } from "@/features/finance/actions/transaction-filters";
 import moment from "moment-hijri";
 import path from "path";
 import fs from "fs";
@@ -94,6 +95,7 @@ export async function GET(request: NextRequest) {
         where: {
           date: { lt: startDate },
           type: TransactionType.INCOME,
+          ledger: TransactionLedger.FINANCE,
           deletedAt: null,
         },
         _sum: { amount: true },
@@ -102,6 +104,7 @@ export async function GET(request: NextRequest) {
         where: {
           date: { lt: startDate },
           type: TransactionType.EXPENSE,
+          ledger: TransactionLedger.FINANCE,
           deletedAt: null,
         },
         _sum: { amount: true },
@@ -120,6 +123,7 @@ export async function GET(request: NextRequest) {
       where: {
         date: { gte: startDate, lte: endDate },
         type: TransactionType.EXPENSE,
+        ledger: TransactionLedger.FINANCE,
         deletedAt: null,
         expense: {
           items: {
@@ -155,9 +159,8 @@ export async function GET(request: NextRequest) {
   } else {
     transactions = await prisma.transaction.findMany({
       where: {
+        ...financeTransactionWhere(),
         date: { gte: startDate, lte: endDate },
-        type: { in: [TransactionType.INCOME, TransactionType.EXPENSE] },
-        deletedAt: null,
       },
       orderBy: { date: "asc" },
       include: {

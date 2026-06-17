@@ -72,15 +72,6 @@ export default function FuelReportPage() {
     }
   }, [session, status, router]);
 
-  // Tampilkan loading saat session belum diketahui
-  if (status === 'loading' || (status === 'authenticated' && session?.user?.role !== 'ADMIN')) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-border border-t-blue-500" />
-      </div>
-    );
-  }
-
   const [hijriYear, setHijriYear] = useState(currentHijriYear);
   const [hijriMonth, setHijriMonth] = useState(currentHijriMonth);
   const [selectedCarId, setSelectedCarId] = useState<string>("all");
@@ -98,10 +89,12 @@ export default function FuelReportPage() {
   const [generating, setGenerating] = useState(false);
 
   const years = Array.from({ length: 7 }, (_, i) => currentHijriYear - 5 + i);
+  const canLoadData = status === 'authenticated' && session?.user?.role === 'ADMIN';
 
   useEffect(() => {
+    if (!canLoadData) return;
     getCars().then((data) => setCars(data));
-  }, []);
+  }, [canLoadData]);
 
   const handleDownloadPDF = async () => {
     setGenerating(true);
@@ -131,6 +124,7 @@ export default function FuelReportPage() {
   };
 
   const loadData = useCallback(async () => {
+    if (!canLoadData) return;
     setLoading(true);
     try {
       const result = await getFuelPurchasesByHijriMonth(
@@ -144,11 +138,20 @@ export default function FuelReportPage() {
     } finally {
       setLoading(false);
     }
-  }, [hijriYear, hijriMonth, selectedCarId]);
+  }, [canLoadData, hijriYear, hijriMonth, selectedCarId]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Tampilkan loading saat session belum diketahui
+  if (status === 'loading' || (status === 'authenticated' && session?.user?.role !== 'ADMIN')) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-border border-t-blue-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

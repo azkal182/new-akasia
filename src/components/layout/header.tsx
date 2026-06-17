@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -74,8 +74,14 @@ const driverNavItems = [
 
 export function Header({ user }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { isDriverMode, isForced, toggleDriverMode } = useDriverMode();
   const pathname = usePathname();
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setIsMounted(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   return (
     <>
@@ -134,12 +140,23 @@ export function Header({ user }: HeaderProps) {
             </div>
           ) : (
             /* ── Normal mode: search bar ── */
-            <div className="relative hidden sm:block">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Cari..."
-                className="w-48 md:w-64 border-border bg-background/60 pl-9 text-sm text-foreground placeholder:text-muted-foreground focus:border-blue-500"
-              />
+            <div className="relative hidden h-9 w-48 md:w-64 sm:block">
+              {isMounted && (
+                <>
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    name="dashboard-search"
+                    placeholder="Cari..."
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    data-lpignore="true"
+                    data-form-type="other"
+                    className="w-48 md:w-64 border-border bg-background/60 pl-9 text-sm text-foreground placeholder:text-muted-foreground focus:border-blue-500"
+                  />
+                </>
+              )}
             </div>
           )}
         </div>
@@ -225,4 +242,3 @@ export function Header({ user }: HeaderProps) {
     </>
   );
 }
-

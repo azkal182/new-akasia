@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { TransactionType } from "@/generated/prisma/enums";
+import { TransactionLedger, TransactionType } from "@/generated/prisma/enums";
 import {
   createIncomeSchema,
   updateIncomeSchema,
@@ -10,7 +10,11 @@ import {
   type UpdateIncomeInput,
 } from "../schemas/transaction.schema";
 import { auth } from "@/lib/auth";
-import { calculateBalanceBefore } from "./balance.util";
+import {
+  calculateBalanceBefore,
+  calculateCurrentFinanceBalance,
+} from "./balance.util";
+import { financeTransactionWhere } from "./transaction-filters";
 
 export async function createIncome(data: CreateIncomeInput) {
   const session = await auth();
@@ -24,23 +28,20 @@ export async function createIncome(data: CreateIncomeInput) {
   }
 
   const { amount, source, date, notes } = validated.data;
+  const entryDate = new Date(date);
 
   try {
-    // Get recent transaction for balance calculation
-    const lastTransaction = await prisma.transaction.findFirst({
-      orderBy: { date: "desc" },
-    });
-
-    const balanceBefore = lastTransaction?.balanceAfter ?? 0;
+    const balanceBefore = await calculateBalanceBefore(entryDate);
     const balanceAfter = balanceBefore + amount;
 
     // Create transaction with income relation
     const transaction = await prisma.transaction.create({
       data: {
         type: TransactionType.INCOME,
+        ledger: TransactionLedger.FINANCE,
         amount,
         description: source,
-        date: new Date(date),
+        date: entryDate,
         balanceBefore,
         balanceAfter,
         userId: session.user.id,
@@ -82,11 +83,12 @@ export async function updateIncome(
 
   const existing = await prisma.transaction.findUnique({
     where: { id: transactionId },
-    select: { id: true, type: true, income: { select: { id: true } } },
+    select: { id: true, ledger: true, type: true, income: { select: { id: true } } },
   });
 
   if (
     !existing ||
+    existing.ledger !== TransactionLedger.FINANCE ||
     existing.type !== TransactionType.INCOME ||
     !existing.income
   ) {
@@ -137,10 +139,10 @@ export async function deleteIncome(transactionId: string) {
 
   const existing = await prisma.transaction.findUnique({
     where: { id: transactionId },
-    select: { id: true, type: true },
+    select: { id: true, ledger: true, type: true },
   });
 
-  if (!existing || existing.type !== TransactionType.INCOME) {
+  if (!existing || existing.ledger !== TransactionLedger.FINANCE || existing.type !== TransactionType.INCOME) {
     return { error: "Transaksi pemasukan tidak ditemukan" };
   }
 
@@ -167,11 +169,13 @@ export async function getTransactions(options?: {
 }) {
   const { year, month, type, limit } = options ?? {};
 
-  const where: Record<string, unknown> = {
-    deletedAt: null,
-    // By default, only show INCOME and EXPENSE (not FUEL_PURCHASE)
-    type: type ?? { in: [TransactionType.INCOME, TransactionType.EXPENSE] },
-  };
+  const where: Record<string, unknown> = type
+    ? {
+        deletedAt: null,
+        ledger: TransactionLedger.FINANCE,
+        type,
+      }
+    : financeTransactionWhere();
 
   if (year && month) {
     const startDate = new Date(year, month - 1, 1);
@@ -215,26 +219,7 @@ export async function getTransactions(options?: {
 }
 
 export async function getBalance() {
-  // Calculate balance from sum of amounts (not from stored balanceAfter)
-  // Only count INCOME and EXPENSE, not FUEL_PURCHASE
-  const [income, expense] = await Promise.all([
-    prisma.transaction.aggregate({
-      where: {
-        type: TransactionType.INCOME,
-        deletedAt: null,
-      },
-      _sum: { amount: true },
-    }),
-    prisma.transaction.aggregate({
-      where: {
-        type: TransactionType.EXPENSE,
-        deletedAt: null,
-      },
-      _sum: { amount: true },
-    }),
-  ]);
-
-  return (income._sum.amount ?? 0) - (expense._sum.amount ?? 0);
+  return calculateCurrentFinanceBalance();
 }
 
 export async function getMonthlyStats(year: number, month: number) {
@@ -245,6 +230,7 @@ export async function getMonthlyStats(year: number, month: number) {
     prisma.transaction.aggregate({
       where: {
         type: TransactionType.INCOME,
+        ledger: TransactionLedger.FINANCE,
         date: { gte: startDate, lte: endDate },
         deletedAt: null,
       },
@@ -252,7 +238,8 @@ export async function getMonthlyStats(year: number, month: number) {
     }),
     prisma.transaction.aggregate({
       where: {
-        type: TransactionType.EXPENSE, // Only EXPENSE, not FUEL_PURCHASE
+        type: TransactionType.EXPENSE,
+        ledger: TransactionLedger.FINANCE,
         date: { gte: startDate, lte: endDate },
         deletedAt: null,
       },
@@ -345,6 +332,7 @@ export async function getTransactionsByHijriMonth(
       where: {
         date: { gte: startDate, lte: endDate },
         type: TransactionType.EXPENSE,
+        ledger: TransactionLedger.FINANCE,
         deletedAt: null,
         expense: {
           items: {
@@ -409,6 +397,7 @@ export async function getTransactionsByHijriMonth(
       where: {
         date: { lt: startDate },
         type: TransactionType.INCOME,
+        ledger: TransactionLedger.FINANCE,
         deletedAt: null,
       },
       _sum: { amount: true },
@@ -417,6 +406,7 @@ export async function getTransactionsByHijriMonth(
       where: {
         date: { lt: startDate },
         type: TransactionType.EXPENSE, // Only EXPENSE, not FUEL_PURCHASE
+        ledger: TransactionLedger.FINANCE,
         deletedAt: null,
       },
       _sum: { amount: true },
@@ -429,9 +419,8 @@ export async function getTransactionsByHijriMonth(
   // Get transactions for the Hijri month (INCOME and EXPENSE only, not FUEL_PURCHASE)
   const transactions = await prisma.transaction.findMany({
     where: {
+      ...financeTransactionWhere(),
       date: { gte: startDate, lte: endDate },
-      type: { in: [TransactionType.INCOME, TransactionType.EXPENSE] },
-      deletedAt: null,
     },
     orderBy: { date: "asc" },
     include: {

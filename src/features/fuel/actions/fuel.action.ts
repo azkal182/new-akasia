@@ -3,10 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { TransactionType } from "@/generated/prisma/enums";
+import { TransactionLedger, TransactionType } from "@/generated/prisma/enums";
 import { z } from "zod";
 import moment from "moment-hijri";
 import { uploadCompressedReceipt } from "@/lib/receipt";
+import {
+  calculateFuelBalanceBefore,
+} from "@/features/finance/actions/balance.util";
+import { fuelTransactionWhere } from "@/features/finance/actions/transaction-filters";
 
 const purchaseFuelSchema = z.object({
   carId: z.string().uuid("Invalid car ID"),
@@ -44,18 +48,14 @@ export async function purchaseFuel(
   }
 
   const { carId, totalAmount, date, notes } = validated.data;
+  const entryDate = new Date(date);
 
   try {
     const receiptUrl = await uploadCompressedReceipt(
       receiptFile,
       "receipts/fuel",
     );
-    // Get last transaction for balance
-    const lastTransaction = await prisma.transaction.findFirst({
-      orderBy: { date: "desc" },
-    });
-
-    const balanceBefore = lastTransaction?.balanceAfter ?? 0;
+    const balanceBefore = await calculateFuelBalanceBefore(entryDate);
     const balanceAfter = balanceBefore - totalAmount;
 
     // Get car info
@@ -68,9 +68,10 @@ export async function purchaseFuel(
     const transaction = await prisma.transaction.create({
       data: {
         type: TransactionType.FUEL_PURCHASE,
+        ledger: TransactionLedger.FUEL,
         amount: totalAmount,
         description: `Pembelian BBM - ${car.name} (${car.licensePlate})`,
-        date: new Date(date),
+        date: entryDate,
         balanceBefore,
         balanceAfter,
         userId: session.user.id,
@@ -112,22 +113,19 @@ export async function receiveFuelIncome(data: ReceiveIncomeInput) {
   }
 
   const { amount, source, date, notes } = validated.data;
+  const entryDate = new Date(date);
 
   try {
-    // Get last transaction for balance
-    const lastTransaction = await prisma.transaction.findFirst({
-      orderBy: { date: "desc" },
-    });
-
-    const balanceBefore = lastTransaction?.balanceAfter ?? 0;
+    const balanceBefore = await calculateFuelBalanceBefore(entryDate);
     const balanceAfter = balanceBefore + amount;
 
     const transaction = await prisma.transaction.create({
       data: {
         type: TransactionType.INCOME,
+        ledger: TransactionLedger.FUEL,
         amount,
-        description: `Dana BBM - ${source}`,
-        date: new Date(date),
+        description: source,
+        date: entryDate,
         balanceBefore,
         balanceAfter,
         userId: session.user.id,
@@ -185,7 +183,7 @@ export async function getFuelTransactions(options?: {
 
   const transactions = await prisma.transaction.findMany({
     where: {
-      type: { in: [TransactionType.INCOME, TransactionType.FUEL_PURCHASE] },
+      ...fuelTransactionWhere(),
       date: {
         gte: startDate,
         lte: endDate,
@@ -278,6 +276,7 @@ export async function getFuelMonthlyReport(
     prisma.transaction.aggregate({
       where: {
         type: TransactionType.INCOME,
+        ledger: TransactionLedger.FUEL,
         date: { gte: startDate, lte: endDate },
         deletedAt: null,
       },
@@ -286,6 +285,7 @@ export async function getFuelMonthlyReport(
     prisma.transaction.aggregate({
       where: {
         type: TransactionType.FUEL_PURCHASE,
+        ledger: TransactionLedger.FUEL,
         date: { gte: startDate, lte: endDate },
         deletedAt: null,
       },
@@ -440,6 +440,7 @@ export async function getFuelPurchasesByHijriMonth(
   const incomeTotal = await prisma.transaction.aggregate({
     where: {
       type: TransactionType.INCOME,
+      ledger: TransactionLedger.FUEL,
       date: { gte: startDate, lte: endDate },
       deletedAt: null,
     },

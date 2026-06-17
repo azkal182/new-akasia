@@ -1,5 +1,10 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Storage
+
+Upload baru dapat diarahkan ke Cloudflare R2 tanpa memutus URL Supabase lama.
+Lihat [panduan Cloudflare R2](docs/storage-r2.md).
+
 ## Getting Started
 
 First, run the development server:

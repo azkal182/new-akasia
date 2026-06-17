@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
-import { TransactionType } from '@/generated/prisma/enums';
+import { TransactionLedger, TransactionType } from '@/generated/prisma/enums';
 import {
   createExpenseSchema,
   updateExpenseSchema,
@@ -25,6 +25,7 @@ export async function createExpense(data: CreateExpenseInput, receiptFile?: File
   }
 
   const { date, description, items, notes } = validated.data;
+  const entryDate = new Date(date);
 
   // Calculate total amount
   const totalAmount = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
@@ -36,21 +37,17 @@ export async function createExpense(data: CreateExpenseInput, receiptFile?: File
       receiptUrl = await uploadCompressedReceipt(receiptFile, 'receipts/expense');
     }
 
-    // Get recent transaction for balance calculation
-    const lastTransaction = await prisma.transaction.findFirst({
-      orderBy: { date: 'desc' },
-    });
-
-    const balanceBefore = lastTransaction?.balanceAfter ?? 0;
+    const balanceBefore = await calculateBalanceBefore(entryDate);
     const balanceAfter = balanceBefore - totalAmount;
 
     // Create transaction with expense relation
     const transaction = await prisma.transaction.create({
       data: {
         type: TransactionType.EXPENSE,
+        ledger: TransactionLedger.FINANCE,
         amount: totalAmount,
         description,
-        date: new Date(date),
+        date: entryDate,
         balanceBefore,
         balanceAfter,
         userId: session.user.id,
@@ -115,7 +112,12 @@ export async function updateExpense(
     },
   });
 
-  if (!existing || existing.type !== TransactionType.EXPENSE || !existing.expense) {
+  if (
+    !existing ||
+    existing.ledger !== TransactionLedger.FINANCE ||
+    existing.type !== TransactionType.EXPENSE ||
+    !existing.expense
+  ) {
     return { error: 'Transaksi pengeluaran tidak ditemukan' };
   }
 
@@ -184,10 +186,10 @@ export async function deleteExpense(transactionId: string) {
 
   const existing = await prisma.transaction.findUnique({
     where: { id: transactionId },
-    select: { id: true, type: true },
+    select: { id: true, ledger: true, type: true },
   });
 
-  if (!existing || existing.type !== TransactionType.EXPENSE) {
+  if (!existing || existing.ledger !== TransactionLedger.FINANCE || existing.type !== TransactionType.EXPENSE) {
     return { error: 'Transaksi pengeluaran tidak ditemukan' };
   }
 

@@ -49,6 +49,7 @@ enum UserRole {
 model Transaction {
     id          String          @id @default(uuid())
     type        TransactionType
+    ledger      TransactionLedger @default(FINANCE)
     amount      Int
     description String
     date        DateTime        @default(now())
@@ -72,6 +73,7 @@ model Transaction {
 
     @@index([date])
     @@index([type])
+    @@index([ledger])
     @@index([userId])
 }
 
@@ -79,6 +81,11 @@ enum TransactionType {
     INCOME
     EXPENSE
     FUEL_PURCHASE
+}
+
+enum TransactionLedger {
+    FINANCE
+    FUEL
 }
 
 model Income {

@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { TransactionType } from '@/generated/prisma/enums';
+import { TransactionLedger, TransactionType } from '@/generated/prisma/enums';
 
 export async function calculateBalanceBefore(date: Date, excludeTransactionId?: string) {
   const baseWhere = {
@@ -14,6 +14,7 @@ export async function calculateBalanceBefore(date: Date, excludeTransactionId?: 
     prisma.transaction.aggregate({
       where: {
         ...baseWhere,
+        ledger: TransactionLedger.FINANCE,
         type: TransactionType.INCOME,
       },
       _sum: { amount: true },
@@ -21,7 +22,56 @@ export async function calculateBalanceBefore(date: Date, excludeTransactionId?: 
     prisma.transaction.aggregate({
       where: {
         ...baseWhere,
+        ledger: TransactionLedger.FINANCE,
         type: TransactionType.EXPENSE,
+      },
+      _sum: { amount: true },
+    }),
+  ]);
+
+  return (income._sum.amount ?? 0) - (expense._sum.amount ?? 0);
+}
+
+export async function calculateCurrentFinanceBalance() {
+  const [income, expense] = await Promise.all([
+    prisma.transaction.aggregate({
+      where: {
+        deletedAt: null,
+        ledger: TransactionLedger.FINANCE,
+        type: TransactionType.INCOME,
+      },
+      _sum: { amount: true },
+    }),
+    prisma.transaction.aggregate({
+      where: {
+        deletedAt: null,
+        ledger: TransactionLedger.FINANCE,
+        type: TransactionType.EXPENSE,
+      },
+      _sum: { amount: true },
+    }),
+  ]);
+
+  return (income._sum.amount ?? 0) - (expense._sum.amount ?? 0);
+}
+
+export async function calculateFuelBalanceBefore(date: Date) {
+  const [income, expense] = await Promise.all([
+    prisma.transaction.aggregate({
+      where: {
+        date: { lt: date },
+        deletedAt: null,
+        ledger: TransactionLedger.FUEL,
+        type: TransactionType.INCOME,
+      },
+      _sum: { amount: true },
+    }),
+    prisma.transaction.aggregate({
+      where: {
+        date: { lt: date },
+        deletedAt: null,
+        ledger: TransactionLedger.FUEL,
+        type: TransactionType.FUEL_PURCHASE,
       },
       _sum: { amount: true },
     }),
