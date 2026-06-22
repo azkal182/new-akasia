@@ -7,9 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  asRecord,
+  formatRequirementType,
   formatScheduleDate,
-  getRecordString,
+  formatSessionStatus,
   normalizeSchedules,
   sessionBadgeClass,
   type NormalizedSchedule,
@@ -47,20 +47,10 @@ export default function ProgramKerjaTodayPage() {
     return payload.integrationClient ?? '-';
   }, [payload]);
 
-  const divisionLabel = useMemo(() => {
-    if (!payload) {
-      return '-';
-    }
-
-    if (!Array.isArray(payload)) {
-      return payload.divisionId ?? '-';
-    }
-
-    const first = asRecord(payload[0]);
-    const program = asRecord(first?.program);
-    const division = asRecord(program?.division);
-    return getRecordString(division, 'id') ?? '-';
-  }, [payload]);
+  const completedCount = schedules.filter((schedule) =>
+    ['COMPLETED', 'COMPLETED_WITH_ISSUE'].includes(schedule.sessionStatus ?? ''),
+  ).length;
+  const pendingCount = Math.max(0, schedules.length - completedCount);
 
   const loadToday = useCallback(async () => {
     setLoading(true);
@@ -71,13 +61,13 @@ export default function ProgramKerjaTodayPage() {
       const body = await response.json();
 
       if (!response.ok) {
-        setError(typeof body?.error === 'string' ? body.error : 'Gagal mengambil data field hari ini');
+        setError(typeof body?.error === 'string' ? body.error : 'Jadwal hari ini belum bisa dimuat');
         return;
       }
 
       setPayload(body as FieldTodayResponse | unknown[]);
     } catch {
-      setError('Terjadi kesalahan jaringan saat menghubungi endpoint internal.');
+      setError('Koneksi bermasalah. Coba muat ulang jadwal beberapa saat lagi.');
     } finally {
       setLoading(false);
     }
@@ -93,19 +83,19 @@ export default function ProgramKerjaTodayPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Field Hari Ini</h1>
           <p className="text-sm text-muted-foreground">
-            Data otomatis dimuat saat halaman dibuka. Pilih schedule untuk lanjut submit laporan.
+            Lihat tugas lapangan hari ini dan kirim laporan setelah kegiatan selesai.
           </p>
         </div>
         <Button type="button" onClick={() => void loadToday()} disabled={loading} variant="outline">
           <RefreshCw className="mr-2 h-4 w-4" />
-          {loading ? 'Memuat...' : 'Refresh'}
+          {loading ? 'Memuat...' : 'Muat Ulang'}
         </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Integration Client</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Sumber Data</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-lg font-semibold text-foreground">{integrationClientLabel}</p>
@@ -113,15 +103,15 @@ export default function ProgramKerjaTodayPage() {
         </Card>
         <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Division ID</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Belum Dilaporkan</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="truncate text-lg font-semibold text-foreground">{divisionLabel}</p>
+            <p className="text-lg font-semibold text-foreground">{pendingCount}</p>
           </CardContent>
         </Card>
         <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Total Schedule</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Total Kegiatan</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-lg font-semibold text-foreground">{schedules.length}</p>
@@ -139,7 +129,7 @@ export default function ProgramKerjaTodayPage() {
         <Card className="border-border bg-card/60">
           <CardContent className="flex min-h-40 flex-col items-center justify-center gap-2 pt-6 text-center">
             <CalendarCheck2 className="h-6 w-6 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Belum ada schedule untuk hari ini.</p>
+            <p className="text-sm text-muted-foreground">Tidak ada kegiatan lapangan untuk hari ini.</p>
           </CardContent>
         </Card>
       ) : null}
@@ -151,7 +141,7 @@ export default function ProgramKerjaTodayPage() {
               <div className="flex items-start justify-between gap-3">
                 <CardTitle className="line-clamp-2 text-base text-foreground">{schedule.programName}</CardTitle>
                 <Badge variant="outline" className={sessionBadgeClass(schedule.sessionStatus)}>
-                  {schedule.sessionStatus ?? 'DRAFT'}
+                  {formatSessionStatus(schedule.sessionStatus)}
                 </Badge>
               </div>
             </CardHeader>
@@ -166,12 +156,14 @@ export default function ProgramKerjaTodayPage() {
                   <p className="font-medium text-foreground">{schedule.scheduleTime ?? '-'}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Tipe Bukti</p>
-                  <p className="font-medium text-foreground">{schedule.requirementType ?? '-'}</p>
+                  <p className="text-muted-foreground">Bukti yang Diminta</p>
+                  <p className="font-medium text-foreground">{formatRequirementType(schedule.requirementType)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Minimum Upload</p>
-                  <p className="font-medium text-foreground">{schedule.minUploads ?? '-'}</p>
+                  <p className="text-muted-foreground">Jumlah Minimal Bukti</p>
+                  <p className="font-medium text-foreground">
+                    {schedule.minUploads ? `${schedule.minUploads} file` : '-'}
+                  </p>
                 </div>
               </div>
 
@@ -192,7 +184,7 @@ export default function ProgramKerjaTodayPage() {
                       ? 'Selesai dengan Catatan'
                       : schedule.sessionStatus && schedule.sessionStatus !== 'DRAFT'
                         ? 'Lihat Status Laporan'
-                        : 'Submit Laporan'}
+                        : 'Kirim Laporan'}
                 </Button>
               </Link>
             </CardContent>

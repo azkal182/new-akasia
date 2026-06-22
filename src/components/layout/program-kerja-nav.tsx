@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CalendarCheck2, CalendarDays, LayoutGrid, Car as DriverIcon, LogOut } from 'lucide-react';
+import { CalendarCheck2, CalendarDays, Car as DriverIcon, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -21,12 +21,6 @@ interface ProgramKerjaNavProps {
 }
 
 const navItems = [
-  {
-    title: 'Overview',
-    href: '/dashboard/program-kerja',
-    icon: LayoutGrid,
-    exact: true,
-  },
   {
     title: 'Field Hari Ini',
     href: '/dashboard/program-kerja/today',

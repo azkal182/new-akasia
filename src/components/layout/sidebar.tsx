@@ -89,11 +89,6 @@ const adminMenuItems = [
 
 const programKerjaItems = [
   {
-    title: "Overview",
-    href: "/dashboard/program-kerja",
-    icon: CalendarCheck2,
-  },
-  {
     title: "Field Hari Ini",
     href: "/dashboard/program-kerja/today",
     icon: CalendarCheck2,
@@ -154,9 +149,7 @@ export function Sidebar({ user }: SidebarProps) {
           </p>
           {programKerjaItems.map((item) => {
             const isActive =
-              item.href === "/dashboard/program-kerja"
-                ? pathname === "/dashboard/program-kerja"
-                : pathname === item.href || pathname.startsWith(`${item.href}/`);
+              pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
                 key={item.href}

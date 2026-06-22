@@ -8,7 +8,6 @@ import {
   Search,
   Menu,
   Car as DriverIcon,
-  LayoutGrid,
   CalendarCheck2,
   CalendarDays,
 } from 'lucide-react';
@@ -47,12 +46,6 @@ const driverNavItems = [
     icon: DriverIcon,
     // aktif jika BUKAN di halaman program-kerja
     matchFn: (pathname: string) => !pathname.startsWith('/dashboard/program-kerja'),
-  },
-  {
-    title: 'Overview',
-    href: '/dashboard/program-kerja',
-    icon: LayoutGrid,
-    matchFn: (pathname: string) => pathname === '/dashboard/program-kerja',
   },
   {
     title: 'Field Hari Ini',

@@ -8,7 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
+  formatRequirementType,
   formatScheduleDate,
+  formatSessionStatus,
   normalizeSchedules,
   sessionBadgeClass,
   type NormalizedSchedule,
@@ -81,8 +83,10 @@ export default function ProgramKerjaSchedulesPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Jadwal Divisi</h1>
-          <p className="text-sm text-muted-foreground">Default langsung menampilkan jadwal hari ini.</p>
+          <h1 className="text-2xl font-bold text-foreground">Jadwal Kegiatan</h1>
+          <p className="text-sm text-muted-foreground">
+            Pilih tanggal untuk melihat daftar kegiatan yang sudah dijadwalkan.
+          </p>
         </div>
       </div>
 
@@ -90,7 +94,7 @@ export default function ProgramKerjaSchedulesPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-foreground">
             <CalendarDays className="h-5 w-5 text-blue-400" />
-            Filter Jadwal
+            Pilih Tanggal
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -107,7 +111,7 @@ export default function ProgramKerjaSchedulesPage() {
 
             <div className="flex gap-2">
               <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-500">
-                {loading ? 'Memuat...' : 'Terapkan'}
+                {loading ? 'Memuat...' : 'Tampilkan Jadwal'}
               </Button>
               <Button
                 type="button"
@@ -116,7 +120,7 @@ export default function ProgramKerjaSchedulesPage() {
                 disabled={loading}
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Refresh
+                Muat Ulang
               </Button>
             </div>
           </form>
@@ -126,23 +130,31 @@ export default function ProgramKerjaSchedulesPage() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Client</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Tanggal Dipilih</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-lg font-semibold text-foreground">{payload?.integrationClient ?? '-'}</p>
+            <p className="text-lg font-semibold text-foreground">
+              {formatScheduleDate(payload?.date ?? date)}
+            </p>
           </CardContent>
         </Card>
         <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Division</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Sudah Dilaporkan</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="truncate text-lg font-semibold text-foreground">{payload?.divisionId ?? '-'}</p>
+            <p className="text-lg font-semibold text-foreground">
+              {
+                schedules.filter((schedule) =>
+                  ['COMPLETED', 'COMPLETED_WITH_ISSUE'].includes(schedule.sessionStatus ?? ''),
+                ).length
+              }
+            </p>
           </CardContent>
         </Card>
         <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Total Jadwal</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Total Kegiatan</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-lg font-semibold text-foreground">{schedules.length}</p>
@@ -159,7 +171,7 @@ export default function ProgramKerjaSchedulesPage() {
       {!error && !loading && schedules.length === 0 ? (
         <Card className="border-border bg-card/60">
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            Tidak ada jadwal pada tanggal ini.
+            Tidak ada kegiatan pada tanggal ini.
           </CardContent>
         </Card>
       ) : null}
@@ -171,7 +183,7 @@ export default function ProgramKerjaSchedulesPage() {
               <div className="flex items-start justify-between gap-3">
                 <CardTitle className="line-clamp-2 text-base text-foreground">{schedule.programName}</CardTitle>
                 <Badge variant="outline" className={sessionBadgeClass(schedule.sessionStatus)}>
-                  {schedule.sessionStatus ?? 'DRAFT'}
+                  {formatSessionStatus(schedule.sessionStatus)}
                 </Badge>
               </div>
             </CardHeader>
@@ -184,6 +196,16 @@ export default function ProgramKerjaSchedulesPage() {
                 <div>
                   <p className="text-muted-foreground">Jam</p>
                   <p className="font-medium text-foreground">{schedule.scheduleTime ?? '-'}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Bukti yang Diminta</p>
+                  <p className="font-medium text-foreground">{formatRequirementType(schedule.requirementType)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Jumlah Minimal Bukti</p>
+                  <p className="font-medium text-foreground">
+                    {schedule.minUploads ? `${schedule.minUploads} file` : '-'}
+                  </p>
                 </div>
               </div>
             </CardContent>

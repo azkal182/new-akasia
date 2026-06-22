@@ -166,6 +166,56 @@ export function sessionBadgeClass(status: string | null) {
   return 'border-blue-500/50 text-blue-400';
 }
 
+export function formatSessionStatus(status: string | null) {
+  if (!status || status === 'DRAFT') {
+    return 'Belum dilaporkan';
+  }
+
+  if (status === 'COMPLETED') {
+    return 'Selesai';
+  }
+
+  if (status === 'COMPLETED_WITH_ISSUE') {
+    return 'Selesai dengan catatan';
+  }
+
+  if (status === 'NOT_EXECUTED') {
+    return 'Tidak terlaksana';
+  }
+
+  return status
+    .toLowerCase()
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+export function formatRequirementType(type: string | null) {
+  if (!type) {
+    return '-';
+  }
+
+  const normalized = type.toUpperCase();
+
+  if (normalized === 'PHOTO') {
+    return 'Foto';
+  }
+
+  if (normalized === 'DOCUMENT') {
+    return 'Dokumen';
+  }
+
+  if (normalized === 'PHOTO_AND_DOCUMENT') {
+    return 'Foto dan dokumen';
+  }
+
+  return type
+    .toLowerCase()
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
 export function normalizeSessionDetail(input: unknown): NormalizedSessionDetail | null {
   const rec = asRecord(input);
   if (!rec) {
