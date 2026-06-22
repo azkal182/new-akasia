@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatRupiah, formatDate } from '@/lib/utils';
 import { getFuelTransactions, getCurrentHijriDate, getFuelMonthlyReport } from '@/features/fuel/actions';
+import { FuelTransactionActions } from '@/features/fuel/components/fuel-transaction-actions';
+import { getCars } from '@/features/cars/actions';
 import { auth } from '@/lib/auth';
 import { can, type UserRole } from '@/lib/permissions';
 
@@ -73,7 +75,10 @@ async function FuelStats() {
 }
 
 async function FuelTransactionsList() {
-  const transactions = await getFuelTransactions();
+  const [transactions, cars] = await Promise.all([
+    getFuelTransactions(),
+    getCars(),
+  ]);
 
   return (
     <Card className="border-border bg-card/60">
@@ -118,23 +123,26 @@ async function FuelTransactionsList() {
                     )}
                   </div>
                 </div>
-                <div className="text-right">
-                  <p
-                    className={`font-semibold ${trx.type === 'INCOME' ? 'text-emerald-500' : 'text-amber-400'
-                      }`}
-                  >
-                    {trx.type === 'INCOME' ? '+' : '-'}
-                    {formatRupiah(trx.amount)}
-                  </p>
-                  <Badge
-                    variant="outline"
-                    className={`text-xs ${trx.type === 'INCOME'
-                      ? 'border-emerald-500/50 text-emerald-400'
-                      : 'border-amber-500/50 text-amber-400'
-                      }`}
-                  >
-                    {trx.type === 'INCOME' ? 'Pemasukan' : 'BBM'}
-                  </Badge>
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <p
+                      className={`font-semibold ${trx.type === 'INCOME' ? 'text-emerald-500' : 'text-amber-400'
+                        }`}
+                    >
+                      {trx.type === 'INCOME' ? '+' : '-'}
+                      {formatRupiah(trx.amount)}
+                    </p>
+                    <Badge
+                      variant="outline"
+                      className={`text-xs ${trx.type === 'INCOME'
+                        ? 'border-emerald-500/50 text-emerald-400'
+                        : 'border-amber-500/50 text-amber-400'
+                        }`}
+                    >
+                      {trx.type === 'INCOME' ? 'Pemasukan' : 'BBM'}
+                    </Badge>
+                  </div>
+                  <FuelTransactionActions transaction={trx} cars={cars} />
                 </div>
               </div>
             ))

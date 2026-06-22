@@ -55,22 +55,25 @@ export async function calculateCurrentFinanceBalance() {
   return (income._sum.amount ?? 0) - (expense._sum.amount ?? 0);
 }
 
-export async function calculateFuelBalanceBefore(date: Date) {
+export async function calculateFuelBalanceBefore(date: Date, excludeTransactionId?: string) {
+  const baseWhere = {
+    date: { lt: date },
+    deletedAt: null,
+    ledger: TransactionLedger.FUEL,
+    ...(excludeTransactionId ? { id: { not: excludeTransactionId } } : {}),
+  };
+
   const [income, expense] = await Promise.all([
     prisma.transaction.aggregate({
       where: {
-        date: { lt: date },
-        deletedAt: null,
-        ledger: TransactionLedger.FUEL,
+        ...baseWhere,
         type: TransactionType.INCOME,
       },
       _sum: { amount: true },
     }),
     prisma.transaction.aggregate({
       where: {
-        date: { lt: date },
-        deletedAt: null,
-        ledger: TransactionLedger.FUEL,
+        ...baseWhere,
         type: TransactionType.FUEL_PURCHASE,
       },
       _sum: { amount: true },

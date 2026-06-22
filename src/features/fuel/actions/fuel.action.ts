@@ -7,6 +7,7 @@ import { TransactionLedger, TransactionType } from "@/generated/prisma/enums";
 import { z } from "zod";
 import moment from "moment-hijri";
 import { uploadCompressedReceipt } from "@/lib/receipt";
+import { deleteObject } from "@/lib/storage";
 import {
   calculateFuelBalanceBefore,
 } from "@/features/finance/actions/balance.util";
@@ -26,8 +27,13 @@ const receiveIncomeSchema = z.object({
   notes: z.string().optional(),
 });
 
+const updateFuelIncomeSchema = receiveIncomeSchema;
+const updateFuelPurchaseSchema = purchaseFuelSchema;
+
 export type PurchaseFuelInput = z.infer<typeof purchaseFuelSchema>;
 export type ReceiveIncomeInput = z.infer<typeof receiveIncomeSchema>;
+export type UpdateFuelIncomeInput = z.infer<typeof updateFuelIncomeSchema>;
+export type UpdateFuelPurchaseInput = z.infer<typeof updateFuelPurchaseSchema>;
 
 export async function purchaseFuel(
   data: PurchaseFuelInput,
@@ -91,8 +97,7 @@ export async function purchaseFuel(
       },
     });
 
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/fuel");
+    revalidateFuelPaths();
 
     return { success: true, transaction };
   } catch (error) {
@@ -141,13 +146,236 @@ export async function receiveFuelIncome(data: ReceiveIncomeInput) {
       },
     });
 
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/fuel");
+    revalidateFuelPaths();
 
     return { success: true, transaction };
   } catch (error) {
     console.error("Failed to receive income:", error);
     return { error: "Gagal menyimpan pemasukan" };
+  }
+}
+
+export async function updateFuelIncome(
+  transactionId: string,
+  data: UpdateFuelIncomeInput,
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" };
+  }
+
+  const validated = updateFuelIncomeSchema.safeParse(data);
+  if (!validated.success) {
+    return { error: validated.error.errors[0].message };
+  }
+
+  const existing = await prisma.transaction.findUnique({
+    where: { id: transactionId },
+    select: {
+      id: true,
+      ledger: true,
+      type: true,
+      income: { select: { id: true } },
+    },
+  });
+
+  if (
+    !existing ||
+    existing.ledger !== TransactionLedger.FUEL ||
+    existing.type !== TransactionType.INCOME ||
+    !existing.income
+  ) {
+    return { error: "Transaksi pemasukan BBM tidak ditemukan" };
+  }
+
+  const { amount, source, date, notes } = validated.data;
+  const entryDate = new Date(date);
+  const balanceBefore = await calculateFuelBalanceBefore(entryDate, transactionId);
+  const balanceAfter = balanceBefore + amount;
+
+  try {
+    const transaction = await prisma.transaction.update({
+      where: { id: transactionId },
+      data: {
+        amount,
+        description: source,
+        date: entryDate,
+        balanceBefore,
+        balanceAfter,
+        income: {
+          update: {
+            source,
+            notes: notes ?? null,
+          },
+        },
+      },
+      include: { income: true },
+    });
+
+    revalidateFuelPaths();
+
+    return { success: true, transaction };
+  } catch (error) {
+    console.error("Failed to update fuel income:", error);
+    return { error: "Gagal memperbarui pemasukan BBM" };
+  }
+}
+
+export async function deleteFuelIncome(transactionId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" };
+  }
+
+  const existing = await prisma.transaction.findUnique({
+    where: { id: transactionId },
+    select: { id: true, ledger: true, type: true },
+  });
+
+  if (
+    !existing ||
+    existing.ledger !== TransactionLedger.FUEL ||
+    existing.type !== TransactionType.INCOME
+  ) {
+    return { error: "Transaksi pemasukan BBM tidak ditemukan" };
+  }
+
+  try {
+    await prisma.transaction.delete({ where: { id: transactionId } });
+    revalidateFuelPaths();
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete fuel income:", error);
+    return { error: "Gagal menghapus pemasukan BBM" };
+  }
+}
+
+export async function updateFuelPurchase(
+  transactionId: string,
+  data: UpdateFuelPurchaseInput,
+  receiptFile?: File | null,
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" };
+  }
+
+  const validated = updateFuelPurchaseSchema.safeParse(data);
+  if (!validated.success) {
+    return { error: validated.error.errors[0].message };
+  }
+
+  const existing = await prisma.transaction.findUnique({
+    where: { id: transactionId },
+    include: {
+      fuelPurchase: true,
+    },
+  });
+
+  if (
+    !existing ||
+    existing.ledger !== TransactionLedger.FUEL ||
+    existing.type !== TransactionType.FUEL_PURCHASE ||
+    !existing.fuelPurchase
+  ) {
+    return { error: "Transaksi pembelian BBM tidak ditemukan" };
+  }
+
+  const { carId, totalAmount, date, notes } = validated.data;
+  const entryDate = new Date(date);
+
+  try {
+    const car = await prisma.car.findUnique({ where: { id: carId } });
+    if (!car) {
+      return { error: "Mobil tidak ditemukan" };
+    }
+
+    const oldReceiptUrl = existing.fuelPurchase.receiptUrl;
+    let receiptUrl = oldReceiptUrl;
+    if (receiptFile) {
+      receiptUrl = await uploadCompressedReceipt(receiptFile, "receipts/fuel");
+    }
+
+    const balanceBefore = await calculateFuelBalanceBefore(entryDate, transactionId);
+    const balanceAfter = balanceBefore - totalAmount;
+
+    const transaction = await prisma.transaction.update({
+      where: { id: transactionId },
+      data: {
+        amount: totalAmount,
+        description: `Pembelian BBM - ${car.name} (${car.licensePlate})`,
+        date: entryDate,
+        balanceBefore,
+        balanceAfter,
+        fuelPurchase: {
+          update: {
+            carId,
+            totalAmount,
+            receiptUrl,
+            notes: notes ?? null,
+          },
+        },
+      },
+      include: {
+        fuelPurchase: {
+          include: { car: true },
+        },
+      },
+    });
+
+    if (receiptFile && oldReceiptUrl && oldReceiptUrl !== receiptUrl) {
+      deleteObject(oldReceiptUrl).catch((error) => {
+        console.warn("Failed to delete old fuel receipt:", error);
+      });
+    }
+
+    revalidateFuelPaths();
+
+    return { success: true, transaction };
+  } catch (error) {
+    console.error("Failed to update fuel purchase:", error);
+    return { error: "Gagal memperbarui pembelian BBM" };
+  }
+}
+
+export async function deleteFuelPurchase(transactionId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" };
+  }
+
+  const existing = await prisma.transaction.findUnique({
+    where: { id: transactionId },
+    include: {
+      fuelPurchase: {
+        select: { receiptUrl: true },
+      },
+    },
+  });
+
+  if (
+    !existing ||
+    existing.ledger !== TransactionLedger.FUEL ||
+    existing.type !== TransactionType.FUEL_PURCHASE ||
+    !existing.fuelPurchase
+  ) {
+    return { error: "Transaksi pembelian BBM tidak ditemukan" };
+  }
+
+  try {
+    await prisma.transaction.delete({ where: { id: transactionId } });
+
+    if (existing.fuelPurchase.receiptUrl) {
+      deleteObject(existing.fuelPurchase.receiptUrl).catch((error) => {
+        console.warn("Failed to delete fuel receipt:", error);
+      });
+    }
+
+    revalidateFuelPaths();
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete fuel purchase:", error);
+    return { error: "Gagal menghapus pembelian BBM" };
   }
 }
 
@@ -205,6 +433,12 @@ export async function getFuelTransactions(options?: {
   });
 
   return transactions;
+}
+
+function revalidateFuelPaths() {
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/fuel");
+  revalidatePath("/dashboard/fuel/report");
 }
 
 export async function getFuelMonthlyReport(
@@ -293,19 +527,37 @@ export async function getFuelMonthlyReport(
     }),
   ]);
 
-  // Get fuel usage per car
-  const fuelBycar = await prisma.fuelPurchase.groupBy({
-    by: ["carId"],
+  // Get fuel usage per car from the transaction ledger date, not FuelPurchase.createdAt.
+  const fuelPurchasesForCars = await prisma.fuelPurchase.findMany({
     where: {
-      createdAt: { gte: startDate, lte: endDate },
+      transaction: {
+        type: TransactionType.FUEL_PURCHASE,
+        ledger: TransactionLedger.FUEL,
+        date: { gte: startDate, lte: endDate },
+        deletedAt: null,
+      },
     },
-    _sum: {
+    select: {
+      carId: true,
       totalAmount: true,
     },
-    _count: {
-      _all: true,
-    },
   });
+
+  const fuelByCarMap = new Map<string, { carId: string; amount: number; count: number }>();
+  for (const purchase of fuelPurchasesForCars) {
+    const existing = fuelByCarMap.get(purchase.carId);
+    if (existing) {
+      existing.amount += purchase.totalAmount;
+      existing.count += 1;
+    } else {
+      fuelByCarMap.set(purchase.carId, {
+        carId: purchase.carId,
+        amount: purchase.totalAmount,
+        count: 1,
+      });
+    }
+  }
+  const fuelBycar = Array.from(fuelByCarMap.values());
 
   // Get car names
   const cars = await prisma.car.findMany({
@@ -321,6 +573,8 @@ export async function getFuelMonthlyReport(
       ...f,
       carName: car?.name ?? "Unknown",
       carPlate: car?.licensePlate ?? "",
+      _sum: { totalAmount: f.amount },
+      _count: { _all: f.count },
     };
   });
 
@@ -411,7 +665,12 @@ export async function getFuelPurchasesByHijriMonth(
   const { startDate, endDate } = getHijriMonthRange(hijriYear, hijriMonth);
 
   const fuelWhere: Record<string, unknown> = {
-    createdAt: { gte: startDate, lte: endDate },
+    transaction: {
+      type: TransactionType.FUEL_PURCHASE,
+      ledger: TransactionLedger.FUEL,
+      date: { gte: startDate, lte: endDate },
+      deletedAt: null,
+    },
   };
 
   if (carId) {
@@ -421,7 +680,7 @@ export async function getFuelPurchasesByHijriMonth(
   // Get fuel purchases
   const purchases = await prisma.fuelPurchase.findMany({
     where: fuelWhere,
-    orderBy: { createdAt: "desc" },
+    orderBy: { transaction: { date: "desc" } },
     include: {
       car: { select: { id: true, name: true, licensePlate: true } },
       transaction: {

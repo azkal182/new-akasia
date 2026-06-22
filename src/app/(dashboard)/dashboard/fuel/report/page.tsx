@@ -407,7 +407,7 @@ export default function FuelReportPage() {
                         {index + 1}
                       </TableCell>
                       <TableCell className="text-foreground">
-                        {formatDate(purchase.createdAt)}
+                        {formatDate(purchase.transaction?.date ?? purchase.createdAt)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">

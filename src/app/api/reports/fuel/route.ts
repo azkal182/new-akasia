@@ -138,7 +138,12 @@ export async function GET(request: NextRequest) {
   const { startDate, endDate } = getHijriMonthRange(hijriYear, hijriMonth);
 
   const fuelWhere: Record<string, unknown> = {
-    createdAt: { gte: startDate, lte: endDate },
+    transaction: {
+      type: TransactionType.FUEL_PURCHASE,
+      ledger: TransactionLedger.FUEL,
+      date: { gte: startDate, lte: endDate },
+      deletedAt: null,
+    },
   };
   if (carId) {
     fuelWhere.carId = carId;
@@ -147,7 +152,7 @@ export async function GET(request: NextRequest) {
   const [purchases, incomeTotal, selectedCar] = await Promise.all([
     prisma.fuelPurchase.findMany({
       where: fuelWhere,
-      orderBy: { createdAt: 'asc' },
+      orderBy: { transaction: { date: 'asc' } },
       include: {
         car: { select: { id: true, name: true, licensePlate: true } },
         transaction: {
@@ -302,10 +307,12 @@ export async function GET(request: NextRequest) {
   const receipts: ReceiptMeta[] = [];
 
   for (const purchase of purchases) {
+    const transactionDate = purchase.transaction?.date ?? purchase.createdAt;
+
     if (purchase.receiptUrl) {
       const carLabel = `${purchase.car.name}${purchase.car.licensePlate ? ` (${purchase.car.licensePlate})` : ''}`;
       receipts.push({
-        date: purchase.createdAt,
+        date: transactionDate,
         total: purchase.totalAmount,
         url: purchase.receiptUrl,
         car: carLabel,
@@ -324,7 +331,7 @@ export async function GET(request: NextRequest) {
     drawCellBorders(40, y, rowHeight);
     let x = 43;
 
-    doc.text(formatHijriDate(purchase.createdAt), x, y + 4, { width: colWidths[0] - 6 });
+    doc.text(formatHijriDate(transactionDate), x, y + 4, { width: colWidths[0] - 6 });
     x += colWidths[0];
 
     const carText = truncateText(
