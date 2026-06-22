@@ -22,7 +22,7 @@ interface ProgramKerjaNavProps {
 
 const navItems = [
   {
-    title: 'Field Hari Ini',
+    title: 'Laporan Hari Ini',
     href: '/dashboard/program-kerja/today',
     icon: CalendarCheck2,
     exact: false,

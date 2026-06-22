@@ -15,10 +15,8 @@ import {
   CalendarDays,
   Users,
   Settings,
-  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -27,8 +25,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { signOut } from "next-auth/react";
 import { can, type UserRole } from "@/lib/permissions";
+import { useDriverMode } from "@/contexts/driver-mode-context";
 
 interface MobileSidebarProps {
   user: {
@@ -57,8 +55,33 @@ const adminMenuItems = [
 ];
 
 const programKerjaItems = [
-  { title: "Field Hari Ini", href: "/dashboard/program-kerja/today", icon: CalendarCheck2 },
+  { title: "Laporan Hari Ini", href: "/dashboard/program-kerja/today", icon: CalendarCheck2 },
   { title: "Jadwal Divisi", href: "/dashboard/program-kerja/schedules", icon: CalendarDays },
+];
+
+const driverMenuItems = [
+  {
+    title: "Operasional",
+    href: "/dashboard",
+    icon: Car,
+    match: (pathname: string) => !pathname.startsWith("/dashboard/program-kerja"),
+  },
+  {
+    title: "Laporan Hari Ini",
+    href: "/dashboard/program-kerja/today",
+    icon: CalendarCheck2,
+    match: (pathname: string) =>
+      pathname === "/dashboard/program-kerja/today" ||
+      pathname.startsWith("/dashboard/program-kerja/today/"),
+  },
+  {
+    title: "Jadwal Divisi",
+    href: "/dashboard/program-kerja/schedules",
+    icon: CalendarDays,
+    match: (pathname: string) =>
+      pathname === "/dashboard/program-kerja/schedules" ||
+      pathname.startsWith("/dashboard/program-kerja/schedules/"),
+  },
 ];
 
 export function MobileSidebar({
@@ -67,6 +90,7 @@ export function MobileSidebar({
   onOpenChange,
 }: MobileSidebarProps) {
   const pathname = usePathname();
+  const { isDriverMode } = useDriverMode();
 
   const handleLinkClick = () => {
     onOpenChange(false);
@@ -83,73 +107,21 @@ export function MobileSidebar({
             <SheetTitle className="text-left font-bold text-foreground">
               Akasia
             </SheetTitle>
-            <p className="text-xs text-muted-foreground">Fleet Management</p>
+            <p className="text-xs text-muted-foreground">
+              {isDriverMode ? "Mode Driver" : "Fleet Management"}
+            </p>
           </div>
         </SheetHeader>
 
-        <ScrollArea className="h-[calc(100vh-8rem)] px-3 py-4">
+        <ScrollArea className="h-[calc(100vh-4rem)] px-3 py-4">
           <nav className="space-y-1">
-            {can.viewMainMenu((user.role as UserRole) ?? 'USER') && menuItems.map((item) => {
-              // Dashboard should only be active on exact match
-              const isActive =
-                item.href === "/dashboard"
-                  ? pathname === "/dashboard"
-                  : pathname === item.href ||
-                    pathname.startsWith(`${item.href}/`);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={handleLinkClick}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all",
-                    isActive
-                      ? "bg-gradient-to-r from-blue-600/20 to-cyan-600/20 text-blue-400"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                  )}
-                >
-                  <item.icon className="h-5 w-5" />
-                  {item.title}
-                </Link>
-              );
-            })}
-
-            <Separator className="my-4 bg-border" />
-            <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Program Kerja
-            </p>
-            {programKerjaItems.map((item) => {
-              const isActive =
-                pathname === item.href || pathname.startsWith(`${item.href}/`);
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={handleLinkClick}
-                  className={cn(
-                    "ml-2 flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all",
-                    isActive
-                      ? "bg-gradient-to-r from-blue-600/20 to-cyan-600/20 text-blue-400"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                  )}
-                >
-                  <item.icon className="h-5 w-5" />
-                  {item.title}
-                </Link>
-              );
-            })}
-
-            {user.role === "ADMIN" && (
+            {isDriverMode ? (
               <>
-                <Separator className="my-4 bg-border" />
                 <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Admin
+                  Menu Driver
                 </p>
-                {adminMenuItems.map((item) => {
-                  const isActive =
-                    pathname === item.href ||
-                    pathname.startsWith(`${item.href}/`);
+                {driverMenuItems.map((item) => {
+                  const isActive = item.match(pathname);
                   return (
                     <Link
                       key={item.href}
@@ -168,36 +140,93 @@ export function MobileSidebar({
                   );
                 })}
               </>
+            ) : (
+              <>
+                {can.viewMainMenu((user.role as UserRole) ?? 'USER') && menuItems.map((item) => {
+                  // Dashboard should only be active on exact match
+                  const isActive =
+                    item.href === "/dashboard"
+                      ? pathname === "/dashboard"
+                      : pathname === item.href ||
+                        pathname.startsWith(`${item.href}/`);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={handleLinkClick}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all",
+                        isActive
+                          ? "bg-gradient-to-r from-blue-600/20 to-cyan-600/20 text-blue-400"
+                          : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                      )}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      {item.title}
+                    </Link>
+                  );
+                })}
+
+                <Separator className="my-4 bg-border" />
+                <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Program Kerja
+                </p>
+                {programKerjaItems.map((item) => {
+                  const isActive =
+                    pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={handleLinkClick}
+                      className={cn(
+                        "ml-2 flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all",
+                        isActive
+                          ? "bg-gradient-to-r from-blue-600/20 to-cyan-600/20 text-blue-400"
+                          : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                      )}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      {item.title}
+                    </Link>
+                  );
+                })}
+
+                {user.role === "ADMIN" && (
+                  <>
+                    <Separator className="my-4 bg-border" />
+                    <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Admin
+                    </p>
+                    {adminMenuItems.map((item) => {
+                      const isActive =
+                        pathname === item.href ||
+                        pathname.startsWith(`${item.href}/`);
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={handleLinkClick}
+                          className={cn(
+                            "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all",
+                            isActive
+                              ? "bg-gradient-to-r from-blue-600/20 to-cyan-600/20 text-blue-400"
+                              : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                          )}
+                        >
+                          <item.icon className="h-5 w-5" />
+                          {item.title}
+                        </Link>
+                      );
+                    })}
+                  </>
+                )}
+              </>
             )}
           </nav>
         </ScrollArea>
 
-        {/* User Profile & Logout */}
-        <div className="absolute bottom-0 left-0 right-0 border-t border-border bg-card p-3">
-          <div className="flex items-center gap-3 rounded-lg bg-muted/60 p-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-              <span className="text-sm font-medium text-foreground">
-                {user.name?.charAt(0).toUpperCase() || "U"}
-              </span>
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <p className="truncate text-sm font-medium text-foreground">
-                {user.name}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">
-                @{user.username}
-              </p>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:bg-accent hover:text-foreground"
-              onClick={() => signOut({ callbackUrl: "/login" })}
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
       </SheetContent>
     </Sheet>
   );

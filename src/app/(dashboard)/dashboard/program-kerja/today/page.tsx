@@ -81,7 +81,7 @@ export default function ProgramKerjaTodayPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Field Hari Ini</h1>
+          <h1 className="text-2xl font-bold text-foreground">Laporan Hari Ini</h1>
           <p className="text-sm text-muted-foreground">
             Lihat tugas lapangan hari ini dan kirim laporan setelah kegiatan selesai.
           </p>

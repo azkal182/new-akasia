@@ -1,15 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import {
   Bell,
   Search,
   Menu,
   Car as DriverIcon,
-  CalendarCheck2,
-  CalendarDays,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +24,6 @@ import { signOut } from 'next-auth/react';
 import { MobileSidebar } from './mobile-sidebar';
 import { useDriverMode } from '@/contexts/driver-mode-context';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { cn } from '@/lib/utils';
 
 interface HeaderProps {
   user: {
@@ -38,38 +33,10 @@ interface HeaderProps {
   };
 }
 
-// Nav items yang muncul di dalam Driver Mode
-const driverNavItems = [
-  {
-    title: 'Operasional',
-    href: '/dashboard',
-    icon: DriverIcon,
-    // aktif jika BUKAN di halaman program-kerja
-    matchFn: (pathname: string) => !pathname.startsWith('/dashboard/program-kerja'),
-  },
-  {
-    title: 'Field Hari Ini',
-    href: '/dashboard/program-kerja/today',
-    icon: CalendarCheck2,
-    matchFn: (pathname: string) =>
-      pathname === '/dashboard/program-kerja/today' ||
-      pathname.startsWith('/dashboard/program-kerja/today/'),
-  },
-  {
-    title: 'Jadwal Divisi',
-    href: '/dashboard/program-kerja/schedules',
-    icon: CalendarDays,
-    matchFn: (pathname: string) =>
-      pathname === '/dashboard/program-kerja/schedules' ||
-      pathname.startsWith('/dashboard/program-kerja/schedules/'),
-  },
-];
-
 export function Header({ user }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const { isDriverMode, isForced, toggleDriverMode } = useDriverMode();
-  const pathname = usePathname();
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setIsMounted(true));
@@ -79,79 +46,35 @@ export function Header({ user }: HeaderProps) {
   return (
     <>
       <header className="flex h-14 sm:h-16 items-center justify-between border-b border-border bg-card/70 px-3 sm:px-6 backdrop-blur-sm">
-        {/* ── Kiri: hamburger / driver mode indicator + nav ── */}
+        {/* ── Kiri: hamburger + search ── */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Hamburger — hanya saat bukan driver mode */}
-          {!isDriverMode && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden text-muted-foreground hover:text-foreground"
-              onClick={() => setMobileMenuOpen(true)}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden text-muted-foreground hover:text-foreground"
+            onClick={() => setMobileMenuOpen(true)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
 
-          {isDriverMode ? (
-            /* ── Driver Mode: badge + nav tabs ── */
-            <div className="flex items-center gap-2 sm:gap-4">
-              {/* Driver Mode badge */}
-              <div className="flex items-center gap-1.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500">
-                  <DriverIcon className="h-3.5 w-3.5 text-white" />
-                </div>
-                <span className="hidden text-sm font-semibold text-foreground sm:block">
-                  Driver
-                </span>
-              </div>
-
-              {/* Divider */}
-              <div className="hidden h-5 w-px bg-border sm:block" />
-
-              {/* Program Kerja navigation tabs */}
-              <nav className="flex items-center gap-0.5">
-                {driverNavItems.map((item) => {
-                  const isActive = item.matchFn(pathname);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cn(
-                        'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all sm:text-sm',
-                        isActive
-                          ? 'bg-gradient-to-r from-blue-600/20 to-cyan-600/20 text-blue-400'
-                          : 'text-muted-foreground hover:bg-accent hover:text-foreground',
-                      )}
-                    >
-                      <item.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      <span className="hidden sm:block">{item.title}</span>
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
-          ) : (
-            /* ── Normal mode: search bar ── */
-            <div className="relative hidden h-9 w-48 md:w-64 sm:block">
-              {isMounted && (
-                <>
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    name="dashboard-search"
-                    placeholder="Cari..."
-                    autoComplete="off"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    data-lpignore="true"
-                    data-form-type="other"
-                    className="w-48 md:w-64 border-border bg-background/60 pl-9 text-sm text-foreground placeholder:text-muted-foreground focus:border-blue-500"
-                  />
-                </>
-              )}
-            </div>
-          )}
+          <div className="relative hidden h-9 w-48 md:w-64 sm:block">
+            {isMounted && (
+              <>
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="search"
+                  name="dashboard-search"
+                  placeholder="Cari..."
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  data-lpignore="true"
+                  data-form-type="other"
+                  className="w-48 md:w-64 border-border bg-background/60 pl-9 text-sm text-foreground placeholder:text-muted-foreground focus:border-blue-500"
+                />
+              </>
+            )}
+          </div>
         </div>
 
         {/* ── Kanan: toggle + theme + notif + user ── */}
@@ -224,14 +147,11 @@ export function Header({ user }: HeaderProps) {
         </div>
       </header>
 
-      {/* Mobile Sidebar — hanya saat bukan driver mode */}
-      {!isDriverMode && (
-        <MobileSidebar
-          user={user}
-          open={mobileMenuOpen}
-          onOpenChange={setMobileMenuOpen}
-        />
-      )}
+      <MobileSidebar
+        user={user}
+        open={mobileMenuOpen}
+        onOpenChange={setMobileMenuOpen}
+      />
     </>
   );
 }
