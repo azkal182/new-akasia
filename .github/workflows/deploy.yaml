@@ -109,6 +109,10 @@ jobs:
           echo "INTEGRATION_API_KEY=${{ secrets.INTEGRATION_API_KEY }}" >> .env
           echo "INTEGRATION_DIVISION_ID=${{ secrets.INTEGRATION_DIVISION_ID }}" >> .env
           echo "INTEGRATION_API_TIMEOUT_MS=${{ secrets.INTEGRATION_API_TIMEOUT_MS }}" >> .env
+          echo "WA_API_URL=${{ secrets.WA_API_URL }}" >> .env
+          echo "WA_SESSION_ID=${{ secrets.WA_SESSION_ID }}" >> .env
+          echo "WA_API_KEY=${{ secrets.WA_API_KEY }}" >> .env
+          echo "WA_RECIPIENT=${{ secrets.WA_RECIPIENT }}" >> .env
 
           echo "HUSKY=0" >> .env
           # echo "NODE_ENV=production" >> .env
@@ -220,6 +224,10 @@ jobs:
           echo "INTEGRATION_API_KEY=${{ secrets.INTEGRATION_API_KEY }}" >> .env
           echo "INTEGRATION_DIVISION_ID=${{ secrets.INTEGRATION_DIVISION_ID }}" >> .env
           echo "INTEGRATION_API_TIMEOUT_MS=${{ secrets.INTEGRATION_API_TIMEOUT_MS }}" >> .env
+          echo "WA_API_URL=${{ secrets.WA_API_URL }}" >> .env
+          echo "WA_SESSION_ID=${{ secrets.WA_SESSION_ID }}" >> .env
+          echo "WA_API_KEY=${{ secrets.WA_API_KEY }}" >> .env
+          echo "WA_RECIPIENT=${{ secrets.WA_RECIPIENT }}" >> .env
 
           echo "HUSKY=0" >> .env
           # echo "NODE_ENV=production" >> .env
