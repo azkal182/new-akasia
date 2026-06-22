@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { z } from 'zod';
+import { Prisma } from '@/generated/prisma/client';
 
 const carSchema = z.object({
   name: z.string().min(1, 'Nama mobil wajib diisi'),
@@ -12,6 +13,29 @@ const carSchema = z.object({
 });
 
 export type CarInput = z.infer<typeof carSchema>;
+
+function normalizeOptionalUniqueString(value?: string | null) {
+  const normalized = value?.trim();
+  return normalized ? normalized : null;
+}
+
+function getCarUniqueErrorMessage(error: unknown) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+    const target = Array.isArray(error.meta?.target) ? error.meta.target : [];
+
+    if (target.includes('barcodeString')) {
+      return 'Kode barcode sudah digunakan';
+    }
+
+    if (target.includes('licensePlate')) {
+      return 'Plat nomor sudah digunakan';
+    }
+
+    return 'Data kendaraan sudah digunakan';
+  }
+
+  return null;
+}
 
 export async function getCars() {
   const cars = await prisma.car.findMany({
@@ -79,11 +103,13 @@ export async function createCar(data: CarInput) {
   }
 
   try {
+    const barcodeString = normalizeOptionalUniqueString(validated.data.barcodeString);
+
     const car = await prisma.car.create({
       data: {
-        name: validated.data.name,
-        licensePlate: validated.data.licensePlate,
-        barcodeString: validated.data.barcodeString || validated.data.licensePlate.replace(/\s/g, '-'),
+        name: validated.data.name.trim(),
+        licensePlate: validated.data.licensePlate.trim(),
+        barcodeString,
       },
     });
 
@@ -91,7 +117,7 @@ export async function createCar(data: CarInput) {
     return { success: true, car };
   } catch (error) {
     console.error('Failed to create car:', error);
-    return { error: 'Gagal menambah mobil' };
+    return { error: getCarUniqueErrorMessage(error) ?? 'Gagal menambah mobil' };
   }
 }
 
@@ -107,12 +133,14 @@ export async function updateCar(id: string, data: CarInput) {
   }
 
   try {
+    const barcodeString = normalizeOptionalUniqueString(validated.data.barcodeString);
+
     const car = await prisma.car.update({
       where: { id },
       data: {
-        name: validated.data.name,
-        licensePlate: validated.data.licensePlate,
-        barcodeString: validated.data.barcodeString,
+        name: validated.data.name.trim(),
+        licensePlate: validated.data.licensePlate.trim(),
+        barcodeString,
       },
     });
 
@@ -121,7 +149,7 @@ export async function updateCar(id: string, data: CarInput) {
     return { success: true, car };
   } catch (error) {
     console.error('Failed to update car:', error);
-    return { error: 'Gagal mengupdate mobil' };
+    return { error: getCarUniqueErrorMessage(error) ?? 'Gagal mengupdate mobil' };
   }
 }
 
