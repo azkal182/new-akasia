@@ -49,13 +49,29 @@ type CarOption = {
   licensePlate: string | null;
 };
 
+type ItemDraft = {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  carId: string;
+};
+
+const emptyItemDraft: ItemDraft = {
+  description: "",
+  quantity: 1,
+  unitPrice: 0,
+  carId: "none",
+};
+
 export default function ExpensePage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [cars, setCars] = useState<CarOption[]>([]);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [itemDraft, setItemDraft] = useState<ItemDraft>(emptyItemDraft);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const itemDescriptionRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<CreateExpenseInput>({
     resolver: zodResolver(createExpenseSchema),
@@ -63,7 +79,7 @@ export default function ExpensePage() {
       date: new Date(),
       description: "",
       notes: "",
-      items: [{ description: "", quantity: 1, unitPrice: 0, carId: null }],
+      items: [],
     },
   });
 
@@ -128,6 +144,49 @@ export default function ExpensePage() {
       };
       reader.readAsDataURL(file);
     }
+  }
+
+  function handleAddItem() {
+    const description = itemDraft.description.trim();
+
+    if (!description) {
+      toast.error("Nama item wajib diisi");
+      return;
+    }
+
+    if (!Number.isInteger(itemDraft.quantity) || itemDraft.quantity <= 0) {
+      toast.error("Qty harus lebih dari 0");
+      return;
+    }
+
+    if (!Number.isInteger(itemDraft.unitPrice) || itemDraft.unitPrice <= 0) {
+      toast.error("Harga harus lebih dari 0");
+      return;
+    }
+
+    if (itemDraft.carId === "none") {
+      toast.error("Armada wajib dipilih");
+      return;
+    }
+
+    append({
+      description,
+      quantity: itemDraft.quantity,
+      unitPrice: itemDraft.unitPrice,
+      carId: itemDraft.carId,
+    });
+    form.clearErrors("items");
+    setItemDraft(emptyItemDraft);
+    requestAnimationFrame(() => itemDescriptionRef.current?.focus());
+  }
+
+  function getCarLabel(carId: string | null | undefined) {
+    if (!carId) return "Tanpa armada";
+
+    const car = cars.find((item) => item.id === carId);
+    if (!car) return "Armada tidak ditemukan";
+
+    return `${car.name}${car.licensePlate ? ` - ${car.licensePlate}` : ""}`;
   }
 
   return (
@@ -256,158 +315,183 @@ export default function ExpensePage() {
 
               {/* Items */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-foreground">Daftar Item</h3>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      append({
-                        description: "",
-                        quantity: 1,
-                        unitPrice: 0,
-                        carId: null,
-                      })
-                    }
-                    className="border-border"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Tambah Item
-                  </Button>
+                <div>
+                  <h3 className="font-medium text-foreground">Input Item</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Isi detail item, lalu klik Tambah Item untuk memasukkannya
+                    ke daftar pengeluaran.
+                  </p>
                 </div>
 
-                {fields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="grid gap-3 rounded-lg bg-muted/40 p-4 md:grid-cols-7"
-                  >
-                    <FormField
-                      control={form.control}
-                      name={`items.${index}.description`}
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel className="text-muted-foreground text-sm">
-                            Deskripsi
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Nama item"
-                              disabled={isLoading}
-                              className="border-border bg-muted/60 text-foreground"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`items.${index}.quantity`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-muted-foreground text-sm">
-                            Qty
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              {...field}
-                              onChange={(e) =>
-                                field.onChange(Number(e.target.value))
-                              }
-                              disabled={isLoading}
-                              className="border-border bg-muted/60 text-foreground"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`items.${index}.carId`}
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel className="text-muted-foreground text-sm">
-                            Armada
-                          </FormLabel>
-                          <Select
-                            value={field.value ?? "none"}
-                            onValueChange={(value) =>
-                              field.onChange(value === "none" ? null : value)
-                            }
-                            disabled={isLoading}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="border-border bg-muted/60 text-foreground">
-                                <SelectValue placeholder="Pilih armada (opsional)" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="border-border bg-card">
-                              <SelectItem value="none">Tanpa armada</SelectItem>
-                              {cars.length === 0 && (
-                                <SelectItem value="no-car" disabled>
-                                  Belum ada armada
-                                </SelectItem>
-                              )}
-                              {cars.map((car) => (
-                                <SelectItem key={car.id} value={car.id}>
-                                  {car.name}
-                                  {car.licensePlate
-                                    ? ` - ${car.licensePlate}`
-                                    : ""}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="flex items-end gap-2 md:col-span-2">
-                      <FormField
-                        control={form.control}
-                        name={`items.${index}.unitPrice`}
-                        render={({ field }) => (
-                          <FormItem className="flex-1">
-                            <FormLabel className="text-muted-foreground text-sm">
-                              Harga
-                            </FormLabel>
-                            <FormControl>
-                              <NominalInput
-                                value={field.value ?? 0}
-                                onValueChange={(values) =>
-                                  field.onChange(values.floatValue ?? 0)
-                                }
-                                name={field.name}
-                                onBlur={field.onBlur}
-                                disabled={isLoading}
-                                className="border-border bg-muted/60 text-foreground"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                <div className="rounded-lg border border-border bg-muted/30 p-4">
+                  <div className="grid gap-3 md:grid-cols-7">
+                    <div className="space-y-2 md:col-span-2">
+                      <FormLabel className="text-sm text-muted-foreground">
+                        Deskripsi
+                      </FormLabel>
+                      <Input
+                        ref={itemDescriptionRef}
+                        value={itemDraft.description}
+                        onChange={(event) =>
+                          setItemDraft((current) => ({
+                            ...current,
+                            description: event.target.value,
+                          }))
+                        }
+                        placeholder="Nama item"
+                        disabled={isLoading}
+                        className="border-border bg-muted/60 text-foreground"
                       />
-                      {fields.length > 1 && (
+                    </div>
+
+                    <div className="space-y-2">
+                      <FormLabel className="text-sm text-muted-foreground">
+                        Qty
+                      </FormLabel>
+                      <Input
+                        type="number"
+                        min={1}
+                        step={1}
+                        value={itemDraft.quantity}
+                        onChange={(event) =>
+                          setItemDraft((current) => ({
+                            ...current,
+                            quantity: Number(event.target.value),
+                          }))
+                        }
+                        disabled={isLoading}
+                        className="border-border bg-muted/60 text-foreground"
+                      />
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                      <FormLabel className="text-sm text-muted-foreground">
+                        Armada *
+                      </FormLabel>
+                      <Select
+                        value={itemDraft.carId}
+                        onValueChange={(value) =>
+                          setItemDraft((current) => ({
+                            ...current,
+                            carId: value,
+                          }))
+                        }
+                        disabled={isLoading}
+                      >
+                        <SelectTrigger className="border-border bg-muted/60 text-foreground">
+                          <SelectValue placeholder="Pilih armada" />
+                        </SelectTrigger>
+                        <SelectContent className="border-border bg-card">
+                          <SelectItem value="none">Pilih armada</SelectItem>
+                          {cars.length === 0 && (
+                            <SelectItem value="no-car" disabled>
+                              Belum ada armada
+                            </SelectItem>
+                          )}
+                          {cars.map((car) => (
+                            <SelectItem key={car.id} value={car.id}>
+                              {car.name}
+                              {car.licensePlate
+                                ? ` - ${car.licensePlate}`
+                                : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                      <FormLabel className="text-sm text-muted-foreground">
+                        Harga
+                      </FormLabel>
+                      <div className="flex gap-2">
+                        <NominalInput
+                          value={itemDraft.unitPrice}
+                          onValueChange={(values) =>
+                            setItemDraft((current) => ({
+                              ...current,
+                              unitPrice: values.floatValue ?? 0,
+                            }))
+                          }
+                          disabled={isLoading}
+                          className="border-border bg-muted/60 text-foreground"
+                        />
                         <Button
                           type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => remove(index)}
-                          className="text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                          onClick={handleAddItem}
+                          disabled={isLoading}
+                          className="shrink-0"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Plus className="mr-2 h-4 w-4" />
+                          Tambah
                         </Button>
-                      )}
+                      </div>
                     </div>
                   </div>
-                ))}
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-foreground">
+                      Daftar Item
+                    </h3>
+                    <span className="text-sm text-muted-foreground">
+                      {fields.length} item
+                    </span>
+                  </div>
+
+                  {fields.length === 0 ? (
+                    <div className="rounded-lg border border-dashed border-border bg-muted/20 p-6 text-center text-sm text-muted-foreground">
+                      Belum ada item. Isi form item di atas lalu klik Tambah.
+                    </div>
+                  ) : (
+                    fields.map((field, index) => {
+                      const item = watchItems[index];
+                      const subtotal =
+                        (item?.quantity || 0) * (item?.unitPrice || 0);
+
+                      return (
+                        <div
+                          key={field.id}
+                          className="flex flex-col gap-3 rounded-lg bg-muted/40 p-4 md:flex-row md:items-center md:justify-between"
+                        >
+                          <div className="space-y-1">
+                            <p className="font-medium text-foreground">
+                              {item?.description}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {item?.quantity} x{" "}
+                              {formatRupiah(item?.unitPrice || 0)} ·{" "}
+                              {getCarLabel(item?.carId)}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center justify-between gap-3 md:justify-end">
+                            <span className="font-semibold text-red-400">
+                              {formatRupiah(subtotal)}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => remove(index)}
+                              disabled={isLoading}
+                              className="text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+
+                  {form.formState.errors.items?.message && (
+                    <p className="text-sm font-medium text-destructive">
+                      {form.formState.errors.items.message}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <Separator className="bg-muted" />
