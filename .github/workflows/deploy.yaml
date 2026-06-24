@@ -113,6 +113,7 @@ jobs:
           echo "WA_SESSION_ID=${{ secrets.WA_SESSION_ID }}" >> .env
           echo "WA_API_KEY=${{ secrets.WA_API_KEY }}" >> .env
           echo "WA_RECIPIENT=${{ secrets.WA_RECIPIENT }}" >> .env
+          echo "WA_APPROVAL_RECIPIENT=${{ secrets.WA_APPROVAL_RECIPIENT }}" >> .env
 
           echo "HUSKY=0" >> .env
           # echo "NODE_ENV=production" >> .env
@@ -228,6 +229,7 @@ jobs:
           echo "WA_SESSION_ID=${{ secrets.WA_SESSION_ID }}" >> .env
           echo "WA_API_KEY=${{ secrets.WA_API_KEY }}" >> .env
           echo "WA_RECIPIENT=${{ secrets.WA_RECIPIENT }}" >> .env
+          echo "WA_APPROVAL_RECIPIENT=${{ secrets.WA_APPROVAL_RECIPIENT }}" >> .env
 
           echo "HUSKY=0" >> .env
           # echo "NODE_ENV=production" >> .env

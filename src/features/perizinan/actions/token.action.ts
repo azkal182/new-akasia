@@ -6,7 +6,11 @@ import { auth } from "@/lib/auth";
 import { PerizinanStatus, TokenType } from "@/generated/prisma/enums";
 import { z } from "zod";
 import { randomUUID } from "crypto";
-import { sendWhatsApp, formatPerizinanMessage } from "@/lib/whatsapp";
+import {
+  sendWhatsApp,
+  formatPerizinanMessage,
+  formatPerizinanApprovedMessage,
+} from "@/lib/whatsapp";
 
 // ============================================
 // TOKEN GENERATION
@@ -257,12 +261,15 @@ export async function approveWithToken(token: string) {
     return { error: "Token tidak valid untuk approval" };
   }
 
-  const perizinanId = validation.tokenData?.perizinanId;
-  if (!perizinanId) {
+  const tokenData = validation.tokenData;
+  if (!tokenData?.perizinanId) {
     return { error: "Data perizinan tidak ditemukan" };
   }
+  const perizinanId = tokenData.perizinanId;
 
   try {
+    const perizinan = tokenData.perizinan;
+
     await prisma.$transaction([
       // Update perizinan status
       prisma.perizinan.update({
@@ -275,6 +282,23 @@ export async function approveWithToken(token: string) {
         data: { usedAt: new Date() },
       }),
     ]);
+
+    if (perizinan) {
+      const message = formatPerizinanApprovedMessage({
+        name: perizinan.name,
+        carName: perizinan.car.name,
+        licensePlate: perizinan.car.licensePlate,
+        purpose: perizinan.purpose,
+        destination: perizinan.destination,
+        date: perizinan.date,
+        numberOfPassengers: perizinan.numberOfPassengers,
+        estimation: perizinan.estimation,
+      });
+
+      sendWhatsApp(message, process.env.WA_APPROVAL_RECIPIENT).catch((err) => {
+        console.error("WhatsApp approval notification failed:", err);
+      });
+    }
 
     revalidatePath("/dashboard/perizinan");
     return { success: true };

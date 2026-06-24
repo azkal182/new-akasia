@@ -97,3 +97,36 @@ ${data.approvalUrl}
 
 _Klik link untuk menyetujui perizinan_`;
 }
+
+/**
+ * Format approval confirmation notification message
+ */
+export function formatPerizinanApprovedMessage(data: {
+    name: string;
+    carName: string;
+    licensePlate: string | null;
+    purpose: string;
+    destination: string;
+    date: Date;
+    numberOfPassengers: number;
+    estimation: number;
+}): string {
+    const formattedDate = data.date.toLocaleDateString('id-ID', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+
+    return `✅ *PERIZINAN DISETUJUI*
+
+*Pemohon:* ${data.name}
+*Kendaraan:* ${data.carName} (${data.licensePlate || '-'})
+*Keperluan:* ${data.purpose}
+*Tujuan:* ${data.destination}
+*Tanggal:* ${formattedDate}
+*Jumlah Penumpang:* ${data.numberOfPassengers} orang
+*Durasi:* ${data.estimation} hari
+
+Perizinan kendaraan telah disetujui.`;
+}

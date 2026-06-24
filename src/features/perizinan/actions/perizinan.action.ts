@@ -6,7 +6,11 @@ import { auth } from '@/lib/auth';
 import { PerizinanStatus, TokenType } from '@/generated/prisma/enums';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
-import { sendWhatsApp, formatPerizinanMessage } from '@/lib/whatsapp';
+import {
+  sendWhatsApp,
+  formatPerizinanMessage,
+  formatPerizinanApprovedMessage,
+} from '@/lib/whatsapp';
 
 const createPerizinanSchema = z.object({
   carId: z.string().uuid('Invalid car ID'),
@@ -139,6 +143,24 @@ export async function approvePerizinan(id: string) {
       data: {
         status: PerizinanStatus.APPROVED,
       },
+      include: {
+        car: { select: { name: true, licensePlate: true } },
+      },
+    });
+
+    const message = formatPerizinanApprovedMessage({
+      name: perizinan.name,
+      carName: perizinan.car.name,
+      licensePlate: perizinan.car.licensePlate,
+      purpose: perizinan.purpose,
+      destination: perizinan.destination,
+      date: perizinan.date,
+      numberOfPassengers: perizinan.numberOfPassengers,
+      estimation: perizinan.estimation,
+    });
+
+    sendWhatsApp(message, process.env.WA_APPROVAL_RECIPIENT).catch((err) => {
+      console.error('WhatsApp approval notification failed:', err);
     });
 
     revalidatePath('/dashboard/perizinan');

@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle2 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { approveWithToken } from '@/features/perizinan/actions';
@@ -12,8 +11,8 @@ interface ApproveButtonProps {
 }
 
 export default function ApproveButton({ token }: ApproveButtonProps) {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isApproved, setIsApproved] = useState(false);
 
   async function handleApprove() {
     if (!confirm('Yakin ingin menyetujui perizinan ini?')) return;
@@ -24,25 +23,13 @@ export default function ApproveButton({ token }: ApproveButtonProps) {
       if (result.error) {
         toast.error(result.error);
       } else {
-        setIsApproved(true);
+        router.replace('/perizinan/approve/success');
       }
     } catch {
       toast.error('Gagal menyetujui perizinan');
     } finally {
       setIsSubmitting(false);
     }
-  }
-
-  if (isApproved) {
-    return (
-      <Card className="border-emerald-500/30 bg-emerald-500/10">
-        <CardContent className="py-8 text-center">
-          <CheckCircle2 className="h-12 w-12 text-emerald-400 mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-foreground">Berhasil Disetujui!</h3>
-          <p className="text-foreground text-sm mt-1">Perizinan telah disetujui.</p>
-        </CardContent>
-      </Card>
-    );
   }
 
   return (
