@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import moment from "moment-hijri";
 import { prisma } from "@/lib/prisma";
 import { TransactionLedger, TransactionType } from "@/generated/prisma/enums";
 import {
@@ -256,8 +257,6 @@ export async function getMonthlyStats(year: number, month: number) {
 
 // Helper function to convert Hijri date range to Gregorian with validation
 async function getHijriMonthRange(hijriYear: number, hijriMonth: number) {
-  const moment = (await import("moment-hijri")).default;
-
   try {
     // Build start and end of the requested Hijri month
     // Format: iYYYY/iM/iD - padded for proper parsing
