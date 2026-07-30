@@ -105,6 +105,7 @@ jobs:
           echo "R2_SECRET_ACCESS_KEY=${{ secrets.R2_SECRET_ACCESS_KEY }}" >> .env
           echo "R2_BUCKET=${{ secrets.R2_BUCKET }}" >> .env
           echo "R2_PUBLIC_URL=${{ secrets.R2_PUBLIC_URL }}" >> .env
+          echo "R2_LEGACY_PUBLIC_URLS=${{ secrets.R2_LEGACY_PUBLIC_URLS }}" >> .env
           echo "INTEGRATION_API_BASE_URL=${{ secrets.INTEGRATION_API_BASE_URL }}" >> .env
           echo "INTEGRATION_API_KEY=${{ secrets.INTEGRATION_API_KEY }}" >> .env
           echo "INTEGRATION_DIVISION_ID=${{ secrets.INTEGRATION_DIVISION_ID }}" >> .env
@@ -221,6 +222,7 @@ jobs:
           echo "R2_SECRET_ACCESS_KEY=${{ secrets.R2_SECRET_ACCESS_KEY }}" >> .env
           echo "R2_BUCKET=${{ secrets.R2_BUCKET }}" >> .env
           echo "R2_PUBLIC_URL=${{ secrets.R2_PUBLIC_URL }}" >> .env
+          echo "R2_LEGACY_PUBLIC_URLS=${{ secrets.R2_LEGACY_PUBLIC_URLS }}" >> .env
           echo "INTEGRATION_API_BASE_URL=${{ secrets.INTEGRATION_API_BASE_URL }}" >> .env
           echo "INTEGRATION_API_KEY=${{ secrets.INTEGRATION_API_KEY }}" >> .env
           echo "INTEGRATION_DIVISION_ID=${{ secrets.INTEGRATION_DIVISION_ID }}" >> .env
