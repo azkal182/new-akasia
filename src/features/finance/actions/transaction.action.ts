@@ -315,6 +315,46 @@ async function getHijriMonthRange(hijriYear: number, hijriMonth: number) {
   }
 }
 
+export async function getHijriMonthlyStats(
+  hijriYear: number,
+  hijriMonth: number,
+) {
+  const { startDate, endDate } = await getHijriMonthRange(
+    hijriYear,
+    hijriMonth,
+  );
+
+  const [income, expense] = await Promise.all([
+    prisma.transaction.aggregate({
+      where: {
+        type: TransactionType.INCOME,
+        ledger: TransactionLedger.FINANCE,
+        date: { gte: startDate, lte: endDate },
+        deletedAt: null,
+      },
+      _sum: { amount: true },
+    }),
+    prisma.transaction.aggregate({
+      where: {
+        type: TransactionType.EXPENSE,
+        ledger: TransactionLedger.FINANCE,
+        date: { gte: startDate, lte: endDate },
+        deletedAt: null,
+      },
+      _sum: { amount: true },
+    }),
+  ]);
+
+  const totalIncome = income._sum.amount ?? 0;
+  const totalExpense = expense._sum.amount ?? 0;
+
+  return {
+    totalIncome,
+    totalExpense,
+    net: totalIncome - totalExpense,
+  };
+}
+
 export async function getTransactionsByHijriMonth(
   hijriYear: number,
   hijriMonth: number,

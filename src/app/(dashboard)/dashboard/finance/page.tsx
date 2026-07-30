@@ -14,9 +14,10 @@ import { formatRupiah, formatDate } from "@/lib/utils";
 import {
   getTransactions,
   getBalance,
-  getMonthlyStats,
+  getHijriMonthlyStats,
 } from "@/features/finance/actions";
 import { getCars } from "@/features/cars/actions";
+import { getCurrentHijriDate } from "@/features/fuel/actions";
 import { TransactionType } from "@/generated/prisma/enums";
 import { TransactionActions } from "@/features/finance/components/transaction-actions";
 import { auth } from "@/lib/auth";
@@ -34,7 +35,7 @@ export default async function FinancePage() {
   const showSummary = can.viewFinanceSummary(role);
   const showReports = can.viewReports(role);
 
-  const now = new Date();
+  const hijri = await getCurrentHijriDate();
   const [
     transactions,
     balance,
@@ -45,7 +46,7 @@ export default async function FinancePage() {
   ] = await Promise.all([
     getTransactions({ limit: 20 }),
     showSummary ? getBalance() : Promise.resolve(0),
-    showSummary ? getMonthlyStats(now.getFullYear(), now.getMonth() + 1) : Promise.resolve({ totalIncome: 0, totalExpense: 0, net: 0 }),
+    showSummary ? getHijriMonthlyStats(hijri.hijriYear, hijri.hijriMonth) : Promise.resolve({ totalIncome: 0, totalExpense: 0, net: 0 }),
     getTransactions({ type: TransactionType.INCOME, limit: 50 }),
     getTransactions({ type: TransactionType.EXPENSE, limit: 50 }),
     getCars(),
