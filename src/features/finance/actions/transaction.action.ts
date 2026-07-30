@@ -256,36 +256,41 @@ export async function getMonthlyStats(year: number, month: number) {
 }
 
 // Helper function to convert Hijri date range to Gregorian with validation
+// Uses moment setter methods to avoid locale-sensitive string parsing
 async function getHijriMonthRange(hijriYear: number, hijriMonth: number) {
   try {
-    // Build start and end of the requested Hijri month
-    // Format: iYYYY/iM/iD - padded for proper parsing
-    const startStr = `${hijriYear}/${hijriMonth}/1`;
-    const startHijri = moment(startStr, "iYYYY/iM/iD");
+    if (isNaN(hijriYear) || isNaN(hijriMonth)) {
+      throw new Error(`Invalid Hijri inputs: year=${hijriYear}, month=${hijriMonth}`);
+    }
 
-    // For end date, go to first of next month and subtract 1 day
-    let nextMonth = hijriMonth + 1;
+    // Build start date using setter methods (locale-safe, no string parsing)
+    const startHijri = moment().iYear(hijriYear).iMonth(hijriMonth - 1).iDate(1).startOf("day");
+
+    // Build end date: first day of next Hijri month, minus 1 second
+    let nextMonth = hijriMonth; // iMonth is 0-indexed so hijriMonth (1-indexed) = next month in 0-indexed
     let nextYear = hijriYear;
-    if (nextMonth > 12) {
-      nextMonth = 1;
+    if (nextMonth > 11) { // 0-indexed: month 11 = Dhu al-Hijja
+      nextMonth = 0;
       nextYear++;
     }
-    const endStr = `${nextYear}/${nextMonth}/1`;
-    const endHijri = moment(endStr, "iYYYY/iM/iD")
-      .subtract(1, "day")
-      .endOf("day");
+    const endHijri = moment()
+      .iYear(nextYear)
+      .iMonth(nextMonth)
+      .iDate(1)
+      .startOf("day")
+      .subtract(1, "second");
 
     const startDate = startHijri.toDate();
     const endDate = endHijri.toDate();
 
     // Validate dates are reasonable (between year 1900 and 2200)
     if (
+      isNaN(startDate.getTime()) ||
+      isNaN(endDate.getTime()) ||
       startDate.getFullYear() < 1900 ||
       startDate.getFullYear() > 2200 ||
       endDate.getFullYear() < 1900 ||
-      endDate.getFullYear() > 2200 ||
-      isNaN(startDate.getTime()) ||
-      isNaN(endDate.getTime())
+      endDate.getFullYear() > 2200
     ) {
       throw new Error("Invalid date range from Hijri conversion");
     }
