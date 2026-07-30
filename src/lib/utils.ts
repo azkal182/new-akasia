@@ -34,6 +34,28 @@ export function formatDate(date: Date | string, options?: Intl.DateTimeFormatOpt
 }
 
 /**
+ * Format date-only records using UTC so client components do not shift dates
+ * based on the browser timezone.
+ */
+export function formatDateOnly(date: Date | string, options?: Intl.DateTimeFormatOptions): string {
+  const d = new Date(date);
+  const dateOnly = new Date(Date.UTC(
+    d.getUTCFullYear(),
+    d.getUTCMonth(),
+    d.getUTCDate(),
+    12,
+  ));
+
+  return dateOnly.toLocaleDateString('id-ID', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'UTC',
+    ...options,
+  });
+}
+
+/**
  * Format bytes to human readable size
  */
 export function formatBytes(bytes: number, decimals = 2): string {

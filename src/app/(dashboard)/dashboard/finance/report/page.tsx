@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatRupiah, formatDate } from '@/lib/utils';
+import { formatRupiah, formatDateOnly } from '@/lib/utils';
 import { getTransactionsByHijriMonth } from '@/features/finance/actions';
 import { getCars } from '@/features/cars/actions';
 
@@ -313,7 +313,7 @@ export default function FinanceReportPage() {
                       return (
                         <TableRow key={trx.id} className="border-border">
                           <TableCell className="text-muted-foreground">{index + 1}</TableCell>
-                          <TableCell className="text-foreground">{formatDate(trx.date)}</TableCell>
+                          <TableCell className="text-foreground">{formatDateOnly(trx.date)}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <div className={`flex h-6 w-6 items-center justify-center rounded-full ${trx.type === 'INCOME'

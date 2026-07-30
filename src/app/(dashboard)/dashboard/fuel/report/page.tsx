@@ -32,7 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatRupiah, formatDate } from "@/lib/utils";
+import { formatRupiah, formatDateOnly } from "@/lib/utils";
 import { getFuelPurchasesByHijriMonth } from "@/features/fuel/actions";
 import { getCars } from "@/features/cars/actions";
 
@@ -407,7 +407,7 @@ export default function FuelReportPage() {
                         {index + 1}
                       </TableCell>
                       <TableCell className="text-foreground">
-                        {formatDate(purchase.transaction?.date ?? purchase.createdAt)}
+                        {formatDateOnly(purchase.transaction?.date ?? purchase.createdAt)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
