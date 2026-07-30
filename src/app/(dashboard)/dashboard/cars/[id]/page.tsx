@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/table';
 import { formatRupiah, formatDate } from '@/lib/utils';
 import { getCarById } from '@/features/cars/actions';
+import { normalizeStorageUrl } from '@/lib/normalize-storage-url';
 
 interface CarDetailPageProps {
   params: Promise<{ id: string }>;
@@ -248,14 +249,14 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
                         </TableCell>
                         <TableCell className="text-right">
                           {fp.receiptUrl ? (
-                            <Link
-                              href={fp.receiptUrl}
+                            <a
+                              href={normalizeStorageUrl(fp.receiptUrl) ?? fp.receiptUrl}
                               target="_blank"
                               rel="noreferrer"
                               className="text-xs text-blue-400 hover:text-blue-300"
                             >
                               Lihat
-                            </Link>
+                            </a>
                           ) : (
                             <span className="text-xs text-muted-foreground">-</span>
                           )}

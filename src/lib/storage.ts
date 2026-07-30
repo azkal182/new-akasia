@@ -2,6 +2,9 @@ import 'server-only';
 
 import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { normalizeStorageUrl } from './normalize-storage-url';
+
+export { normalizeStorageUrl };
 
 const DEFAULT_BUCKET = 'akasia';
 
@@ -48,6 +51,7 @@ function getProvider(): StorageProvider {
   }
   return provider;
 }
+
 
 function getR2Client(): S3Client {
   if (!r2Client) {
@@ -173,7 +177,20 @@ async function deleteFromR2(fileUrl: string): Promise<boolean> {
   const publicUrl = process.env.R2_PUBLIC_URL?.trim();
   if (!publicUrl) return false;
 
-  const key = objectKeyFromPublicUrl(fileUrl, publicUrl);
+  // Try current public URL first
+  let key = objectKeyFromPublicUrl(fileUrl, publicUrl);
+
+  // If not matched, try legacy URLs so old files can still be deleted
+  if (!key) {
+    const legacyPublicUrls = process.env.R2_LEGACY_PUBLIC_URLS?.trim();
+    if (legacyPublicUrls) {
+      for (const legacyUrl of legacyPublicUrls.split(',')) {
+        key = objectKeyFromPublicUrl(fileUrl, legacyUrl.trim());
+        if (key) break;
+      }
+    }
+  }
+
   if (!key) return false;
 
   await getR2Client().send(

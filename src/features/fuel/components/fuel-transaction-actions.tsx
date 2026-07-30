@@ -34,6 +34,7 @@ import {
   updateFuelIncome,
   updateFuelPurchase,
 } from "@/features/fuel/actions";
+import { normalizeStorageUrl } from "@/lib/normalize-storage-url";
 
 const fuelIncomeSchema = z.object({
   amount: z.coerce.number().int().positive("Jumlah wajib diisi"),
@@ -103,7 +104,7 @@ export function FuelTransactionActions({
 
   const isIncome = transaction.type === TransactionType.INCOME;
   const isPurchase = transaction.type === TransactionType.FUEL_PURCHASE;
-  const receiptUrl = transaction.fuelPurchase?.receiptUrl ?? null;
+  const receiptUrl = normalizeStorageUrl(transaction.fuelPurchase?.receiptUrl ?? null);
 
   const incomeDefaults = useMemo<FuelIncomeForm>(
     () => ({

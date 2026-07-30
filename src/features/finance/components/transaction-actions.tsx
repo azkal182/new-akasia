@@ -39,6 +39,7 @@ import {
   deleteExpense,
 } from "@/features/finance/actions";
 import { TransactionType } from "@/generated/prisma/enums";
+import { normalizeStorageUrl } from "@/lib/normalize-storage-url";
 
 type TransactionItem = {
   id: string;
@@ -92,7 +93,7 @@ export function TransactionActions({ transaction, cars }: TransactionActionsProp
 
   const isIncome = transaction.type === TransactionType.INCOME;
   const isExpense = transaction.type === TransactionType.EXPENSE;
-  const receiptUrl = transaction.expense?.receiptUrl ?? null;
+  const receiptUrl = normalizeStorageUrl(transaction.expense?.receiptUrl ?? null);
 
   const incomeDefaults = useMemo<UpdateIncomeInput>(
     () => ({
