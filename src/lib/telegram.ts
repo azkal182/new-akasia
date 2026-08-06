@@ -82,7 +82,7 @@ export async function sendTelegramDocument(
     formData.append('parse_mode', 'Markdown');
     formData.append(
       'document',
-      new Blob([buffer], { type: 'application/pdf' }),
+      new Blob([new Uint8Array(buffer)], { type: 'application/pdf' }),
       filename
     );
 
