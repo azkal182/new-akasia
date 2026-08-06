@@ -11,6 +11,7 @@ import {
 } from '../schemas/transaction.schema';
 import { auth } from '@/lib/auth';
 import { uploadCompressedReceipt } from '@/lib/receipt';
+import { deleteObject } from '@/lib/storage';
 import { calculateBalanceBefore } from './balance.util';
 
 export async function createExpense(data: CreateExpenseInput, receiptFile?: File | null) {
@@ -30,13 +31,17 @@ export async function createExpense(data: CreateExpenseInput, receiptFile?: File
   // Calculate total amount
   const totalAmount = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
 
-  try {
-    // Upload receipt if provided
-    let receiptUrl: string | null = null;
-    if (receiptFile) {
+  let receiptUrl: string | null = null;
+  if (receiptFile) {
+    try {
       receiptUrl = await uploadCompressedReceipt(receiptFile, 'receipts/expense');
+    } catch (uploadError: any) {
+      console.error('Failed to upload receipt:', uploadError);
+      return { error: `Gagal mengunggah nota/struk: ${uploadError?.message || 'Kesalahan tidak diketahui'}` };
     }
+  }
 
+  try {
     const balanceBefore = await calculateBalanceBefore(entryDate);
     const balanceAfter = balanceBefore - totalAmount;
 
@@ -80,9 +85,14 @@ export async function createExpense(data: CreateExpenseInput, receiptFile?: File
     revalidatePath('/dashboard/finance');
 
     return { success: true, transaction };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to create expense:', error);
-    return { error: 'Gagal menyimpan pengeluaran' };
+    if (receiptUrl) {
+      await deleteObject(receiptUrl).catch((err) => 
+        console.error('Failed to cleanup receipt after db error:', err)
+      );
+    }
+    return { error: `Gagal menyimpan pengeluaran: ${error?.message || 'Terjadi kesalahan pada database'}` };
   }
 }
 
@@ -126,14 +136,21 @@ export async function updateExpense(
   const entryDate = new Date(date);
 
   let receiptUrl = existing.expense.receiptUrl ?? null;
+  let isNewUpload = false;
   if (receiptFile) {
-    receiptUrl = await uploadCompressedReceipt(receiptFile, 'receipts/expense');
+    try {
+      receiptUrl = await uploadCompressedReceipt(receiptFile, 'receipts/expense');
+      isNewUpload = true;
+    } catch (uploadError: any) {
+      console.error('Failed to upload receipt:', uploadError);
+      return { error: `Gagal mengunggah nota/struk: ${uploadError?.message || 'Kesalahan tidak diketahui'}` };
+    }
   }
 
-  const balanceBefore = await calculateBalanceBefore(entryDate, transactionId);
-  const balanceAfter = balanceBefore - totalAmount;
-
   try {
+    const balanceBefore = await calculateBalanceBefore(entryDate, transactionId);
+    const balanceAfter = balanceBefore - totalAmount;
+
     const transaction = await prisma.transaction.update({
       where: { id: transactionId },
       data: {
@@ -172,9 +189,14 @@ export async function updateExpense(
     revalidatePath('/dashboard/finance');
 
     return { success: true, transaction };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to update expense:', error);
-    return { error: 'Gagal memperbarui pengeluaran' };
+    if (isNewUpload && receiptUrl) {
+      await deleteObject(receiptUrl).catch((err) => 
+        console.error('Failed to cleanup receipt after db error:', err)
+      );
+    }
+    return { error: `Gagal memperbarui pengeluaran: ${error?.message || 'Terjadi kesalahan pada database'}` };
   }
 }
 

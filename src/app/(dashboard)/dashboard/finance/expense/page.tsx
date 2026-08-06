@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, Plus, Trash2, Upload } from "lucide-react";
 import Link from "next/link";
+import imageCompression from "browser-image-compression";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -127,22 +128,47 @@ export default function ExpensePage() {
         toast.success("Pengeluaran berhasil disimpan");
         router.push("/dashboard/finance");
       }
-    } catch {
-      toast.error("Terjadi kesalahan");
+    } catch (error: any) {
+      toast.error(error?.message || "Terjadi kesalahan yang tidak diketahui");
     } finally {
       setIsLoading(false);
     }
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) {
-      setReceiptFile(file);
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Hanya file gambar yang diperbolehkan");
+      return;
+    }
+
+    setIsLoading(true);
+    const toastId = toast.loading("Memproses gambar...");
+
+    try {
+      const options = {
+        maxSizeMB: 1, // Compress to ~1MB
+        maxWidthOrHeight: 1280,
+        useWebWorker: true,
+      };
+
+      const compressedFile = await imageCompression(file, options);
+
+      setReceiptFile(compressedFile);
       const reader = new FileReader();
       reader.onloadend = () => {
         setReceiptPreview(reader.result as string);
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(compressedFile);
+
+      toast.success("Gambar berhasil diproses", { id: toastId });
+    } catch (error) {
+      console.error("Compression error:", error);
+      toast.error("Gagal memproses gambar", { id: toastId });
+    } finally {
+      setIsLoading(false);
     }
   }
 
