@@ -123,13 +123,15 @@ async function prefetchReceipts(receipts: ReceiptMeta[], concurrency: number) {
   return results;
 }
 
-export async function GET(request: NextRequest) {
+/**
+ * Generate a fuel (BBM) report PDF for the given Hijri month and return a Buffer.
+ */
+export async function generateFuelPdf(
+  hijriYear: number,
+  hijriMonth: number,
+  carId?: string,
+): Promise<Buffer> {
   const startedAt = Date.now();
-  const searchParams = request.nextUrl.searchParams;
-  const hijriYear = parseInt(searchParams.get('year') || moment().format('iYYYY'));
-  const hijriMonth = parseInt(searchParams.get('month') || moment().format('iM'));
-  const carId = searchParams.get('carId') || undefined;
-
   console.log(
     `${DEBUG_PREFIX} start`,
     JSON.stringify({ hijriYear, hijriMonth, carId })
@@ -231,16 +233,12 @@ export async function GET(request: NextRequest) {
 
   addWatermark();
 
-  let headerImageHeight = 0;
   try {
     const headerImagePath = path.join(process.cwd(), 'public', 'header.jpg');
     if (fs.existsSync(headerImagePath)) {
       const headerImage = fs.readFileSync(headerImagePath);
-      doc.image(headerImage, 40, 40, {
-        width: 515,
-        align: 'center',
-      });
-      headerImageHeight = 90;
+      doc.image(headerImage, 40, 40, { width: 515, align: 'center' });
+      const headerImageHeight = 90;
       doc.y = 40 + headerImageHeight + 20;
     }
   } catch (err) {
@@ -426,6 +424,17 @@ export async function GET(request: NextRequest) {
     `${DEBUG_PREFIX} done`,
     JSON.stringify({ bytes: pdfBuffer.length, ms: Date.now() - startedAt })
   );
+
+  return pdfBuffer;
+}
+
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const hijriYear = parseInt(searchParams.get('year') || moment().format('iYYYY'));
+  const hijriMonth = parseInt(searchParams.get('month') || moment().format('iM'));
+  const carId = searchParams.get('carId') || undefined;
+
+  const pdfBuffer = await generateFuelPdf(hijriYear, hijriMonth, carId);
 
   return new NextResponse(new Uint8Array(pdfBuffer), {
     headers: {

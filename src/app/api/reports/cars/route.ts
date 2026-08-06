@@ -59,12 +59,14 @@ function truncateText(value: string, maxLength: number) {
   return `${value.slice(0, Math.max(0, maxLength - 3))}...`;
 }
 
-export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const hijriYear = parseInt(searchParams.get('year') || moment().format('iYYYY'));
-  const hijriMonth = parseInt(searchParams.get('month') || moment().format('iM'));
-  const carId = searchParams.get('carId') || undefined;
-
+/**
+ * Generate a cars (armada) usage report PDF for the given Hijri month and return a Buffer.
+ */
+export async function generateCarsPdf(
+  hijriYear: number,
+  hijriMonth: number,
+  carId?: string,
+): Promise<Buffer> {
   const { startDate, endDate } = getHijriMonthRange(hijriYear, hijriMonth);
 
   const where: Record<string, unknown> = {
@@ -91,12 +93,6 @@ export async function GET(request: NextRequest) {
         })
       : Promise.resolve(null),
   ]);
-
-  const totalTrips = records.length;
-  const completedTrips = records.filter((r) => r.endTime !== null).length;
-  const ongoingTrips = records.filter((r) => r.endTime === null).length;
-  const uniqueCars = new Set(records.map((r) => r.carId)).size;
-  const uniqueDrivers = new Set(records.map((r) => r.userId)).size;
 
   const doc = new PDFDocument({ size: 'A4', margin: 40 });
   const chunks: Buffer[] = [];
@@ -135,16 +131,12 @@ export async function GET(request: NextRequest) {
 
   addWatermark();
 
-  let headerImageHeight = 0;
   try {
     const headerImagePath = path.join(process.cwd(), 'public', 'header.jpg');
     if (fs.existsSync(headerImagePath)) {
       const headerImage = fs.readFileSync(headerImagePath);
-      doc.image(headerImage, 40, 40, {
-        width: 515,
-        align: 'center',
-      });
-      headerImageHeight = 90;
+      doc.image(headerImage, 40, 40, { width: 515, align: 'center' });
+      const headerImageHeight = 90;
       doc.y = 40 + headerImageHeight + 20;
     }
   } catch (err) {
@@ -241,6 +233,17 @@ export async function GET(request: NextRequest) {
       resolve(Buffer.concat(chunks));
     });
   });
+
+  return pdfBuffer;
+}
+
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const hijriYear = parseInt(searchParams.get('year') || moment().format('iYYYY'));
+  const hijriMonth = parseInt(searchParams.get('month') || moment().format('iM'));
+  const carId = searchParams.get('carId') || undefined;
+
+  const pdfBuffer = await generateCarsPdf(hijriYear, hijriMonth, carId);
 
   return new NextResponse(new Uint8Array(pdfBuffer), {
     headers: {

@@ -73,17 +73,14 @@ function formatRupiah(amount: number): string {
   return new Intl.NumberFormat("id-ID").format(amount);
 }
 
-export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const hijriYear = parseInt(
-    searchParams.get("year") || String(moment().iYear()),
-  );
-  const hijriMonth = parseInt(
-    searchParams.get("month") || String(moment().iMonth() + 1),
-  );
-
-  const carId = searchParams.get("carId");
-
+/**
+ * Generate a finance report PDF for the given Hijri month and return a Buffer.
+ */
+export async function generateFinancePdf(
+  hijriYear: number,
+  hijriMonth: number,
+  carId?: string | null,
+): Promise<Buffer> {
   const { startDate, endDate } = getHijriMonthRange(hijriYear, hijriMonth);
 
   // Get opening balance
@@ -195,7 +192,6 @@ export async function GET(request: NextRequest) {
   function addWatermark() {
     if (watermarkImage) {
       const savedY = doc.y;
-      // Draw watermark centered, with reduced size for subtle effect
       const pageWidth = doc.page.width;
       const pageHeight = doc.page.height;
       const watermarkWidth = 420;
@@ -219,19 +215,16 @@ export async function GET(request: NextRequest) {
   addWatermark();
 
   // Header with image
-  let headerImageHeight = 0;
   try {
     const headerImagePath = path.join(process.cwd(), "public", "header.jpg");
     if (fs.existsSync(headerImagePath)) {
       const headerImage = fs.readFileSync(headerImagePath);
-      // Center the header image, full width
       doc.image(headerImage, 40, 40, {
         width: 515,
         align: "center",
       });
-      // Estimate image height based on aspect ratio (header is typically short)
-      headerImageHeight = 90; // Approximate height for the header banner
-      doc.y = 40 + headerImageHeight + 20; // Set position below image with spacing
+      const headerImageHeight = 90;
+      doc.y = 40 + headerImageHeight + 20;
     }
   } catch (err) {
     console.warn("Failed to load header image:", err);
@@ -409,7 +402,6 @@ export async function GET(request: NextRequest) {
           doc.addPage();
           addWatermark();
           y = 40;
-          // Redraw header on new page
           doc.fontSize(9).font("Helvetica-Bold");
           doc.rect(40, y, tableWidth, 18).fill("#e0e0e0");
           drawCellBorders(40, y, 18);
@@ -426,38 +418,31 @@ export async function GET(request: NextRequest) {
           doc.font("Helvetica").fontSize(8);
         }
 
-        // Draw row with cell borders
         drawCellBorders(40, y, rowHeight);
         x = 43;
 
-        // Date - show on all rows
         doc.text(formatHijriDate(trx.date), x, y + 4, {
           width: colWidths[0] - 6,
         });
         x += colWidths[0];
 
-        // Description: item name with quantity
         doc.text(`${item.description} (x${item.quantity})`, x, y + 4, {
           width: colWidths[1] - 6,
         });
         x += colWidths[1];
 
-        // Car name
         doc.text(item.car?.name || "-", x, y + 4, { width: colWidths[2] - 6 });
         x += colWidths[2];
 
-        // Masuk (empty for expense)
         doc.text("-", x, y + 4, { width: colWidths[3] - 6, align: "right" });
         x += colWidths[3];
 
-        // Keluar: show item total
         doc.text(formatRupiah(item.total), x, y + 4, {
           width: colWidths[4] - 6,
           align: "right",
         });
         x += colWidths[4];
 
-        // Saldo - show on all rows
         doc.text(formatRupiah(runningBalance), x, y + 4, {
           width: colWidths[5] - 6,
           align: "right",
@@ -466,17 +451,14 @@ export async function GET(request: NextRequest) {
         y += rowHeight;
       }
     } else {
-      // Income or expense without items
       const description = trx.income?.source || trx.description;
 
-      // Update running balance
       if (trx.type === TransactionType.INCOME) {
         runningBalance += trx.amount;
       } else {
         runningBalance -= trx.amount;
       }
 
-      // Check page break
       if (y + rowHeight > 780) {
         doc.addPage();
         addWatermark();
@@ -497,7 +479,6 @@ export async function GET(request: NextRequest) {
         doc.font("Helvetica").fontSize(8);
       }
 
-      // Draw row
       drawCellBorders(40, y, rowHeight);
       x = 43;
       doc.text(formatHijriDate(trx.date), x, y + 4, {
@@ -553,7 +534,6 @@ export async function GET(request: NextRequest) {
 
     for (const result of receiptResults) {
       const receipt = result.receipt;
-      // Check if need new page (2 images per page)
       if (imageCount >= 2) {
         doc.addPage();
         addWatermark();
@@ -565,7 +545,6 @@ export async function GET(request: NextRequest) {
         imageCount = 0;
       }
 
-      // Date and total - centered
       doc.fontSize(10).font("Helvetica-Bold");
       doc.text(`Tanggal: ${formatHijriDate(receipt.date)}`, {
         align: "center",
@@ -575,7 +554,6 @@ export async function GET(request: NextRequest) {
       doc.moveDown(0.5);
 
       if (result.ok && result.buffer) {
-        // Calculate center position for image
         const imageX = 40 + (pageWidth - maxImageWidth) / 2;
         doc.image(result.buffer, imageX, doc.y, {
           fit: [maxImageWidth, maxImageHeight],
@@ -597,12 +575,26 @@ export async function GET(request: NextRequest) {
 
   doc.end();
 
-  // Wait for PDF to complete
   const pdfBuffer = await new Promise<Buffer>((resolve) => {
     doc.on("end", () => {
       resolve(Buffer.concat(chunks));
     });
   });
+
+  return pdfBuffer;
+}
+
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const hijriYear = parseInt(
+    searchParams.get("year") || String(moment().iYear()),
+  );
+  const hijriMonth = parseInt(
+    searchParams.get("month") || String(moment().iMonth() + 1),
+  );
+  const carId = searchParams.get("carId");
+
+  const pdfBuffer = await generateFinancePdf(hijriYear, hijriMonth, carId);
 
   return new NextResponse(new Uint8Array(pdfBuffer), {
     headers: {
