@@ -10,8 +10,8 @@ interface TelegramResult {
 }
 
 function getConfig() {
-  const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
-  const chatId = process.env.TELEGRAM_CHAT_ID?.trim();
+  const token = process.env.TELEGRAM_REPORT_BOT_TOKEN?.trim();
+  const chatId = process.env.TELEGRAM_REPORT_CHAT_ID?.trim();
 
   if (!token || token.startsWith('replace-with-') || !chatId || chatId.startsWith('replace-with-')) {
     return null;
