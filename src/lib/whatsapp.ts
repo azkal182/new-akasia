@@ -90,7 +90,7 @@ export function formatPerizinanMessage(data: {
 *Tujuan:* ${data.destination}
 *Tanggal:* ${formattedDate}
 *Jumlah Penumpang:* ${data.numberOfPassengers} orang
-*Estimasi:* ${formattedEstimation}
+*Estimasi:* ${data.estimation} hari
 
 🔗 *Link Approval:*
 ${data.approvalUrl}
