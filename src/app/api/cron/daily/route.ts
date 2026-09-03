@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { differenceInCalendarDays, addDays, startOfDay } from "date-fns";
+import { addDays, addMinutes, startOfDay } from "date-fns";
 import { UsageStatus, CarStatus } from "@/generated/prisma/enums";
 
 export async function GET() {
@@ -20,15 +20,14 @@ export async function GET() {
     const carsToFree = [];
 
     for (const usage of activeUsages) {
-      if (!usage.estimatedDays) continue;
+      const estimatedDurationMinutes =
+        usage.estimatedDurationMinutes ??
+        (usage.estimatedDays ? usage.estimatedDays * 1440 : null);
 
-      const elapsedDays = differenceInCalendarDays(
-        todayStart,
-        startOfDay(usage.startTime),
-      );
+      if (!estimatedDurationMinutes) continue;
 
-      // If elapsed days >= (estimatedDays - 1), it means it has reached or passed its estimated duration tonight.
-      if (elapsedDays >= usage.estimatedDays - 1) {
+      const estimatedEndTime = addMinutes(usage.startTime, estimatedDurationMinutes);
+      if (estimatedEndTime <= now) {
         usagesToClose.push(usage.id);
         carsToFree.push(usage.carId);
       }
@@ -72,9 +71,9 @@ export async function GET() {
 
     // We can format the taxes to be more readable for the notification payload
     const taxAlerts = upcomingTaxes.map((tax) => {
-      const daysUntilDue = differenceInCalendarDays(
-        startOfDay(tax.dueDate),
-        todayStart,
+      const daysUntilDue = Math.floor(
+        (startOfDay(tax.dueDate).getTime() - todayStart.getTime()) /
+          (1000 * 60 * 60 * 24),
       );
       const isOverdue = daysUntilDue < 0;
 

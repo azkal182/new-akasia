@@ -69,7 +69,8 @@ export default function UsageRecordsPage() {
       carId: selectedCarId,
       purpose,
       destination,
-      estimatedDays: 1, // Default fallback since it's required now
+      estimatedDays: 1,
+      estimatedDurationMinutes: 1440,
       startTime: new Date(),
     });
 

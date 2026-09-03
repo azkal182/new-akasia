@@ -24,9 +24,25 @@ import {
 } from '@/features/cars/actions';
 import { purchaseFuel } from '@/features/fuel/actions';
 import { QRCodeDisplay } from '@/components/ui/qrcode-display';
+import { formatUsageEstimate } from '@/features/cars/utils';
 
 type DrivingStatus = Awaited<ReturnType<typeof getCurrentUserDrivingStatus>>;
 type CarItem = { id: string; name: string; licensePlate: string | null; status: string };
+type EstimateUnit = 'minutes' | 'hours' | 'days';
+type EstimateUnitValue = EstimateUnit | '';
+type StartDrivingField = 'car' | 'purpose' | 'destination' | 'estimateValue' | 'estimateUnit';
+type StartDrivingErrors = Partial<Record<StartDrivingField, string>>;
+
+function toEstimatedDurationMinutes(value: string, unit: EstimateUnitValue) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || amount < 1) {
+    return null;
+  }
+
+  if (unit === 'days') return amount * 1440;
+  if (unit === 'hours') return amount * 60;
+  return amount;
+}
 
 export function DriverView() {
   const [drivingStatus, setDrivingStatus] = useState<DrivingStatus>(null);
@@ -42,13 +58,47 @@ export function DriverView() {
   const [selectedCarId, setSelectedCarId] = useState('');
   const [purpose, setPurpose] = useState('');
   const [destination, setDestination] = useState('');
-  const [estimatedDays, setEstimatedDays] = useState('');
+  const [estimatedDurationValue, setEstimatedDurationValue] = useState('');
+  const [estimatedDurationUnit, setEstimatedDurationUnit] = useState<EstimateUnitValue>('');
+  const [startDrivingErrors, setStartDrivingErrors] = useState<StartDrivingErrors>({});
 
   // Refuel form
   const [totalAmount, setTotalAmount] = useState('');
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const receiptInputRef = useRef<HTMLInputElement>(null);
+  const carSelectRef = useRef<HTMLButtonElement>(null);
+  const purposeInputRef = useRef<HTMLInputElement>(null);
+  const destinationInputRef = useRef<HTMLInputElement>(null);
+  const estimateValueInputRef = useRef<HTMLInputElement>(null);
+  const estimateUnitSelectRef = useRef<HTMLButtonElement>(null);
+
+  function focusStartDrivingField(field: StartDrivingField) {
+    const refs: Record<StartDrivingField, React.RefObject<HTMLElement | null>> = {
+      car: carSelectRef,
+      purpose: purposeInputRef,
+      destination: destinationInputRef,
+      estimateValue: estimateValueInputRef,
+      estimateUnit: estimateUnitSelectRef,
+    };
+
+    refs[field].current?.focus();
+  }
+
+  function clearStartDrivingError(field: StartDrivingField) {
+    setStartDrivingErrors((current) => {
+      if (!current[field]) return current;
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+  }
+
+  function setStartDrivingError(field: StartDrivingField, message: string) {
+    setStartDrivingErrors({ [field]: message });
+    focusStartDrivingField(field);
+    toast.error(message);
+  }
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -69,17 +119,49 @@ export function DriverView() {
   }, [loadData]);
 
   async function handleStartDriving() {
-    if (!selectedCarId || !purpose || !destination || !estimatedDays) {
-      toast.error('Lengkapi semua field termasuk estimasi penggunaan');
+    if (!selectedCarId) {
+      setStartDrivingError('car', 'Pilih kendaraan terlebih dahulu');
       return;
     }
 
+    if (!purpose.trim()) {
+      setStartDrivingError('purpose', 'Tujuan penggunaan wajib diisi');
+      return;
+    }
+
+    if (!destination.trim()) {
+      setStartDrivingError('destination', 'Tempat tujuan wajib diisi');
+      return;
+    }
+
+    if (!estimatedDurationValue) {
+      setStartDrivingError('estimateValue', 'Estimasi penggunaan wajib diisi');
+      return;
+    }
+
+    const estimatedDurationMinutes = toEstimatedDurationMinutes(
+      estimatedDurationValue,
+      estimatedDurationUnit,
+    );
+
+    if (!estimatedDurationMinutes) {
+      setStartDrivingError('estimateValue', 'Estimasi penggunaan minimal 1');
+      return;
+    }
+
+    if (!estimatedDurationUnit) {
+      setStartDrivingError('estimateUnit', 'Pilih satuan estimasi penggunaan');
+      return;
+    }
+
+    setStartDrivingErrors({});
     setIsSubmitting(true);
     const result = await startCarUsage({
       carId: selectedCarId,
-      purpose,
-      destination,
-      estimatedDays: Number(estimatedDays),
+      purpose: purpose.trim(),
+      destination: destination.trim(),
+      estimatedDays: Math.ceil(estimatedDurationMinutes / 1440),
+      estimatedDurationMinutes,
       startTime: new Date(),
     });
 
@@ -91,7 +173,8 @@ export function DriverView() {
       setSelectedCarId('');
       setPurpose('');
       setDestination('');
-      setEstimatedDays('');
+      setEstimatedDurationValue('');
+      setEstimatedDurationUnit('');
       loadData();
     }
     setIsSubmitting(false);
@@ -203,8 +286,18 @@ export function DriverView() {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label className="text-foreground">Pilih Kendaraan</Label>
-                <Select value={selectedCarId} onValueChange={setSelectedCarId}>
-                  <SelectTrigger className="border-border bg-muted/60 text-foreground">
+                <Select
+                  value={selectedCarId}
+                  onValueChange={(value) => {
+                    setSelectedCarId(value);
+                    clearStartDrivingError('car');
+                  }}
+                >
+                  <SelectTrigger
+                    ref={carSelectRef}
+                    aria-invalid={Boolean(startDrivingErrors.car)}
+                    className="border-border bg-muted/60 text-foreground"
+                  >
                     <SelectValue placeholder="Pilih kendaraan" />
                   </SelectTrigger>
                   <SelectContent className="border-border bg-card">
@@ -219,38 +312,89 @@ export function DriverView() {
                     )}
                   </SelectContent>
                 </Select>
+                {startDrivingErrors.car ? (
+                  <p className="text-xs text-red-400">{startDrivingErrors.car}</p>
+                ) : null}
               </div>
               <div className="space-y-2">
                 <Label className="text-foreground">Tujuan Penggunaan</Label>
                 <Input
+                  ref={purposeInputRef}
                   value={purpose}
-                  onChange={(e) => setPurpose(e.target.value)}
+                  onChange={(e) => {
+                    setPurpose(e.target.value);
+                    clearStartDrivingError('purpose');
+                  }}
                   placeholder="Antar jemput, dinas, dll"
                   className="border-border bg-muted/60 text-foreground"
+                  aria-invalid={Boolean(startDrivingErrors.purpose)}
                 />
+                {startDrivingErrors.purpose ? (
+                  <p className="text-xs text-red-400">{startDrivingErrors.purpose}</p>
+                ) : null}
               </div>
               <div className="space-y-2">
                 <Label className="text-foreground">Tempat Tujuan</Label>
                 <Input
+                  ref={destinationInputRef}
                   value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
+                  onChange={(e) => {
+                    setDestination(e.target.value);
+                    clearStartDrivingError('destination');
+                  }}
                   placeholder="Jakarta, Bandung, dll"
                   className="border-border bg-muted/60 text-foreground"
+                  aria-invalid={Boolean(startDrivingErrors.destination)}
                   
                 />
+                {startDrivingErrors.destination ? (
+                  <p className="text-xs text-red-400">{startDrivingErrors.destination}</p>
+                ) : null}
               </div>
               <div className="space-y-2">
-                <Label className="text-foreground">Estimasi Penggunaan (Hari)</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  required
-                  value={estimatedDays}
-                  onChange={(e) => setEstimatedDays(e.target.value)}
-                  placeholder="Contoh: 1 (untuk harian), 2, dst"
-                  className="border-border bg-muted/60 text-foreground"
-                  inputMode="numeric"
-                />
+                <Label className="text-foreground">Estimasi Penggunaan</Label>
+                <div className="grid grid-cols-[1fr_120px] gap-2">
+                  <Input
+                    ref={estimateValueInputRef}
+                    type="number"
+                    min="1"
+                    required
+                    value={estimatedDurationValue}
+                    onChange={(e) => {
+                      setEstimatedDurationValue(e.target.value);
+                      clearStartDrivingError('estimateValue');
+                    }}
+                    placeholder="Contoh: 30"
+                    className="border-border bg-muted/60 text-foreground"
+                    inputMode="numeric"
+                    aria-invalid={Boolean(startDrivingErrors.estimateValue)}
+                  />
+                  <Select
+                    value={estimatedDurationUnit}
+                    onValueChange={(value) => {
+                      setEstimatedDurationUnit(value as EstimateUnit);
+                      clearStartDrivingError('estimateUnit');
+                    }}
+                  >
+                    <SelectTrigger
+                      ref={estimateUnitSelectRef}
+                      aria-invalid={Boolean(startDrivingErrors.estimateUnit)}
+                      className="border-border bg-muted/60 text-foreground"
+                    >
+                      <SelectValue placeholder="Satuan" />
+                    </SelectTrigger>
+                    <SelectContent className="border-border bg-card">
+                      <SelectItem value="minutes">Menit</SelectItem>
+                      <SelectItem value="hours">Jam</SelectItem>
+                      <SelectItem value="days">Hari</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {startDrivingErrors.estimateValue || startDrivingErrors.estimateUnit ? (
+                  <p className="text-xs text-red-400">
+                    {startDrivingErrors.estimateValue ?? startDrivingErrors.estimateUnit}
+                  </p>
+                ) : null}
               </div>
             </div>
             <DialogFooter>
@@ -259,7 +403,7 @@ export function DriverView() {
               </Button>
               <Button
                 onClick={handleStartDriving}
-                disabled={isSubmitting || !selectedCarId || !purpose || !destination || !estimatedDays}
+                disabled={isSubmitting}
                 className="bg-blue-600 hover:bg-blue-500"
               >
                 {isSubmitting ? 'Memulai...' : 'Mulai'}
@@ -311,9 +455,9 @@ export function DriverView() {
 
               <div className="flex items-center justify-between text-xs text-muted-foreground mt-2 border-t border-border/50 pt-3">
                 <p>Mulai: {formatDate(drivingStatus.startTime)}</p>
-                {drivingStatus.estimatedDays && (
+                {formatUsageEstimate(drivingStatus) && (
                   <p className="font-medium text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
-                    Estimasi: {drivingStatus.estimatedDays} Hari
+                    Estimasi: {formatUsageEstimate(drivingStatus)}
                   </p>
                 )}
               </div>

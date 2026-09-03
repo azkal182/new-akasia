@@ -158,7 +158,8 @@ model UsageRecord {
     id            String      @id @default(uuid())
     purpose       String
     destination   String
-    estimatedDays Int
+    estimatedDays Int?
+    estimatedDurationMinutes Int?
     startTime     DateTime    @default(now())
     endTime       DateTime?
     status        UsageStatus @default(ONGOING)

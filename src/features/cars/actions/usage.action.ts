@@ -7,16 +7,32 @@ import { CarStatus } from "@/generated/prisma/enums";
 import { z } from "zod";
 import moment from "moment-hijri";
 
-const createUsageRecordSchema = z.object({
-  carId: z.string().uuid("Pilih kendaraan"),
-  purpose: z.string().min(1, "Tujuan penggunaan wajib diisi"),
-  destination: z.string().min(1, "Tempat tujuan wajib diisi"),
-  estimatedDays: z.coerce
-    .number()
-    .int()
-    .min(1, "Estimasi minimal 1 hari wajib diisi"),
-  startTime: z.coerce.date(),
-});
+const createUsageRecordSchema = z
+  .object({
+    carId: z.string().uuid("Pilih kendaraan"),
+    purpose: z.string().min(1, "Tujuan penggunaan wajib diisi"),
+    destination: z.string().min(1, "Tempat tujuan wajib diisi"),
+    estimatedDays: z.coerce
+      .number()
+      .int()
+      .min(1, "Estimasi minimal 1 hari wajib diisi")
+      .optional(),
+    estimatedDurationMinutes: z.coerce
+      .number()
+      .int()
+      .min(1, "Estimasi minimal 1 menit wajib diisi")
+      .optional(),
+    startTime: z.coerce.date(),
+  })
+  .superRefine((value, ctx) => {
+    if (!value.estimatedDurationMinutes && !value.estimatedDays) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Estimasi penggunaan wajib diisi",
+        path: ["estimatedDurationMinutes"],
+      });
+    }
+  });
 
 const endUsageRecordSchema = z.object({
   recordId: z.string().uuid(),
@@ -141,6 +157,14 @@ export async function startCarUsage(data: CreateUsageRecordInput) {
   }
 
   try {
+    const estimatedDurationMinutes =
+      validated.data.estimatedDurationMinutes ??
+      (validated.data.estimatedDays ? validated.data.estimatedDays * 1440 : null);
+
+    if (!estimatedDurationMinutes) {
+      return { error: "Estimasi penggunaan wajib diisi" };
+    }
+
     // Create usage record and update car status
     const [record] = await prisma.$transaction([
       prisma.usageRecord.create({
@@ -149,7 +173,8 @@ export async function startCarUsage(data: CreateUsageRecordInput) {
           userId: session.user.id,
           purpose: validated.data.purpose,
           destination: validated.data.destination,
-          estimatedDays: validated.data.estimatedDays,
+          estimatedDays: Math.ceil(estimatedDurationMinutes / 1440),
+          estimatedDurationMinutes,
           startTime: validated.data.startTime,
         },
       }),
