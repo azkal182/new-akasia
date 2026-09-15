@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +37,65 @@ type EstimateUnit = 'minutes' | 'hours' | 'days';
 type EstimateUnitValue = EstimateUnit | '';
 type StartDrivingField = 'car' | 'purpose' | 'destination' | 'estimateValue' | 'estimateUnit';
 type StartDrivingErrors = Partial<Record<StartDrivingField, string>>;
+
+function CarAutocomplete({
+  cars,
+  value,
+  onChange,
+  triggerRef,
+  invalid,
+}: {
+  cars: CarItem[];
+  value: string;
+  onChange: (value: string) => void;
+  triggerRef?: React.RefObject<HTMLButtonElement | null>;
+  invalid?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedCar = cars.find((car) => car.id === value);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          ref={triggerRef}
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          aria-invalid={invalid}
+          className="w-full justify-between border-border bg-muted/60 text-foreground font-normal"
+        >
+          {selectedCar ? `${selectedCar.name} - ${selectedCar.licensePlate ?? '-'}` : 'Ketik atau pilih kendaraan'}
+          <span className="ml-2 text-xs text-muted-foreground">⌄</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] border-border bg-card p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Cari nama atau plat nomor..." />
+          <CommandList>
+            <CommandEmpty>Kendaraan tidak ditemukan.</CommandEmpty>
+            {cars.map((car) => (
+              <CommandItem
+                key={car.id}
+                value={`${car.name} ${car.licensePlate ?? ''}`}
+                onSelect={() => {
+                  onChange(car.id);
+                  setOpen(false);
+                }}
+              >
+                <div>
+                  <p>{car.name}</p>
+                  <p className="text-xs text-muted-foreground">{car.licensePlate ?? '-'}</p>
+                </div>
+              </CommandItem>
+            ))}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 function toEstimatedDurationMinutes(value: string, unit: EstimateUnitValue) {
   const amount = Number(value);
@@ -293,32 +354,16 @@ export function DriverView() {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label className="text-foreground">Pilih Kendaraan</Label>
-                <Select
+                <CarAutocomplete
+                  cars={cars}
                   value={selectedCarId}
-                  onValueChange={(value) => {
+                  onChange={(value) => {
                     setSelectedCarId(value);
                     clearStartDrivingError('car');
                   }}
-                >
-                  <SelectTrigger
-                    ref={carSelectRef}
-                    aria-invalid={Boolean(startDrivingErrors.car)}
-                    className="border-border bg-muted/60 text-foreground"
-                  >
-                    <SelectValue placeholder="Pilih kendaraan" />
-                  </SelectTrigger>
-                <SelectContent className="border-border bg-card">
-                    {cars.length === 0 ? (
-                      <SelectItem value="-" disabled>Tidak ada kendaraan tersedia</SelectItem>
-                    ) : (
-                      cars.map((car) => (
-                        <SelectItem key={car.id} value={car.id}>
-                          {car.name} - {car.licensePlate}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                  triggerRef={carSelectRef}
+                  invalid={Boolean(startDrivingErrors.car)}
+                />
                 {busyCars.length > 0 && (
                   <div className="space-y-1 rounded-lg border border-amber-500/20 bg-amber-500/5 p-2">
                     <p className="text-xs font-medium text-amber-400">Sedang digunakan driver lain</p>
@@ -535,20 +580,11 @@ export function DriverView() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label className="text-foreground">Pilih Kendaraan Tersedia</Label>
-              <Select value={selectedCarId} onValueChange={setSelectedCarId}>
-                <SelectTrigger className="border-border bg-muted/60 text-foreground">
-                  <SelectValue placeholder="Pilih kendaraan" />
-                </SelectTrigger>
-                <SelectContent className="border-border bg-card">
-                  {cars.length === 0 ? (
-                    <SelectItem value="-" disabled>Tidak ada kendaraan tersedia</SelectItem>
-                  ) : cars.map((car) => (
-                    <SelectItem key={car.id} value={car.id}>
-                      {car.name} - {car.licensePlate ?? '-'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <CarAutocomplete
+                cars={cars}
+                value={selectedCarId}
+                onChange={setSelectedCarId}
+              />
               {busyCars.length > 0 && (
                 <div className="space-y-1 rounded-lg border border-amber-500/20 bg-amber-500/5 p-2">
                   <p className="text-xs font-medium text-amber-400">Armada dipakai driver lain</p>
