@@ -7,7 +7,7 @@ import { DriverStatusCard } from './driver-status-card';
 type DrivingStatus = Awaited<ReturnType<typeof getCurrentUserDrivingStatus>>;
 
 export function DashboardDriverStatus() {
-  const [drivingStatus, setDrivingStatus] = useState<DrivingStatus>(null);
+  const [drivingStatus, setDrivingStatus] = useState<DrivingStatus>([]);
   const [loading, setLoading] = useState(true);
 
   async function loadStatus() {
@@ -28,14 +28,15 @@ export function DashboardDriverStatus() {
     return null;
   }
 
-  if (!drivingStatus) {
+  if (drivingStatus.length === 0) {
     return null;
   }
 
-  return (
+  return drivingStatus.map((status) => (
     <DriverStatusCard
-      drivingStatus={drivingStatus}
+      key={status.id}
+      drivingStatus={status}
       onStatusChange={loadStatus}
     />
-  );
+  ));
 }

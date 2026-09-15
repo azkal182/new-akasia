@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { formatDate, formatRupiah } from '@/lib/utils';
 import {
   getCurrentUserDrivingStatus,
+  getActiveUsageRecords,
   getCars,
   startCarUsage,
   endCarUsage,
@@ -27,6 +28,8 @@ import { QRCodeDisplay } from '@/components/ui/qrcode-display';
 import { formatUsageEstimate } from '@/features/cars/utils';
 
 type DrivingStatus = Awaited<ReturnType<typeof getCurrentUserDrivingStatus>>;
+type ActiveDrivingStatus = DrivingStatus[number];
+type BusyDrivingStatus = Awaited<ReturnType<typeof getActiveUsageRecords>>[number];
 type CarItem = { id: string; name: string; licensePlate: string | null; status: string };
 type EstimateUnit = 'minutes' | 'hours' | 'days';
 type EstimateUnitValue = EstimateUnit | '';
@@ -45,8 +48,10 @@ function toEstimatedDurationMinutes(value: string, unit: EstimateUnitValue) {
 }
 
 export function DriverView() {
-  const [drivingStatus, setDrivingStatus] = useState<DrivingStatus>(null);
+  const [drivingStatus, setDrivingStatus] = useState<DrivingStatus>([]);
+  const [selectedDrivingStatus, setSelectedDrivingStatus] = useState<ActiveDrivingStatus | null>(null);
   const [cars, setCars] = useState<CarItem[]>([]);
+  const [busyCars, setBusyCars] = useState<BusyDrivingStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -103,12 +108,14 @@ export function DriverView() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [status, allCars] = await Promise.all([
+      const [status, allCars, activeUsages] = await Promise.all([
         getCurrentUserDrivingStatus(),
         getCars(),
+        getActiveUsageRecords(),
       ]);
       setDrivingStatus(status);
       setCars(allCars.filter((c) => c.status === 'AVAILABLE'));
+      setBusyCars(activeUsages.filter((usage) => !status.some((item) => item.id === usage.id)));
     } finally {
       setLoading(false);
     }
@@ -181,11 +188,11 @@ export function DriverView() {
   }
 
   async function handleEndDriving() {
-    if (!drivingStatus) return;
+    if (!selectedDrivingStatus) return;
 
     setIsSubmitting(true);
     const result = await endCarUsage({
-      recordId: drivingStatus.id,
+      recordId: selectedDrivingStatus.id,
       endTime: new Date(),
     });
 
@@ -200,7 +207,7 @@ export function DriverView() {
   }
 
   async function handleRefuel() {
-    if (!drivingStatus || !totalAmount) {
+    if (!selectedDrivingStatus || !totalAmount) {
       toast.error('Total wajib diisi');
       return;
     }
@@ -212,7 +219,7 @@ export function DriverView() {
 
     setIsSubmitting(true);
     const result = await purchaseFuel({
-      carId: drivingStatus.car.id,
+      carId: selectedDrivingStatus.car.id,
       totalAmount: Number(totalAmount),
       date: new Date(),
     }, receiptFile);
@@ -250,7 +257,7 @@ export function DriverView() {
   }
 
   // Not driving - show start button
-  if (!drivingStatus) {
+  if (drivingStatus.length === 0) {
     return (
       <>
         <div className="flex h-[60vh] items-center justify-center">
@@ -300,7 +307,7 @@ export function DriverView() {
                   >
                     <SelectValue placeholder="Pilih kendaraan" />
                   </SelectTrigger>
-                  <SelectContent className="border-border bg-card">
+                <SelectContent className="border-border bg-card">
                     {cars.length === 0 ? (
                       <SelectItem value="-" disabled>Tidak ada kendaraan tersedia</SelectItem>
                     ) : (
@@ -312,6 +319,17 @@ export function DriverView() {
                     )}
                   </SelectContent>
                 </Select>
+                {busyCars.length > 0 && (
+                  <div className="space-y-1 rounded-lg border border-amber-500/20 bg-amber-500/5 p-2">
+                    <p className="text-xs font-medium text-amber-400">Sedang digunakan driver lain</p>
+                    {busyCars.map((usage) => (
+                      <div key={usage.id} className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{usage.car.name} ({usage.car.licensePlate ?? '-'})</span>
+                        <span>{usage.user.name ?? usage.user.username}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {startDrivingErrors.car ? (
                   <p className="text-xs text-red-400">{startDrivingErrors.car}</p>
                 ) : null}
@@ -415,12 +433,23 @@ export function DriverView() {
     );
   }
 
-  // Currently driving - show status
+  // Currently driving - show all active vehicles
   return (
     <>
       <div className="space-y-4 sm:space-y-6">
-        {/* Status Card */}
-        <Card className="border-blue-500/30 bg-gradient-to-br from-blue-500/10 to-cyan-500/5">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">Armada aktif</p>
+            <h1 className="text-xl font-bold text-foreground">Sedang Digunakan ({drivingStatus.length})</h1>
+          </div>
+          <Button variant="outline" onClick={() => setShowStartDialog(true)}>
+            <Play className="mr-2 h-4 w-4" /> Tambah Armada
+          </Button>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+        {drivingStatus.map((status) => (
+        <Card key={status.id} className="border-blue-500/30 bg-gradient-to-br from-blue-500/10 to-cyan-500/5">
           <CardContent className="p-4 sm:p-6">
             <div className="flex flex-col gap-4">
               <div className="flex items-start justify-between">
@@ -430,8 +459,8 @@ export function DriverView() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Sedang Mengendarai</p>
-                    <h2 className="text-xl sm:text-2xl font-bold text-foreground">{drivingStatus.car.name}</h2>
-                    <p className="text-sm text-muted-foreground">{drivingStatus.car.licensePlate}</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-foreground">{status.car.name}</h2>
+                    <p className="text-sm text-muted-foreground">{status.car.licensePlate}</p>
                   </div>
                 </div>
               </div>
@@ -441,36 +470,33 @@ export function DriverView() {
                   <Navigation className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="text-xs text-muted-foreground">Keperluan</p>
-                    <p className="text-sm font-medium text-foreground">{drivingStatus.purpose}</p>
+                <p className="text-sm font-medium text-foreground">{status.purpose}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 rounded-lg bg-muted/60 p-3">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="text-xs text-muted-foreground">Tujuan</p>
-                    <p className="text-sm font-medium text-foreground">{drivingStatus.destination}</p>
+                <p className="text-sm font-medium text-foreground">{status.destination}</p>
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center justify-between text-xs text-muted-foreground mt-2 border-t border-border/50 pt-3">
-                <p>Mulai: {formatDate(drivingStatus.startTime)}</p>
-                {formatUsageEstimate(drivingStatus) && (
+                <p>Mulai: {formatDate(status.startTime)}</p>
+                {formatUsageEstimate(status) && (
                   <p className="font-medium text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
-                    Estimasi: {formatUsageEstimate(drivingStatus)}
+                    Estimasi: {formatUsageEstimate(status)}
                   </p>
                 )}
               </div>
             </div>
-          </CardContent>
-        </Card>
-
         {/* Quick Actions */}
         <div className="grid gap-3 sm:grid-cols-2">
           <Button
             size="lg"
             className="h-auto flex-col gap-2 bg-amber-600 py-4 hover:bg-amber-500"
-            onClick={() => setShowRefuelDialog(true)}
+            onClick={() => { setSelectedDrivingStatus(status); setShowRefuelDialog(true); }}
           >
             <Fuel className="h-6 w-6" />
             <span>Isi BBM</span>
@@ -479,7 +505,7 @@ export function DriverView() {
             size="lg"
             variant="outline"
             className="h-auto flex-col gap-2 border-emerald-500/50 py-4 text-emerald-400 hover:bg-emerald-500/10"
-            onClick={() => setShowEndDialog(true)}
+            onClick={() => { setSelectedDrivingStatus(status); setShowEndDialog(true); }}
           >
             <StopCircle className="h-6 w-6" />
             <span>Selesai Mengendarai</span>
@@ -487,14 +513,85 @@ export function DriverView() {
         </div>
 
         {/* QR Code Display */}
-        {drivingStatus.car.barcodeString && (
+        {status.car.barcodeString && (
           <QRCodeDisplay
-            value={drivingStatus.car.barcodeString}
-            carName={drivingStatus.car.name}
-            licensePlate={drivingStatus.car.licensePlate}
+            value={status.car.barcodeString}
+            carName={status.car.name}
+            licensePlate={status.car.licensePlate}
           />
         )}
+        </CardContent>
+        </Card>
+        ))}
+        </div>
       </div>
+
+      {/* Add another vehicle while one or more vehicles are active */}
+      <Dialog open={showStartDialog} onOpenChange={setShowStartDialog}>
+        <DialogContent className="border-border bg-card">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Tambah Armada</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-foreground">Pilih Kendaraan Tersedia</Label>
+              <Select value={selectedCarId} onValueChange={setSelectedCarId}>
+                <SelectTrigger className="border-border bg-muted/60 text-foreground">
+                  <SelectValue placeholder="Pilih kendaraan" />
+                </SelectTrigger>
+                <SelectContent className="border-border bg-card">
+                  {cars.length === 0 ? (
+                    <SelectItem value="-" disabled>Tidak ada kendaraan tersedia</SelectItem>
+                  ) : cars.map((car) => (
+                    <SelectItem key={car.id} value={car.id}>
+                      {car.name} - {car.licensePlate ?? '-'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {busyCars.length > 0 && (
+                <div className="space-y-1 rounded-lg border border-amber-500/20 bg-amber-500/5 p-2">
+                  <p className="text-xs font-medium text-amber-400">Armada dipakai driver lain</p>
+                  {busyCars.map((usage) => (
+                    <div key={usage.id} className="flex justify-between gap-2 text-xs text-muted-foreground">
+                      <span>{usage.car.name} ({usage.car.licensePlate ?? '-'})</span>
+                      <span>{usage.user.name ?? usage.user.username}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label className="text-foreground">Tujuan Penggunaan</Label>
+              <Input value={purpose} onChange={(event) => setPurpose(event.target.value)} placeholder="Antar jemput, dinas, dll" className="border-border bg-muted/60 text-foreground" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-foreground">Tempat Tujuan</Label>
+              <Input value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="Jakarta, Bandung, dll" className="border-border bg-muted/60 text-foreground" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-foreground">Estimasi Penggunaan</Label>
+              <div className="grid grid-cols-[1fr_120px] gap-2">
+                <Input type="number" min="1" value={estimatedDurationValue} onChange={(event) => setEstimatedDurationValue(event.target.value)} placeholder="Contoh: 30" className="border-border bg-muted/60 text-foreground" />
+                <Select value={estimatedDurationUnit} onValueChange={(value) => setEstimatedDurationUnit(value as EstimateUnit)}>
+                  <SelectTrigger className="border-border bg-muted/60 text-foreground"><SelectValue placeholder="Satuan" /></SelectTrigger>
+                  <SelectContent className="border-border bg-card">
+                    <SelectItem value="minutes">Menit</SelectItem>
+                    <SelectItem value="hours">Jam</SelectItem>
+                    <SelectItem value="days">Hari</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowStartDialog(false)} className="border-border">Batal</Button>
+            <Button onClick={handleStartDriving} disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-500">
+              {isSubmitting ? 'Memulai...' : 'Mulai'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* End Driving Dialog */}
       <Dialog open={showEndDialog} onOpenChange={setShowEndDialog}>
@@ -504,13 +601,13 @@ export function DriverView() {
           </DialogHeader>
           <div className="py-4 space-y-2">
             <p className="text-muted-foreground">
-              Kendaraan: <span className="text-foreground">{drivingStatus.car.name}</span>
+            Kendaraan: <span className="text-foreground">{selectedDrivingStatus?.car.name}</span>
             </p>
             <p className="text-muted-foreground">
-              Tujuan: <span className="text-foreground">{drivingStatus.purpose}</span>
+            Tujuan: <span className="text-foreground">{selectedDrivingStatus?.purpose}</span>
             </p>
             <p className="text-muted-foreground">
-              Mulai: <span className="text-foreground">{formatDate(drivingStatus.startTime)}</span>
+            Mulai: <span className="text-foreground">{selectedDrivingStatus ? formatDate(selectedDrivingStatus.startTime) : '-'}</span>
             </p>
           </div>
           <DialogFooter>
@@ -528,7 +625,7 @@ export function DriverView() {
       <Dialog open={showRefuelDialog} onOpenChange={setShowRefuelDialog}>
         <DialogContent className="border-border bg-card">
           <DialogHeader>
-            <DialogTitle className="text-foreground">Isi BBM - {drivingStatus.car.name}</DialogTitle>
+          <DialogTitle className="text-foreground">Isi BBM - {selectedDrivingStatus?.car.name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">

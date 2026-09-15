@@ -82,7 +82,7 @@ export async function getActiveUsageRecords() {
     orderBy: { startTime: "desc" },
     include: {
       car: { select: { id: true, name: true, licensePlate: true } },
-      user: { select: { name: true, username: true } },
+      user: { select: { id: true, name: true, username: true } },
     },
   });
 
@@ -93,14 +93,15 @@ export async function getActiveUsageRecords() {
 export async function getCurrentUserDrivingStatus() {
   const session = await auth();
   if (!session?.user?.id) {
-    return null;
+    return [];
   }
 
-  const activeRecord = await prisma.usageRecord.findFirst({
+  const activeRecords = await prisma.usageRecord.findMany({
     where: {
       userId: session.user.id,
       endTime: null,
     },
+    orderBy: { startTime: "desc" },
     include: {
       car: {
         select: {
@@ -113,7 +114,7 @@ export async function getCurrentUserDrivingStatus() {
     },
   });
 
-  return activeRecord;
+  return activeRecords;
 }
 
 export async function startCarUsage(data: CreateUsageRecordInput) {
@@ -125,21 +126,6 @@ export async function startCarUsage(data: CreateUsageRecordInput) {
   const validated = createUsageRecordSchema.safeParse(data);
   if (!validated.success) {
     return { error: validated.error.errors[0].message };
-  }
-
-  // Check if user is already driving another car
-  const existingUsage = await prisma.usageRecord.findFirst({
-    where: {
-      userId: session.user.id,
-      endTime: null,
-    },
-    include: { car: { select: { name: true } } },
-  });
-
-  if (existingUsage) {
-    return {
-      error: `Anda masih mengendarai ${existingUsage.car.name}. Selesaikan dulu sebelum menggunakan kendaraan lain.`,
-    };
   }
 
   // Check if car is available
@@ -165,9 +151,18 @@ export async function startCarUsage(data: CreateUsageRecordInput) {
       return { error: "Estimasi penggunaan wajib diisi" };
     }
 
-    // Create usage record and update car status
-    const [record] = await prisma.$transaction([
-      prisma.usageRecord.create({
+    // Claim the car atomically so two drivers cannot start the same car at once.
+    const record = await prisma.$transaction(async (tx) => {
+      const claimed = await tx.car.updateMany({
+        where: { id: validated.data.carId, status: CarStatus.AVAILABLE },
+        data: { status: CarStatus.IN_USE },
+      });
+
+      if (claimed.count === 0) {
+        throw new Error("Kendaraan baru saja digunakan driver lain");
+      }
+
+      return tx.usageRecord.create({
         data: {
           carId: validated.data.carId,
           userId: session.user.id,
@@ -177,19 +172,15 @@ export async function startCarUsage(data: CreateUsageRecordInput) {
           estimatedDurationMinutes,
           startTime: validated.data.startTime,
         },
-      }),
-      prisma.car.update({
-        where: { id: validated.data.carId },
-        data: { status: CarStatus.IN_USE },
-      }),
-    ]);
+      });
+    });
 
     revalidatePath("/dashboard/cars");
     revalidatePath("/dashboard");
     return { success: true, record };
   } catch (error) {
     console.error("Failed to start car usage:", error);
-    return { error: "Gagal memulai penggunaan kendaraan" };
+    return { error: error instanceof Error ? error.message : "Gagal memulai penggunaan kendaraan" };
   }
 }
 
@@ -207,7 +198,7 @@ export async function endCarUsage(data: EndUsageRecordInput) {
   // Get the record
   const record = await prisma.usageRecord.findUnique({
     where: { id: validated.data.recordId },
-    select: { carId: true, endTime: true },
+    select: { carId: true, endTime: true, userId: true },
   });
 
   if (!record) {
@@ -216,6 +207,10 @@ export async function endCarUsage(data: EndUsageRecordInput) {
 
   if (record.endTime) {
     return { error: "Penggunaan sudah selesai" };
+  }
+
+  if (record.userId !== session.user.id) {
+    return { error: "Anda hanya dapat menyelesaikan penggunaan kendaraan sendiri" };
   }
 
   try {

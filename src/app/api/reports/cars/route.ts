@@ -46,7 +46,15 @@ function getHijriMonthRange(hijriYear: number, hijriMonth: number) {
 }
 
 function formatHijriDate(date: Date): string {
-  return moment(date).format('iDD-iMM-iYYYY');
+  // Database timestamps are UTC; reports use the application's Jakarta date.
+  // Applying the offset before converting to Hijri prevents records near
+  // midnight from appearing on the previous Hijri day.
+  const localDate = moment(date).utcOffset(7);
+  const pad = (value: number) => value.toString().padStart(2, '0');
+
+  // moment-hijri emits Arabic-Indic numerals for iDD/iMM/iYYYY. Helvetica in
+  // PDFKit cannot render those glyphs, so build an ASCII date explicitly.
+  return `${pad(localDate.iDate())}/${pad(localDate.iMonth() + 1)}/${localDate.iYear()}`;
 }
 
 function truncateText(value: string, maxLength: number) {

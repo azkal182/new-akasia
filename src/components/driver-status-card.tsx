@@ -19,10 +19,10 @@ import { endCarUsage, getCurrentUserDrivingStatus } from '@/features/cars/action
 import { purchaseFuel } from '@/features/fuel/actions';
 import { QRCodeDisplay } from '@/components/ui/qrcode-display';
 
-type DrivingStatus = Awaited<ReturnType<typeof getCurrentUserDrivingStatus>>;
+type DrivingStatus = Awaited<ReturnType<typeof getCurrentUserDrivingStatus>>[number];
 
 interface DriverStatusCardProps {
-  drivingStatus: DrivingStatus;
+  drivingStatus: DrivingStatus | null;
   onStatusChange: () => void;
 }
 
