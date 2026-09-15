@@ -97,8 +97,15 @@ function CarAutocomplete({
           />
           <CommandList
             className="h-48 max-h-48 min-h-0 overflow-y-scroll overscroll-contain touch-pan-y"
-            style={{ maxHeight: '12rem', overflowY: 'scroll' }}
+            style={{
+              maxHeight: '12rem',
+              overflowY: 'scroll',
+              overscrollBehaviorY: 'contain',
+              touchAction: 'pan-y',
+              WebkitOverflowScrolling: 'touch',
+            }}
             onWheel={(event) => event.stopPropagation()}
+            onTouchMove={(event) => event.stopPropagation()}
           >
             <CommandEmpty>Kendaraan tidak ditemukan.</CommandEmpty>
             {filteredCars.map((car) => (
@@ -509,30 +516,30 @@ export function DriverView() {
   return (
     <>
       <div className="space-y-4 sm:space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm text-muted-foreground">Armada aktif</p>
             <h1 className="text-xl font-bold text-foreground">Sedang Digunakan ({drivingStatus.length})</h1>
           </div>
-          <Button variant="outline" onClick={() => setShowStartDialog(true)}>
+          <Button className="w-full sm:w-auto" variant="outline" onClick={() => setShowStartDialog(true)}>
             <Play className="mr-2 h-4 w-4" /> Tambah Armada
           </Button>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
         {drivingStatus.map((status) => (
-        <Card key={status.id} className="border-blue-500/30 bg-gradient-to-br from-blue-500/10 to-cyan-500/5">
-          <CardContent className="p-4 sm:p-6">
+        <Card key={status.id} className="min-w-0 overflow-hidden border-blue-500/30 bg-gradient-to-br from-blue-500/10 to-cyan-500/5">
+          <CardContent className="min-w-0 p-4 sm:p-6">
             <div className="flex flex-col gap-4">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-blue-500/20">
                     <Car className="h-8 w-8 text-blue-400" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm text-muted-foreground">Sedang Mengendarai</p>
-                    <h2 className="text-xl sm:text-2xl font-bold text-foreground">{status.car.name}</h2>
-                    <p className="text-sm text-muted-foreground">{status.car.licensePlate}</p>
+                    <h2 className="break-words text-xl sm:text-2xl font-bold text-foreground">{status.car.name}</h2>
+                    <p className="break-words text-sm text-muted-foreground">{status.car.licensePlate}</p>
                   </div>
                 </div>
               </div>
@@ -540,16 +547,16 @@ export function DriverView() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="flex items-center gap-2 rounded-lg bg-muted/60 p-3">
                   <Navigation className="h-4 w-4 text-muted-foreground" />
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-muted-foreground">Keperluan</p>
-                <p className="text-sm font-medium text-foreground">{status.purpose}</p>
+                <p className="break-words text-sm font-medium text-foreground">{status.purpose}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 rounded-lg bg-muted/60 p-3">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-muted-foreground">Tujuan</p>
-                <p className="text-sm font-medium text-foreground">{status.destination}</p>
+                <p className="break-words text-sm font-medium text-foreground">{status.destination}</p>
                   </div>
                 </div>
               </div>

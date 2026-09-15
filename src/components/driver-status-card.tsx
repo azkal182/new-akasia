@@ -101,7 +101,7 @@ export function DriverStatusCard({ drivingStatus, onStatusChange }: DriverStatus
 
   return (
     <>
-      <Card className="border-blue-500/30 bg-gradient-to-r from-blue-500/10 to-blue-600/5">
+      <Card className="w-full min-w-0 overflow-hidden border-blue-500/30 bg-gradient-to-r from-blue-500/10 to-blue-600/5">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-blue-400">
             <Car className="h-5 w-5" />
@@ -109,32 +109,32 @@ export function DriverStatusCard({ drivingStatus, onStatusChange }: DriverStatus
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <h3 className="text-xl font-bold text-foreground">{drivingStatus.car.name}</h3>
               <p className="text-sm text-muted-foreground">{drivingStatus.car.licensePlate}</p>
-              <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="mt-1 flex min-w-0 items-start gap-2 text-sm text-muted-foreground">
                 <Navigation className="h-3 w-3" />
-                {drivingStatus.destination} • {drivingStatus.purpose}
+                <span className="min-w-0 break-words">{drivingStatus.destination} • {drivingStatus.purpose}</span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Mulai: {formatDate(drivingStatus.startTime)}
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10"
-                onClick={() => setShowRefuelDialog(true)}
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-amber-500/50 text-amber-400 hover:bg-amber-500/10 sm:w-auto"
+                  onClick={() => setShowRefuelDialog(true)}
               >
                 <Fuel className="mr-2 h-4 w-4" />
                 Isi BBM
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 sm:w-auto"
                 onClick={() => setShowEndDialog(true)}
               >
                 <StopCircle className="mr-2 h-4 w-4" />

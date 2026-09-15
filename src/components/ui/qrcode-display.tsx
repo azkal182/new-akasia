@@ -20,8 +20,8 @@ export function QRCodeDisplay({
     className,
 }: QRCodeDisplayProps) {
     return (
-        <Card className={`border-border bg-gradient-to-br from-card to-muted/40 ${className}`}>
-            <CardContent className="flex items-center gap-4 p-4">
+        <Card className={`w-full min-w-0 max-w-full overflow-hidden border-border bg-gradient-to-br from-card to-muted/40 ${className}`}>
+            <CardContent className="flex min-w-0 items-center gap-4 overflow-hidden p-4">
                 <div className="flex-shrink-0 rounded-lg border border-border bg-white p-2">
                     <QRCodeSVG
                         value={value}
