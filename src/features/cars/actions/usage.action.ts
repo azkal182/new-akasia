@@ -209,7 +209,8 @@ export async function endCarUsage(data: EndUsageRecordInput) {
     return { error: "Penggunaan sudah selesai" };
   }
 
-  if (record.userId !== session.user.id) {
+  const isAdmin = session.user.role === "ADMIN";
+  if (!isAdmin && record.userId !== session.user.id) {
     return { error: "Anda hanya dapat menyelesaikan penggunaan kendaraan sendiri" };
   }
 
@@ -229,6 +230,7 @@ export async function endCarUsage(data: EndUsageRecordInput) {
     ]);
 
     revalidatePath("/dashboard/cars");
+    revalidatePath("/dashboard/cars/usage");
     revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
