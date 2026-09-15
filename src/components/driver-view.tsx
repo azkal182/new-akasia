@@ -52,10 +52,22 @@ function CarAutocomplete({
   invalid?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const selectedCar = cars.find((car) => car.id === value);
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredCars = cars
+    .filter((car) =>
+      `${car.name} ${car.licensePlate ?? ''}`.toLowerCase().includes(normalizedQuery),
+    );
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen);
+        if (!nextOpen) setQuery('');
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           ref={triggerRef}
@@ -70,18 +82,33 @@ function CarAutocomplete({
           <span className="ml-2 text-xs text-muted-foreground">⌄</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] border-border bg-card p-0" align="start">
-        <Command>
-          <CommandInput placeholder="Cari nama atau plat nomor..." />
-          <CommandList>
+      <PopoverContent
+        side="bottom"
+        align="start"
+        sideOffset={4}
+        avoidCollisions={false}
+        className="w-[--radix-popover-trigger-width] border-border bg-card p-0"
+      >
+        <Command shouldFilter={false}>
+          <CommandInput
+            placeholder="Cari nama atau plat nomor..."
+            value={query}
+            onValueChange={setQuery}
+          />
+          <CommandList
+            className="h-48 max-h-48 min-h-0 overflow-y-scroll overscroll-contain touch-pan-y"
+            style={{ maxHeight: '12rem', overflowY: 'scroll' }}
+            onWheel={(event) => event.stopPropagation()}
+          >
             <CommandEmpty>Kendaraan tidak ditemukan.</CommandEmpty>
-            {cars.map((car) => (
+            {filteredCars.map((car) => (
               <CommandItem
                 key={car.id}
                 value={`${car.name} ${car.licensePlate ?? ''}`}
                 onSelect={() => {
                   onChange(car.id);
                   setOpen(false);
+                  setQuery('');
                 }}
               >
                 <div>
