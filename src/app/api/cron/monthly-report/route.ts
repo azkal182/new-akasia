@@ -21,15 +21,27 @@ const hijriMonths = [
   'Dzulhijjah',
 ];
 
-function formatRupiah(amount: number): string {
-  return new Intl.NumberFormat('id-ID').format(amount);
+const JAKARTA_TIME_ZONE = 'Asia/Jakarta';
+
+function parseDateParameter(value: string | null): Date | null | undefined {
+  if (!value) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
+
+  const [year, month, day] = value.split('-').map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  const isValidDate =
+    parsed.getUTCFullYear() === year &&
+    parsed.getUTCMonth() === month - 1 &&
+    parsed.getUTCDate() === day;
+
+  return isValidDate ? parsed : undefined;
 }
 
 /**
  * Check whether today is the last day of the current Hijri month.
  */
-function isLastDayOfHijriMonth(): { isLast: boolean; hijriYear: number; hijriMonth: number; hijriDay: number } {
-  const now = moment();
+function isLastDayOfHijriMonth(referenceDate: Date | null): { isLast: boolean; hijriYear: number; hijriMonth: number; hijriDay: number } {
+  const now = referenceDate ? moment.utc(referenceDate).utcOffset(7) : moment().utcOffset(7);
   const hijriYear = now.iYear();
   const hijriMonth = now.iMonth() + 1; // 1-indexed
   const hijriDay = now.iDate();
@@ -57,14 +69,26 @@ function isLastDayOfHijriMonth(): { isLast: boolean; hijriYear: number; hijriMon
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const force = searchParams.get('force') === 'true';
+  const dateParameter = searchParams.get('date');
+  const requestedDate = parseDateParameter(dateParameter);
 
-  const { isLast, hijriYear, hijriMonth, hijriDay } = isLastDayOfHijriMonth();
+  if (dateParameter && !requestedDate) {
+    return NextResponse.json(
+      { error: 'Parameter date harus berformat YYYY-MM-DD dan merupakan tanggal valid' },
+      { status: 400 },
+    );
+  }
+
+  const effectiveRequestedDate: Date | null = requestedDate ?? null;
+  const { isLast, hijriYear, hijriMonth, hijriDay } = isLastDayOfHijriMonth(effectiveRequestedDate);
   const monthName = hijriMonths[hijriMonth];
-  const todayGregorian = new Date().toLocaleDateString('id-ID', {
+  const referenceDate = effectiveRequestedDate ?? new Date();
+  const todayGregorian = referenceDate.toLocaleDateString('id-ID', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    timeZone: JAKARTA_TIME_ZONE,
   });
 
   if (!isLast && !force) {
@@ -151,10 +175,11 @@ export async function GET(request: NextRequest) {
       reportsSent: ['finance', 'cars', 'fuel'],
       sentAt: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[cron/monthly-report] Error:', error);
+    const message = error instanceof Error ? error.message : 'Internal server error';
     return NextResponse.json(
-      { success: false, error: error?.message || 'Internal server error' },
+      { success: false, error: message },
       { status: 500 }
     );
   }

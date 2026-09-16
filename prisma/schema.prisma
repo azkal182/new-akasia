@@ -220,6 +220,7 @@ model Tax {
     isPaid  Boolean   @default(false)
     paidAt  DateTime?
     notes   String?
+    lastNotificationKey String?
 
     carId String
     car   Car    @relation(fields: [carId], references: [id])
