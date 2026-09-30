@@ -2,6 +2,7 @@ import { Car as CarIcon, UserRound } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getCars } from '@/features/cars/actions';
+import { UsageCountdown } from '@/components/usage-countdown';
 
 function getStatus(car: Awaited<ReturnType<typeof getCars>>[number]) {
   const isInUse = car.usageRecords[0]?.endTime === null;
@@ -62,20 +63,15 @@ export default async function DriverCarsSummaryPage() {
                         <p className="text-sm text-muted-foreground">{car.licensePlate ?? '-'}</p>
                       </div>
                     </div>
-                    <Badge variant="outline" className={status.className}>
-                      {status.label}
-                    </Badge>
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      <Badge variant="outline" className={status.className}>
+                        {status.label}
+                      </Badge>
+                      {activeUsage && <UsageCountdown usage={activeUsage} align="right" />}
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
-                  <div className="flex justify-between gap-3">
-                    <span className="text-muted-foreground">Nomor rangka</span>
-                    <span className="break-all text-right text-foreground">{car.chassisNumber ?? '-'}</span>
-                  </div>
-                  <div className="flex justify-between gap-3">
-                    <span className="text-muted-foreground">Nama</span>
-                    <span className="break-words text-right text-foreground">{car.bpkbOwnerName ?? '-'}</span>
-                  </div>
                   {activeUsage?.user && (
                     <div className="flex items-center gap-2 border-t border-border pt-2 text-amber-400">
                       <UserRound className="h-4 w-4 shrink-0" />

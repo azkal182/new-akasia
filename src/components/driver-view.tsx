@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Car, Fuel, Play, StopCircle, Navigation, MapPin } from 'lucide-react';
+import { Car, Clock3, Fuel, Play, StopCircle, Navigation, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +37,40 @@ type EstimateUnit = 'minutes' | 'hours' | 'days';
 type EstimateUnitValue = EstimateUnit | '';
 type StartDrivingField = 'car' | 'purpose' | 'destination' | 'estimateValue' | 'estimateUnit';
 type StartDrivingErrors = Partial<Record<StartDrivingField, string>>;
+
+function formatRemainingTime(
+  record: {
+    startTime: Date | string;
+    estimatedDurationMinutes?: number | null;
+    estimatedDays?: number | null;
+  },
+  now: number,
+) {
+  const durationMinutes =
+    record.estimatedDurationMinutes ??
+    (record.estimatedDays ? record.estimatedDays * 1440 : null);
+
+  if (!durationMinutes) {
+    return null;
+  }
+
+  const estimatedEndTime = new Date(record.startTime).getTime() + durationMinutes * 60 * 1000;
+  const remainingSeconds = Math.max(0, Math.ceil((estimatedEndTime - now) / 1000));
+  const days = Math.floor(remainingSeconds / 86400);
+  const hours = Math.floor((remainingSeconds % 86400) / 3600);
+  const minutes = Math.floor((remainingSeconds % 3600) / 60);
+  const seconds = remainingSeconds % 60;
+  const clock = [hours, minutes, seconds]
+    .map((value) => String(value).padStart(2, '0'))
+    .join(':');
+
+  return {
+    label: remainingSeconds > 0
+      ? `Sisa waktu: ${days > 0 ? `${days} hari ` : ''}${clock}`
+      : 'Waktu estimasi telah habis',
+    expired: remainingSeconds === 0,
+  };
+}
 
 function CarAutocomplete({
   cars,
@@ -154,6 +188,7 @@ export function DriverView() {
   const [showStartDialog, setShowStartDialog] = useState(false);
   const [showEndDialog, setShowEndDialog] = useState(false);
   const [showRefuelDialog, setShowRefuelDialog] = useState(false);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
 
   const [selectedCarId, setSelectedCarId] = useState('');
   const [purpose, setPurpose] = useState('');
@@ -219,6 +254,15 @@ export function DriverView() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    if (drivingStatus.length === 0) {
+      return;
+    }
+
+    const timer = window.setInterval(() => setCurrentTime(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [drivingStatus.length]);
 
   async function handleStartDriving() {
     if (!selectedCarId) {
@@ -563,11 +607,22 @@ export function DriverView() {
 
               <div className="flex items-center justify-between text-xs text-muted-foreground mt-2 border-t border-border/50 pt-3">
                 <p>Mulai: {formatDate(status.startTime)}</p>
-                {formatUsageEstimate(status) && (
-                  <p className="font-medium text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
-                    Estimasi: {formatUsageEstimate(status)}
-                  </p>
-                )}
+                <div className="flex flex-col items-end gap-1">
+                  {formatUsageEstimate(status) && (
+                    <p className="rounded-md border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 font-medium text-amber-500">
+                      Estimasi: {formatUsageEstimate(status)}
+                    </p>
+                  )}
+                  {(() => {
+                    const remainingTime = formatRemainingTime(status, currentTime);
+                    return remainingTime ? (
+                      <p className={remainingTime.expired ? 'font-medium text-red-400' : 'font-medium text-cyan-400'}>
+                        <Clock3 className="mr-1 inline h-3 w-3" />
+                        {remainingTime.label}
+                      </p>
+                    ) : null;
+                  })()}
+                </div>
               </div>
             </div>
         {/* Quick Actions */}

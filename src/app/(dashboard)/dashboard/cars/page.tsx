@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { getCars } from '@/features/cars/actions';
+import { UsageCountdown } from '@/components/usage-countdown';
 
 export default async function CarsPage() {
   const cars = await getCars();
@@ -135,15 +136,22 @@ export default async function CarsPage() {
                   <CardContent>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <Badge
-                          variant="outline"
-                          className={isInUse
-                            ? 'border-amber-500/50 text-amber-400'
-                            : 'border-emerald-500/50 text-emerald-400'
-                          }
-                        >
-                          {isInUse ? 'Digunakan' : 'Tersedia'}
-                        </Badge>
+                        <div>
+                          <Badge
+                            variant="outline"
+                            className={isInUse
+                              ? 'border-amber-500/50 text-amber-400'
+                              : 'border-emerald-500/50 text-emerald-400'
+                            }
+                          >
+                            {isInUse ? 'Digunakan' : 'Tersedia'}
+                          </Badge>
+                          {isInUse && car.usageRecords[0] && (
+                            <div className="mt-1">
+                              <UsageCountdown usage={car.usageRecords[0]} />
+                            </div>
+                          )}
+                        </div>
                         {isInUse && car.usageRecords[0]?.user && (
                           <span className="text-xs text-muted-foreground">
                             oleh {car.usageRecords[0].user.name}
