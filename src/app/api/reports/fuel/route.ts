@@ -49,7 +49,13 @@ function getHijriMonthRange(hijriYear: number, hijriMonth: number) {
 }
 
 function formatHijriDate(date: Date): string {
-  return moment(date).format('iDD-iMM-iYYYY');
+  // Database timestamps are UTC; reports use the application's Jakarta date.
+  // Build the date from numeric Hijri getters because moment-hijri's iDD/iMM/iYYYY
+  // format emits Arabic-Indic numerals that PDFKit's Helvetica font cannot render.
+  const localDate = moment(date).utcOffset(7);
+  const pad = (value: number) => value.toString().padStart(2, '0');
+
+  return `${pad(localDate.iDate())}/${pad(localDate.iMonth() + 1)}/${localDate.iYear()}`;
 }
 
 function formatRupiah(amount: number): string {
