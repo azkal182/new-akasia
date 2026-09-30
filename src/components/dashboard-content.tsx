@@ -16,7 +16,11 @@ export function DashboardContent({ children }: DashboardContentProps) {
   // Saat driver mode aktif:
   // - Jika sedang di halaman Program Kerja → tampilkan halaman tersebut (children)
   // - Jika di halaman lain → tampilkan DriverView (operasional kendaraan)
-  if (isDriverMode && !pathname.startsWith('/dashboard/program-kerja')) {
+  const isDriverAllowedPage =
+    pathname.startsWith('/dashboard/program-kerja') ||
+    pathname.startsWith('/dashboard/cars/summary');
+
+  if (isDriverMode && !isDriverAllowedPage) {
     return <DriverView />;
   }
 

@@ -148,6 +148,21 @@ export default function FuelPurchasePage() {
               />
             )}
 
+            <div className="space-y-2">
+              <Label htmlFor="date" className="text-foreground">
+                Tanggal
+              </Label>
+              <Input
+                id="date"
+                type="date"
+                {...form.register('date')}
+                className="border-border bg-muted/60 text-foreground"
+              />
+              {form.formState.errors.date && (
+                <p className="text-sm text-red-400">{form.formState.errors.date.message}</p>
+              )}
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="totalAmount" className="text-foreground">
@@ -217,21 +232,6 @@ export default function FuelPurchasePage() {
                   <Upload className="mr-2 h-5 w-5" />
                   Upload Nota/Struk
                 </Button>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="date" className="text-foreground">
-                Tanggal
-              </Label>
-              <Input
-                id="date"
-                type="date"
-                {...form.register('date')}
-                className="border-border bg-muted/60 text-foreground"
-              />
-              {form.formState.errors.date && (
-                <p className="text-sm text-red-400">{form.formState.errors.date.message}</p>
               )}
             </div>
 

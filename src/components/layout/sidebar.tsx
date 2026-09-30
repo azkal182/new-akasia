@@ -103,7 +103,15 @@ const driverMenuItems = [
     title: "Operasional",
     href: "/dashboard",
     icon: Car,
-    match: (pathname: string) => !pathname.startsWith("/dashboard/program-kerja"),
+    match: (pathname: string) =>
+      !pathname.startsWith("/dashboard/program-kerja") &&
+      !pathname.startsWith("/dashboard/cars/summary"),
+  },
+  {
+    title: "Armada",
+    href: "/dashboard/cars/summary",
+    icon: Car,
+    match: (pathname: string) => pathname.startsWith("/dashboard/cars/summary"),
   },
   {
     title: "Laporan Hari Ini",
