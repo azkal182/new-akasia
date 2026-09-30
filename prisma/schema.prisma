@@ -129,6 +129,7 @@ model Car {
     id            String    @id @default(uuid())
     name          String
     licensePlate  String?   @unique
+    chassisNumber  String?   @unique
     barcodeString String?   @unique
     status        CarStatus @default(AVAILABLE)
 
@@ -146,6 +147,7 @@ model Car {
 
     @@index([status])
     @@index([licensePlate])
+    @@index([chassisNumber])
 }
 
 enum CarStatus {

@@ -112,6 +112,7 @@ export default async function CarsPage() {
                       <div>
                         <CardTitle className="text-base text-foreground">{car.name}</CardTitle>
                         <p className="text-sm text-muted-foreground">{car.licensePlate}</p>
+                        <p className="text-xs text-muted-foreground">Rangka: {car.chassisNumber ?? '-'}</p>
                       </div>
                     </div>
                     <DropdownMenu>

@@ -157,7 +157,7 @@ export async function generateFuelPdf(
     fuelWhere.carId = carId;
   }
 
-  const [purchases, incomeTotal, selectedCar] = await Promise.all([
+  const [purchases, incomeTotal, openingIncome, openingExpense, selectedCar] = await Promise.all([
     prisma.fuelPurchase.findMany({
       where: fuelWhere,
       orderBy: { transaction: { date: 'asc' } },
@@ -175,6 +175,24 @@ export async function generateFuelPdf(
         type: TransactionType.INCOME,
         ledger: TransactionLedger.FUEL,
         date: { gte: startDate, lte: endDate },
+        deletedAt: null,
+      },
+      _sum: { amount: true },
+    }),
+    prisma.transaction.aggregate({
+      where: {
+        type: TransactionType.INCOME,
+        ledger: TransactionLedger.FUEL,
+        date: { lt: startDate },
+        deletedAt: null,
+      },
+      _sum: { amount: true },
+    }),
+    prisma.transaction.aggregate({
+      where: {
+        type: TransactionType.FUEL_PURCHASE,
+        ledger: TransactionLedger.FUEL,
+        date: { lt: startDate },
         deletedAt: null,
       },
       _sum: { amount: true },
@@ -199,7 +217,10 @@ export async function generateFuelPdf(
   const totalPurchases = purchases.length;
   const totalAmount = purchases.reduce((sum, p) => sum + p.totalAmount, 0);
   const totalIncome = incomeTotal._sum.amount ?? 0;
+  const openingBalance =
+    (openingIncome._sum.amount ?? 0) - (openingExpense._sum.amount ?? 0);
   const balance = totalIncome - totalAmount;
+  const closingBalance = openingBalance + balance;
   const uniqueCars = new Set(purchases.map((p) => p.carId)).size;
 
   const doc = new PDFDocument({ size: 'A4', margin: 40 });
@@ -264,14 +285,89 @@ export async function generateFuelPdf(
   }
   doc.moveDown(0.8);
 
-  doc.fontSize(10).font('Helvetica-Bold').text('Ringkasan', 40);
-  doc.fontSize(9).font('Helvetica');
-  doc.text(`Total Pemasukan: Rp ${formatRupiah(totalIncome)}`, 40);
-  doc.text(`Total Pengeluaran: Rp ${formatRupiah(totalAmount)}`, 40);
-  doc.text(`Saldo: Rp ${formatRupiah(balance)}`, 40);
-  doc.text(`Total Transaksi: ${totalPurchases}`, 40);
-  doc.text(`Kendaraan Unik: ${uniqueCars}`, 40);
-  doc.moveDown(0.8);
+  const isCarFiltered = Boolean(carId);
+  const condition =
+    balance > 0
+      ? 'Terdapat sisa dana'
+      : balance < 0
+        ? 'Terdapat kekurangan dana'
+        : 'Seimbang';
+  const netLabel =
+    balance > 0 ? 'Sisa dana' : balance < 0 ? 'Kekurangan dana' : 'Selisih bersih';
+
+  doc
+    .fontSize(10)
+    .font('Helvetica-Bold')
+    .text(isCarFiltered ? 'Ringkasan Pengeluaran Kendaraan' : 'Ringkasan Kondisi Keuangan', 40);
+  doc.moveDown(0.3);
+
+  const summaryTop = doc.y;
+  const summaryCellWidth = 171.67;
+  const summaryCellHeight = 38;
+  const summaryRows: [string, string][][] = isCarFiltered
+    ? [
+        [
+          ['Jumlah dana keluar', `Rp ${formatRupiah(totalAmount)}`],
+          ['Jumlah transaksi', String(totalPurchases)],
+          ['Objek laporan', 'Kendaraan'],
+        ],
+        [
+          ['Periode laporan', `${hijriMonths[hijriMonth]} ${hijriYear}H`],
+          ['Jenis laporan', 'Pengeluaran BBM'],
+          ['Saldo kas', 'Tidak berlaku'],
+        ],
+      ]
+    : [
+        [
+          ['Saldo bulan lalu', `Rp ${formatRupiah(openingBalance)}`],
+          ['Jumlah dana masuk', `Rp ${formatRupiah(totalIncome)}`],
+          ['Jumlah dana keluar', `Rp ${formatRupiah(totalAmount)}`],
+        ],
+        [
+          [netLabel, `Rp ${formatRupiah(Math.abs(balance))}`],
+          ['Saldo akhir', `Rp ${formatRupiah(closingBalance)}`],
+          ['Kondisi bulan ini', condition],
+        ],
+      ];
+
+  summaryRows.forEach((row, rowIndex) => {
+    row.forEach(([label, value], columnIndex) => {
+      const cellX = 40 + columnIndex * summaryCellWidth;
+      const cellY = summaryTop + rowIndex * summaryCellHeight;
+      const isConditionCell = label === 'Kondisi bulan ini';
+      const isNegative =
+        label === 'Kekurangan dana' ||
+        (isConditionCell && condition === 'Terdapat kekurangan dana');
+      const isPositive =
+        label === 'Sisa dana' ||
+        (isConditionCell && condition === 'Terdapat sisa dana');
+
+      doc
+        .lineWidth(0.5)
+        .fillColor(isNegative ? '#fef2f2' : isPositive ? '#f0fdf4' : '#f8fafc')
+        .strokeColor('#cbd5e1')
+        .rect(cellX, cellY, summaryCellWidth, summaryCellHeight)
+        .fillAndStroke();
+      doc.fontSize(8).font('Helvetica').fillColor('#64748b').text(label, cellX + 8, cellY + 7, {
+        width: summaryCellWidth - 16,
+      });
+      doc
+        .fontSize(10)
+        .font('Helvetica-Bold')
+        .fillColor(isNegative ? '#b91c1c' : isPositive ? '#15803d' : '#0f172a')
+        .text(value, cellX + 8, cellY + 20, {
+          width: summaryCellWidth - 16,
+          align: 'right',
+        });
+    });
+  });
+
+  doc.fillColor('#000000').moveDown(3.1);
+  doc.fontSize(8).font('Helvetica').fillColor('#64748b').text(
+    `Jumlah transaksi BBM: ${totalPurchases} | Kendaraan yang digunakan: ${uniqueCars}`,
+    40,
+  );
+  doc.fillColor('#000000').moveDown(0.8);
 
   const tableTop = doc.y;
   const colWidths = [70, 150, 80, 60, 70, 85];

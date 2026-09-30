@@ -242,6 +242,115 @@ export async function generateFinancePdf(
     .text(`${hijriMonths[hijriMonth]} ${hijriYear}H`, { align: "center" });
   doc.moveDown(0.8);
 
+  const isCarFiltered = Boolean(carId && carId !== "all");
+  const incomeTransactions = transactions.filter(
+    (transaction) => transaction.type === TransactionType.INCOME,
+  );
+  const expenseTransactions = transactions.filter(
+    (transaction) => transaction.type === TransactionType.EXPENSE,
+  );
+  const totalIncome = incomeTransactions.reduce(
+    (sum, transaction) => sum + transaction.amount,
+    0,
+  );
+  const totalExpense = expenseTransactions.reduce(
+    (sum, transaction) => sum + transaction.amount,
+    0,
+  );
+  const netResult = totalIncome - totalExpense;
+  const condition =
+    netResult > 0
+      ? "Terdapat sisa dana"
+      : netResult < 0
+        ? "Terdapat kekurangan dana"
+        : "Seimbang";
+  const netLabel =
+    netResult > 0
+      ? "Sisa dana"
+      : netResult < 0
+        ? "Kekurangan dana"
+        : "Selisih bersih";
+  const closingBalance = openingBalance + netResult;
+
+  doc
+    .fontSize(10)
+    .font("Helvetica-Bold")
+    .text(
+      isCarFiltered
+        ? "Ringkasan Pengeluaran Kendaraan"
+        : "Ringkasan Kondisi Keuangan",
+      40,
+    );
+  doc.moveDown(0.3);
+
+  const summaryTop = doc.y;
+  const summaryCellWidth = 171.67;
+  const summaryCellHeight = 38;
+  const summaryRows: [string, string][][] = isCarFiltered
+    ? [
+        [
+          ["Jumlah dana keluar", formatRupiah(totalExpense)],
+          ["Jumlah transaksi", String(expenseTransactions.length)],
+          ["Objek laporan", "Kendaraan"],
+        ],
+        [
+          ["Periode laporan", `${hijriMonths[hijriMonth]} ${hijriYear}H`],
+          ["Jenis laporan", "Pengeluaran"],
+          ["Saldo kas", "Tidak berlaku"],
+        ],
+      ]
+    : [
+        [
+          ["Saldo bulan lalu", formatRupiah(openingBalance)],
+          ["Jumlah dana masuk", formatRupiah(totalIncome)],
+          ["Jumlah dana keluar", formatRupiah(totalExpense)],
+        ],
+        [
+          [netLabel, formatRupiah(Math.abs(netResult))],
+          ["Saldo akhir", formatRupiah(closingBalance)],
+          ["Kondisi bulan ini", condition],
+        ],
+      ];
+
+  summaryRows.forEach((row, rowIndex) => {
+    row.forEach(([label, value], columnIndex) => {
+      const cellX = 40 + columnIndex * summaryCellWidth;
+      const cellY = summaryTop + rowIndex * summaryCellHeight;
+      const isConditionCell = label === "Kondisi bulan ini";
+      const isNegative =
+        label === "Kekurangan dana" ||
+        (isConditionCell && condition === "Terdapat kekurangan dana");
+      const isPositive =
+        label === "Sisa dana" ||
+        (isConditionCell && condition === "Terdapat sisa dana");
+
+      doc
+        .lineWidth(0.5)
+        .fillColor(isNegative ? "#fef2f2" : isPositive ? "#f0fdf4" : "#f8fafc")
+        .strokeColor("#cbd5e1")
+        .rect(cellX, cellY, summaryCellWidth, summaryCellHeight)
+        .fillAndStroke();
+      doc.fontSize(8).font("Helvetica").fillColor("#64748b").text(label, cellX + 8, cellY + 7, {
+        width: summaryCellWidth - 16,
+      });
+      doc
+        .fontSize(10)
+        .font("Helvetica-Bold")
+        .fillColor(isNegative ? "#b91c1c" : isPositive ? "#15803d" : "#0f172a")
+        .text(value, cellX + 8, cellY + 20, {
+          width: summaryCellWidth - 16,
+          align: "right",
+        });
+    });
+  });
+
+  doc.fillColor("#000000").moveDown(3.1);
+  doc.fontSize(8).font("Helvetica").fillColor("#64748b").text(
+    `Jumlah transaksi dana masuk: ${incomeTransactions.length} | Jumlah transaksi dana keluar: ${expenseTransactions.length}`,
+    40,
+  );
+  doc.fillColor("#000000").moveDown(0.8);
+
   // Table setup
   const tableTop = doc.y;
   const colWidths = [70, 150, 80, 65, 65, 85];

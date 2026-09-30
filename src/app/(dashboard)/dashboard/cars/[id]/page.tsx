@@ -78,6 +78,7 @@ export default async function CarDetailPage({ params }: CarDetailPageProps) {
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground">{car.licensePlate}</p>
+            <p className="text-xs text-muted-foreground">Nomor rangka: {car.chassisNumber ?? '-'}</p>
           </div>
         </div>
         <div className="flex gap-2">

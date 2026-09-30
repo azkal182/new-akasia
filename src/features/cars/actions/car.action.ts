@@ -9,6 +9,7 @@ import { Prisma } from '@/generated/prisma/client';
 const carSchema = z.object({
   name: z.string().min(1, 'Nama mobil wajib diisi'),
   licensePlate: z.string().min(1, 'Plat nomor wajib diisi'),
+  chassisNumber: z.string().optional(),
   barcodeString: z.string().optional(),
 });
 
@@ -29,6 +30,10 @@ function getCarUniqueErrorMessage(error: unknown) {
 
     if (target.includes('licensePlate')) {
       return 'Plat nomor sudah digunakan';
+    }
+
+    if (target.includes('chassisNumber')) {
+      return 'Nomor rangka sudah digunakan';
     }
 
     return 'Data kendaraan sudah digunakan';
@@ -104,11 +109,13 @@ export async function createCar(data: CarInput) {
 
   try {
     const barcodeString = normalizeOptionalUniqueString(validated.data.barcodeString);
+    const chassisNumber = normalizeOptionalUniqueString(validated.data.chassisNumber);
 
     const car = await prisma.car.create({
       data: {
         name: validated.data.name.trim(),
         licensePlate: validated.data.licensePlate.trim(),
+        chassisNumber,
         barcodeString,
       },
     });
@@ -134,12 +141,14 @@ export async function updateCar(id: string, data: CarInput) {
 
   try {
     const barcodeString = normalizeOptionalUniqueString(validated.data.barcodeString);
+    const chassisNumber = normalizeOptionalUniqueString(validated.data.chassisNumber);
 
     const car = await prisma.car.update({
       where: { id },
       data: {
         name: validated.data.name.trim(),
         licensePlate: validated.data.licensePlate.trim(),
+        chassisNumber,
         barcodeString,
       },
     });
