@@ -130,6 +130,7 @@ model Car {
     name          String
     licensePlate  String?   @unique
     chassisNumber  String?   @unique
+    bpkbOwnerName  String?
     barcodeString String?   @unique
     status        CarStatus @default(AVAILABLE)
 

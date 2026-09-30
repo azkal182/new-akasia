@@ -19,6 +19,7 @@ const carSchema = z.object({
   name: z.string().min(1, 'Nama mobil wajib diisi'),
   licensePlate: z.string().min(1, 'Plat nomor wajib diisi'),
   chassisNumber: z.string().optional(),
+  bpkbOwnerName: z.string().optional(),
   barcodeString: z.string().optional(),
 });
 
@@ -34,6 +35,7 @@ export default function NewCarPage() {
       name: '',
       licensePlate: '',
       chassisNumber: '',
+      bpkbOwnerName: '',
       barcodeString: '',
     },
   });
@@ -118,6 +120,18 @@ export default function NewCarPage() {
                 id="chassisNumber"
                 {...form.register('chassisNumber')}
                 placeholder="MHKA1DA2XBK123456"
+                className="border-border bg-muted/60 text-foreground"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bpkbOwnerName" className="text-foreground">
+                Atas Nama BPKB (Opsional)
+              </Label>
+              <Input
+                id="bpkbOwnerName"
+                {...form.register('bpkbOwnerName')}
+                placeholder="Nama pemilik sesuai BPKB"
                 className="border-border bg-muted/60 text-foreground"
               />
             </div>

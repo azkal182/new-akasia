@@ -10,6 +10,7 @@ const carSchema = z.object({
   name: z.string().min(1, 'Nama mobil wajib diisi'),
   licensePlate: z.string().min(1, 'Plat nomor wajib diisi'),
   chassisNumber: z.string().optional(),
+  bpkbOwnerName: z.string().optional(),
   barcodeString: z.string().optional(),
 });
 
@@ -110,12 +111,14 @@ export async function createCar(data: CarInput) {
   try {
     const barcodeString = normalizeOptionalUniqueString(validated.data.barcodeString);
     const chassisNumber = normalizeOptionalUniqueString(validated.data.chassisNumber);
+    const bpkbOwnerName = normalizeOptionalUniqueString(validated.data.bpkbOwnerName);
 
     const car = await prisma.car.create({
       data: {
         name: validated.data.name.trim(),
         licensePlate: validated.data.licensePlate.trim(),
         chassisNumber,
+        bpkbOwnerName,
         barcodeString,
       },
     });
@@ -142,6 +145,7 @@ export async function updateCar(id: string, data: CarInput) {
   try {
     const barcodeString = normalizeOptionalUniqueString(validated.data.barcodeString);
     const chassisNumber = normalizeOptionalUniqueString(validated.data.chassisNumber);
+    const bpkbOwnerName = normalizeOptionalUniqueString(validated.data.bpkbOwnerName);
 
     const car = await prisma.car.update({
       where: { id },
@@ -149,6 +153,7 @@ export async function updateCar(id: string, data: CarInput) {
         name: validated.data.name.trim(),
         licensePlate: validated.data.licensePlate.trim(),
         chassisNumber,
+        bpkbOwnerName,
         barcodeString,
       },
     });
