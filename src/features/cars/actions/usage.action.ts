@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { CarStatus } from "@/generated/prisma/enums";
 import { z } from "zod";
 import moment from "moment-hijri";
+import { notifyVehicleUsageStarted } from "@/features/cars/notifications/usage.notification";
 
 const createUsageRecordSchema = z
   .object({
@@ -177,6 +178,9 @@ export async function startCarUsage(data: CreateUsageRecordInput) {
 
     revalidatePath("/dashboard/cars");
     revalidatePath("/dashboard");
+    void notifyVehicleUsageStarted(record.id).catch((error) => {
+      console.error("Failed to notify vehicle usage start:", error);
+    });
     return { success: true, record };
   } catch (error) {
     console.error("Failed to start car usage:", error);

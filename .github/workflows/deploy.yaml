@@ -114,6 +114,8 @@ jobs:
           echo "WA_SESSION_ID=${{ secrets.WA_SESSION_ID }}" >> .env
           echo "WA_API_KEY=${{ secrets.WA_API_KEY }}" >> .env
           echo "WA_RECIPIENT=${{ secrets.WA_RECIPIENT }}" >> .env
+          echo "WA_USAGE_SESSION_ID=${{ secrets.WA_USAGE_SESSION_ID }}" >> .env
+          echo "WA_USAGE_RECIPIENT=${{ secrets.WA_USAGE_RECIPIENT }}" >> .env
           echo "WA_APPROVAL_RECIPIENT=${{ secrets.WA_APPROVAL_RECIPIENT }}" >> .env
           echo "TELEGRAM_REPORT_BOT_TOKEN=${{ secrets.TELEGRAM_REPORT_BOT_TOKEN }}" >> .env
           echo "TELEGRAM_REPORT_CHAT_ID=${{ secrets.TELEGRAM_REPORT_CHAT_ID }}" >> .env
@@ -233,6 +235,8 @@ jobs:
           echo "WA_SESSION_ID=${{ secrets.WA_SESSION_ID }}" >> .env
           echo "WA_API_KEY=${{ secrets.WA_API_KEY }}" >> .env
           echo "WA_RECIPIENT=${{ secrets.WA_RECIPIENT }}" >> .env
+          echo "WA_USAGE_SESSION_ID=${{ secrets.WA_USAGE_SESSION_ID }}" >> .env
+          echo "WA_USAGE_RECIPIENT=${{ secrets.WA_USAGE_RECIPIENT }}" >> .env
           echo "WA_APPROVAL_RECIPIENT=${{ secrets.WA_APPROVAL_RECIPIENT }}" >> .env
           echo "TELEGRAM_REPORT_BOT_TOKEN=${{ secrets.TELEGRAM_REPORT_BOT_TOKEN }}" >> .env
           echo "TELEGRAM_REPORT_CHAT_ID=${{ secrets.TELEGRAM_REPORT_CHAT_ID }}" >> .env

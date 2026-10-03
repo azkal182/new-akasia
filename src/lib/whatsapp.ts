@@ -10,15 +10,25 @@ interface SendWhatsAppResult {
     error?: string;
 }
 
+type VehicleUsageNotificationRecord = {
+    startTime: Date;
+    purpose: string;
+    destination: string;
+    estimatedDurationMinutes: number | null;
+    car: { name: string; licensePlate: string | null };
+    user: { name: string; username: string };
+};
+
 /**
  * Send a WhatsApp message via the multi-session API
  */
 export async function sendWhatsApp(
     message: string,
-    to?: string
+    to?: string,
+    sessionIdOverride?: string,
 ): Promise<SendWhatsAppResult> {
     const apiUrl = process.env.WA_API_URL;
-    const sessionId = process.env.WA_SESSION_ID;
+    const sessionId = sessionIdOverride || process.env.WA_SESSION_ID;
     const apiKey = process.env.WA_API_KEY;
     const recipient = to || process.env.WA_RECIPIENT;
 
@@ -27,8 +37,10 @@ export async function sendWhatsApp(
         return { success: false, error: 'WhatsApp API not configured' };
     }
 
+    const endpoint = `${apiUrl}/sessions/${sessionId}/send`;
+
     try {
-        const response = await fetch(`${apiUrl}/sessions/${sessionId}/send`, {
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -40,19 +52,72 @@ export async function sendWhatsApp(
             }),
         });
 
+        const responseBody = await response.text();
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('WhatsApp API error:', errorText);
+            console.error('WhatsApp API error:', responseBody);
             return { success: false, error: `API error: ${response.status}` };
         }
 
-        const result = await response.json();
+        let result: unknown = responseBody;
+        try {
+            result = JSON.parse(responseBody);
+        } catch {
+            // Keep the raw response when the API does not return JSON.
+        }
         console.log('WhatsApp message sent:', result);
         return { success: true };
     } catch (error) {
         console.error('Failed to send WhatsApp message:', error);
         return { success: false, error: 'Network error' };
     }
+}
+
+function formatUsageDuration(minutes: number | null) {
+    if (!minutes) return '-';
+    if (minutes % 1440 === 0) return `${minutes / 1440} hari`;
+    if (minutes % 60 === 0) return `${minutes / 60} jam`;
+    return `${minutes} menit`;
+}
+
+export function formatVehicleUsageStartedMessage(
+    records: VehicleUsageNotificationRecord[],
+) {
+    if (records.length === 0) return '';
+
+    const dateFormatter = new Intl.DateTimeFormat('id-ID', {
+        timeZone: 'Asia/Jakarta',
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    });
+    const timeFormatter = new Intl.DateTimeFormat('id-ID', {
+        timeZone: 'Asia/Jakarta',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+    });
+
+    const lines = [
+        '🚗 DAFTAR PENGGUNAAN ARMADA',
+        `Tanggal: ${dateFormatter.format(records[0].startTime)}`,
+        '',
+    ];
+
+    records.forEach((record, index) => {
+        lines.push(
+            `${index + 1}. ${record.car.name} (${record.car.licensePlate ?? '-'})`,
+            `   Pengemudi: ${record.user.name || record.user.username}`,
+            `   Keperluan: ${record.purpose}`,
+            `   Tujuan: ${record.destination}`,
+            `   Mulai: ${timeFormatter.format(record.startTime)} WIB`,
+            `   Estimasi: ${formatUsageDuration(record.estimatedDurationMinutes)}`,
+            '',
+        );
+    });
+
+    lines.push(`Total penggunaan armada: ${records.length}`);
+    return lines.join('\n');
 }
 
 /**
