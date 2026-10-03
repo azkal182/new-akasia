@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { z } from 'zod';
 import { Prisma } from '@/generated/prisma/client';
+import { TransactionLedger, TransactionType } from '@/generated/prisma/enums';
+import { FUEL_START_DATE } from '@/features/fuel/constants';
 
 const carSchema = z.object({
   name: z.string().min(1, 'Nama mobil wajib diisi'),
@@ -60,7 +62,16 @@ export async function getCars() {
       _count: {
         select: {
           usageRecords: true,
-          fuelPurchases: true,
+          fuelPurchases: {
+            where: {
+              transaction: {
+                type: TransactionType.FUEL_PURCHASE,
+                ledger: TransactionLedger.FUEL,
+                date: { gte: FUEL_START_DATE },
+                deletedAt: null,
+              },
+            },
+          },
           taxes: true,
         },
       },
@@ -84,6 +95,14 @@ export async function getCarById(id: string) {
         },
       },
       fuelPurchases: {
+        where: {
+          transaction: {
+            type: TransactionType.FUEL_PURCHASE,
+            ledger: TransactionLedger.FUEL,
+            date: { gte: FUEL_START_DATE },
+            deletedAt: null,
+          },
+        },
         orderBy: { createdAt: 'desc' },
         take: 10,
       },

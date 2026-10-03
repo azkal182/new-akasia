@@ -15,6 +15,7 @@ import {
   getTransactions,
   getBalance,
   getHijriMonthlyStats,
+  getTransactionsByHijriMonth,
 } from "@/features/finance/actions";
 import { getCars } from "@/features/cars/actions";
 import { getCurrentHijriDate } from "@/features/fuel/actions";
@@ -40,6 +41,7 @@ export default async function FinancePage() {
     transactions,
     balance,
     monthlyStats,
+    hijriMonthlyReport,
     incomeTransactions,
     expenseTransactions,
     cars,
@@ -47,6 +49,9 @@ export default async function FinancePage() {
     getTransactions({ limit: 20 }),
     showSummary ? getBalance() : Promise.resolve(0),
     showSummary ? getHijriMonthlyStats(hijri.hijriYear, hijri.hijriMonth) : Promise.resolve({ totalIncome: 0, totalExpense: 0, net: 0 }),
+    showSummary
+      ? getTransactionsByHijriMonth(hijri.hijriYear, hijri.hijriMonth)
+      : Promise.resolve({ stats: { previousMonthBalance: 0 } }),
     getTransactions({ type: TransactionType.INCOME, limit: 50 }),
     getTransactions({ type: TransactionType.EXPENSE, limit: 50 }),
     getCars(),
@@ -104,7 +109,20 @@ export default async function FinancePage() {
 
       {/* Stats Cards — hanya ADMIN */}
       {showSummary && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-5">
+          <Card className="border-amber-500/30 bg-amber-500/5">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-amber-400">
+                Saldo Bulan Lalu
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-xl font-bold text-amber-300">
+                {formatRupiah(hijriMonthlyReport.stats.previousMonthBalance)}
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="border-border bg-card/60">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">

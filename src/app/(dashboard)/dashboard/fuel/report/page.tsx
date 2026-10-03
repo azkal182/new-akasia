@@ -83,6 +83,9 @@ export default function FuelReportPage() {
     totalAmount: 0,
     totalIncome: 0,
     balance: 0,
+    openingBalance: 0,
+    closingBalance: 0,
+    previousMonthBalance: 0,
     uniqueCars: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -262,26 +265,50 @@ export default function FuelReportPage() {
 
       {/* Stats Summary */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-5">
-        <Card className="border-emerald-500/30 bg-emerald-500/5">
+        <Card className="border-amber-500/30 bg-amber-500/5">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-emerald-400">
-              Pemasukan
+            <CardTitle className="text-xs sm:text-sm font-medium text-amber-400">
+              Saldo Bulan Lalu
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-lg sm:text-xl font-bold text-emerald-300">
+            <div className="text-lg sm:text-xl font-bold text-amber-300">
+              {formatRupiah(stats.previousMonthBalance)}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-border bg-card/60">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+              Saldo Awal
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg sm:text-xl font-bold text-foreground">
+              {formatRupiah(stats.openingBalance)}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-border bg-card/60">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+              Total Pemasukan
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg sm:text-xl font-bold text-emerald-500">
               {formatRupiah(stats.totalIncome)}
             </div>
           </CardContent>
         </Card>
-        <Card className="border-red-500/30 bg-red-500/5">
+        <Card className="border-border bg-card/60">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-red-400">
-              Pengeluaran
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+              Total Pengeluaran
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-lg sm:text-xl font-bold text-red-300">
+            <div className="text-lg sm:text-xl font-bold text-red-400">
               {formatRupiah(stats.totalAmount)}
             </div>
           </CardContent>
@@ -289,38 +316,12 @@ export default function FuelReportPage() {
         <Card className="border-blue-500/30 bg-blue-500/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs sm:text-sm font-medium text-blue-400">
-              Saldo
+              Saldo Akhir
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div
-              className={`text-lg sm:text-xl font-bold ${stats.balance >= 0 ? "text-blue-300" : "text-red-400"}`}
-            >
-              {formatRupiah(stats.balance)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-border bg-card/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Transaksi
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg sm:text-xl font-bold text-foreground">
-              {stats.totalPurchases}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-border bg-card/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Kendaraan
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg sm:text-xl font-bold text-foreground">
-              {stats.uniqueCars}
+            <div className="text-lg sm:text-xl font-bold text-blue-300">
+              {formatRupiah(stats.closingBalance)}
             </div>
           </CardContent>
         </Card>

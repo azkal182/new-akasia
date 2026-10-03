@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { TransactionLedger, TransactionType } from '@/generated/prisma/enums';
+import { FUEL_START_DATE } from '@/features/fuel/constants';
 
 export async function calculateBalanceBefore(date: Date, excludeTransactionId?: string) {
   const baseWhere = {
@@ -68,6 +69,7 @@ export async function calculateFuelBalanceBefore(date: Date, excludeTransactionI
       where: {
         ...baseWhere,
         type: TransactionType.INCOME,
+        date: { gte: FUEL_START_DATE, lt: date },
       },
       _sum: { amount: true },
     }),
@@ -75,6 +77,7 @@ export async function calculateFuelBalanceBefore(date: Date, excludeTransactionI
       where: {
         ...baseWhere,
         type: TransactionType.FUEL_PURCHASE,
+        date: { gte: FUEL_START_DATE, lt: date },
       },
       _sum: { amount: true },
     }),
@@ -90,6 +93,7 @@ export async function calculateCurrentFuelBalance() {
         deletedAt: null,
         ledger: TransactionLedger.FUEL,
         type: TransactionType.INCOME,
+        date: { gte: FUEL_START_DATE },
       },
       _sum: { amount: true },
     }),
@@ -98,6 +102,7 @@ export async function calculateCurrentFuelBalance() {
         deletedAt: null,
         ledger: TransactionLedger.FUEL,
         type: TransactionType.FUEL_PURCHASE,
+        date: { gte: FUEL_START_DATE },
       },
       _sum: { amount: true },
     }),

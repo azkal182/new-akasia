@@ -5,6 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import { prisma } from '@/lib/prisma';
 import { TransactionLedger, TransactionType } from '@/generated/prisma/enums';
+import { clampFuelStartDate, FUEL_START_DATE } from '@/features/fuel/constants';
 
 const DEBUG_PREFIX = '[reports/fuel]';
 
@@ -143,7 +144,8 @@ export async function generateFuelPdf(
     JSON.stringify({ hijriYear, hijriMonth, carId })
   );
 
-  const { startDate, endDate } = getHijriMonthRange(hijriYear, hijriMonth);
+  const { startDate: rawStartDate, endDate } = getHijriMonthRange(hijriYear, hijriMonth);
+  const startDate = clampFuelStartDate(rawStartDate);
 
   const fuelWhere: Record<string, unknown> = {
     transaction: {
@@ -183,7 +185,7 @@ export async function generateFuelPdf(
       where: {
         type: TransactionType.INCOME,
         ledger: TransactionLedger.FUEL,
-        date: { lt: startDate },
+        date: { gte: FUEL_START_DATE, lt: startDate },
         deletedAt: null,
       },
       _sum: { amount: true },
@@ -192,7 +194,7 @@ export async function generateFuelPdf(
       where: {
         type: TransactionType.FUEL_PURCHASE,
         ledger: TransactionLedger.FUEL,
-        date: { lt: startDate },
+        date: { gte: FUEL_START_DATE, lt: startDate },
         deletedAt: null,
       },
       _sum: { amount: true },

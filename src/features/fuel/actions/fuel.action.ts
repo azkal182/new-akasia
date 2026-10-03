@@ -13,6 +13,11 @@ import {
   calculateCurrentFuelBalance,
 } from "@/features/finance/actions/balance.util";
 import { fuelTransactionWhere } from "@/features/finance/actions/transaction-filters";
+import {
+  clampFuelStartDate,
+  getFuelDateValidationMessage,
+  isFuelDateBeforeStart,
+} from "@/features/fuel/constants";
 
 const purchaseFuelSchema = z.object({
   carId: z.string().uuid("Invalid car ID"),
@@ -56,6 +61,10 @@ export async function purchaseFuel(
 
   const { carId, totalAmount, date, notes } = validated.data;
   const entryDate = new Date(date);
+
+  if (isFuelDateBeforeStart(entryDate)) {
+    return { error: getFuelDateValidationMessage() };
+  }
 
   try {
     const receiptUrl = await uploadCompressedReceipt(
@@ -120,6 +129,10 @@ export async function receiveFuelIncome(data: ReceiveIncomeInput) {
 
   const { amount, source, date, notes } = validated.data;
   const entryDate = new Date(date);
+
+  if (isFuelDateBeforeStart(entryDate)) {
+    return { error: getFuelDateValidationMessage() };
+  }
 
   try {
     const balanceBefore = await calculateFuelBalanceBefore(entryDate);
@@ -191,6 +204,11 @@ export async function updateFuelIncome(
 
   const { amount, source, date, notes } = validated.data;
   const entryDate = new Date(date);
+
+  if (isFuelDateBeforeStart(entryDate)) {
+    return { error: getFuelDateValidationMessage() };
+  }
+
   const balanceBefore = await calculateFuelBalanceBefore(entryDate, transactionId);
   const balanceAfter = balanceBefore + amount;
 
@@ -284,6 +302,10 @@ export async function updateFuelPurchase(
 
   const { carId, totalAmount, date, notes } = validated.data;
   const entryDate = new Date(date);
+
+  if (isFuelDateBeforeStart(entryDate)) {
+    return { error: getFuelDateValidationMessage() };
+  }
 
   try {
     const car = await prisma.car.findUnique({ where: { id: carId } });
@@ -410,6 +432,8 @@ export async function getFuelTransactions(options?: {
     endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
   }
 
+  startDate = clampFuelStartDate(startDate);
+
   const transactions = await prisma.transaction.findMany({
     where: {
       ...fuelTransactionWhere(),
@@ -508,6 +532,8 @@ export async function getFuelMonthlyReport(
     hijriYearStr = moment().format("iYYYY");
   }
 
+  startDate = clampFuelStartDate(startDate);
+
   const [incomeTotal, expenseTotal, currentBalance] = await Promise.all([
     prisma.transaction.aggregate({
       where: {
@@ -590,6 +616,7 @@ export async function getFuelMonthlyReport(
     totalExpense: expenseTotal._sum.amount ?? 0,
     balance: (incomeTotal._sum.amount ?? 0) - (expenseTotal._sum.amount ?? 0),
     currentBalance,
+    previousMonthBalance: await calculateFuelBalanceBefore(startDate),
     fuelBycar: fuelByCarWithNames,
   };
 }
@@ -679,12 +706,13 @@ export async function getFuelPurchasesByHijriMonth(
   carId?: string,
 ) {
   const { startDate, endDate } = getHijriMonthRange(hijriYear, hijriMonth);
+  const effectiveStartDate = clampFuelStartDate(startDate);
 
   const fuelWhere: Record<string, unknown> = {
     transaction: {
       type: TransactionType.FUEL_PURCHASE,
       ledger: TransactionLedger.FUEL,
-      date: { gte: startDate, lte: endDate },
+      date: { gte: effectiveStartDate, lte: endDate },
       deletedAt: null,
     },
   };
@@ -716,12 +744,15 @@ export async function getFuelPurchasesByHijriMonth(
     where: {
       type: TransactionType.INCOME,
       ledger: TransactionLedger.FUEL,
-      date: { gte: startDate, lte: endDate },
+      date: { gte: effectiveStartDate, lte: endDate },
       deletedAt: null,
     },
     _sum: { amount: true },
   });
   const totalIncome = incomeTotal._sum.amount ?? 0;
+  const previousMonthBalance = await calculateFuelBalanceBefore(effectiveStartDate);
+  const openingBalance = previousMonthBalance;
+  const closingBalance = openingBalance + totalIncome - totalAmount;
 
   // Unique cars
   const uniqueCars = new Set(purchases.map((p) => p.carId)).size;
@@ -756,11 +787,14 @@ export async function getFuelPurchasesByHijriMonth(
       totalAmount,
       totalIncome,
       balance: totalIncome - totalAmount,
+      openingBalance,
+      closingBalance,
+      previousMonthBalance,
       uniqueCars,
     },
     fuelByCar,
     dateRange: {
-      startDate,
+      startDate: effectiveStartDate,
       endDate,
     },
   };
