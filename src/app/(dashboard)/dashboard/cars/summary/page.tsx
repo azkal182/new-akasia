@@ -1,8 +1,17 @@
-import { Car as CarIcon, UserRound } from 'lucide-react';
+import { Car as CarIcon, Clock3, MapPin, UserRound } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getCars } from '@/features/cars/actions';
 import { UsageCountdown } from '@/components/usage-countdown';
+
+function formatStartTime(value: Date | string) {
+  return new Intl.DateTimeFormat('id-ID', {
+    timeZone: 'Asia/Jakarta',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date(value));
+}
 
 function getStatus(car: Awaited<ReturnType<typeof getCars>>[number]) {
   const isInUse = car.usageRecords[0]?.endTime === null;
@@ -51,8 +60,8 @@ export default async function DriverCarsSummaryPage() {
             const activeUsage = car.usageRecords[0]?.endTime === null ? car.usageRecords[0] : null;
 
             return (
-              <Card key={car.id} className="border-border bg-card/60">
-                <CardHeader className="pb-3">
+              <Card key={car.id} className="gap-2 border-border bg-card/60">
+                <CardHeader className="pb-1">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500/20">
@@ -75,7 +84,29 @@ export default async function DriverCarsSummaryPage() {
                   {activeUsage?.user && (
                     <div className="flex items-center gap-2 border-t border-border pt-2 text-amber-400">
                       <UserRound className="h-4 w-4 shrink-0" />
-                      <span className="truncate">Digunakan oleh {activeUsage.user.name}</span>
+                      <span className="min-w-0 break-words">Digunakan oleh {activeUsage.user.name}</span>
+                    </div>
+                  )}
+                  {activeUsage && (
+                    <div className="space-y-2 border-t border-border pt-2 text-muted-foreground">
+                      <div className="flex items-start gap-2">
+                        <Clock3 className="mt-0.5 h-4 w-4 shrink-0" />
+                        <span className="min-w-0 break-words">
+                          Mulai digunakan: <span className="font-medium text-foreground">{formatStartTime(activeUsage.startTime)}</span>
+                        </span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CarIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                        <span className="min-w-0 break-words">
+                          Keperluan: <span className="font-medium text-foreground">{activeUsage.purpose}</span>
+                        </span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
+                        <span className="min-w-0 break-words">
+                          Tujuan: <span className="font-medium text-foreground">{activeUsage.destination}</span>
+                        </span>
+                      </div>
                     </div>
                   )}
                 </CardContent>

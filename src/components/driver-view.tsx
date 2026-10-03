@@ -28,6 +28,7 @@ import {
 import { purchaseFuel } from '@/features/fuel/actions';
 import { QRCodeDisplay } from '@/components/ui/qrcode-display';
 import { formatUsageEstimate } from '@/features/cars/utils';
+import { NominalInput } from '@/components/inputs/nominal-input';
 
 type DrivingStatus = Awaited<ReturnType<typeof getCurrentUserDrivingStatus>>;
 type ActiveDrivingStatus = DrivingStatus[number];
@@ -198,7 +199,7 @@ export function DriverView() {
   const [startDrivingErrors, setStartDrivingErrors] = useState<StartDrivingErrors>({});
 
   // Refuel form
-  const [totalAmount, setTotalAmount] = useState('');
+  const [totalAmount, setTotalAmount] = useState<number | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const receiptInputRef = useRef<HTMLInputElement>(null);
@@ -359,7 +360,7 @@ export function DriverView() {
     setIsSubmitting(true);
     const result = await purchaseFuel({
       carId: selectedDrivingStatus.car.id,
-      totalAmount: Number(totalAmount),
+      totalAmount,
       date: new Date(),
     }, receiptFile);
 
@@ -368,7 +369,7 @@ export function DriverView() {
     } else {
       toast.success('Pengisian BBM berhasil dicatat');
       setShowRefuelDialog(false);
-      setTotalAmount('');
+      setTotalAmount(null);
       setReceiptFile(null);
       setReceiptPreview(null);
     }
@@ -755,11 +756,10 @@ export function DriverView() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label className="text-foreground">Total Biaya</Label>
-              <Input
-                type="number"
-                value={totalAmount}
-                onChange={(e) => setTotalAmount(e.target.value)}
-                placeholder="Contoh: 500000"
+              <NominalInput
+                value={totalAmount ?? undefined}
+                onValueChange={(values) => setTotalAmount(values.floatValue ?? null)}
+                placeholder="Contoh: 500.000"
                 className="border-border bg-muted/60 text-foreground"
               />
             </div>
@@ -800,11 +800,11 @@ export function DriverView() {
                 </Button>
               )}
             </div>
-            {Number(totalAmount) > 0 && (
+            {totalAmount && totalAmount > 0 && (
               <div className="rounded-lg bg-muted/60 p-3 text-center">
                 <p className="text-sm text-muted-foreground">Total</p>
                 <p className="text-xl font-bold text-amber-400">
-                  {formatRupiah(Number(totalAmount))}
+                  {formatRupiah(totalAmount)}
                 </p>
               </div>
             )}
