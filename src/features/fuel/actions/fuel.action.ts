@@ -10,6 +10,7 @@ import { uploadCompressedReceipt } from "@/lib/receipt";
 import { deleteObject } from "@/lib/storage";
 import {
   calculateFuelBalanceBefore,
+  calculateCurrentFuelBalance,
 } from "@/features/finance/actions/balance.util";
 import { fuelTransactionWhere } from "@/features/finance/actions/transaction-filters";
 
@@ -507,7 +508,7 @@ export async function getFuelMonthlyReport(
     hijriYearStr = moment().format("iYYYY");
   }
 
-  const [incomeTotal, expenseTotal] = await Promise.all([
+  const [incomeTotal, expenseTotal, currentBalance] = await Promise.all([
     prisma.transaction.aggregate({
       where: {
         type: TransactionType.INCOME,
@@ -526,6 +527,7 @@ export async function getFuelMonthlyReport(
       },
       _sum: { amount: true },
     }),
+    calculateCurrentFuelBalance(),
   ]);
 
   // Get fuel usage per car from the transaction ledger date, not FuelPurchase.createdAt.
@@ -587,6 +589,7 @@ export async function getFuelMonthlyReport(
     totalIncome: incomeTotal._sum.amount ?? 0,
     totalExpense: expenseTotal._sum.amount ?? 0,
     balance: (incomeTotal._sum.amount ?? 0) - (expenseTotal._sum.amount ?? 0),
+    currentBalance,
     fuelBycar: fuelByCarWithNames,
   };
 }

@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { Plus, Fuel, ArrowUpRight, Calendar, ClipboardList } from 'lucide-react';
+import { Plus, Fuel, ArrowUpRight, ClipboardList } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,23 +19,21 @@ async function FuelStats() {
     <div className="grid gap-4 md:grid-cols-4">
       <Card className="border-border bg-card/60">
         <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <Calendar className="h-4 w-4" />
-            Bulan Hijri
+          <CardTitle className="text-sm font-medium text-muted-foreground">
+            Saldo Saat Ini
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-xl font-bold text-foreground">
-            {report.hijriMonth} {report.hijriYear}
+          <div className={`text-xl font-bold ${report.currentBalance >= 0 ? 'text-foreground' : 'text-red-400'}`}>
+            {formatRupiah(report.currentBalance)}
           </div>
-          <p className="text-xs text-muted-foreground">{hijri.hijriDate}</p>
         </CardContent>
       </Card>
 
       <Card className="border-border bg-card/60">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Pemasukan BBM
+            Pemasukan Bulan Ini
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -48,7 +46,7 @@ async function FuelStats() {
       <Card className="border-border bg-card/60">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Pengeluaran BBM
+            Pengeluaran Bulan Ini
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -61,11 +59,11 @@ async function FuelStats() {
       <Card className="border-border bg-card/60">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Sisa Saldo BBM
+            Net Bulan Ini
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className={`text-2xl font-bold ${report.balance >= 0 ? 'text-emerald-500' : 'text-red-400'}`}>
+          <div className={`text-xl font-bold ${report.balance >= 0 ? 'text-emerald-500' : 'text-red-400'}`}>
             {formatRupiah(report.balance)}
           </div>
         </CardContent>
