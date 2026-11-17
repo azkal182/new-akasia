@@ -102,7 +102,10 @@ export async function generateCarsPdf(
       : Promise.resolve(null),
   ]);
 
-  const doc = new PDFDocument({ size: 'A4', margin: 40 });
+  const doc = new PDFDocument({ size: [612, 936], margin: 40 });
+  const contentLeft = 40;
+  const contentWidth = doc.page.width - contentLeft * 2;
+  const pageBottom = doc.page.height - 40;
   const chunks: Buffer[] = [];
 
   doc.on('data', (chunk: Buffer) => chunks.push(chunk));
@@ -143,7 +146,7 @@ export async function generateCarsPdf(
     const headerImagePath = path.join(process.cwd(), 'public', 'header.jpg');
     if (fs.existsSync(headerImagePath)) {
       const headerImage = fs.readFileSync(headerImagePath);
-      doc.image(headerImage, 40, 40, { width: 515, align: 'center' });
+      doc.image(headerImage, contentLeft, 40, { width: contentWidth, align: 'center' });
       const headerImageHeight = 90;
       doc.y = 40 + headerImageHeight + 20;
     }
@@ -162,8 +165,108 @@ export async function generateCarsPdf(
   }
   doc.moveDown(0.8);
 
-  const tableTop = doc.y;
-  const colWidths = [70, 140, 90, 125, 90];
+  const recordsByCar = new Map<string, { name: string; licensePlate: string | null; count: number }>();
+  for (const record of records) {
+    const summary = recordsByCar.get(record.carId);
+    if (summary) {
+      summary.count += 1;
+    } else {
+      recordsByCar.set(record.carId, {
+        name: record.car.name,
+        licensePlate: record.car.licensePlate,
+        count: 1,
+      });
+    }
+  }
+  const carSummaries = Array.from(recordsByCar.values()).sort((a, b) => b.count - a.count);
+
+  doc.fontSize(10).font('Helvetica-Bold').text('Jumlah Perjalanan per Armada', 40);
+  doc.moveDown(0.4);
+
+  if (carSummaries.length === 0) {
+    doc.fontSize(8).font('Helvetica').fillColor('#64748b').text(
+      'Tidak ada perjalanan pada periode ini.',
+      40,
+    );
+    doc.fillColor('#000000').moveDown(0.8);
+  } else {
+    const summaryColumns = [contentWidth * 0.75, contentWidth * 0.25];
+    const summaryRowHeight = 18;
+
+    function drawCarSummaryHeader(startY: number) {
+      const labels = ['Armada', 'Jumlah Perjalanan'];
+      let x = contentLeft;
+      doc.rect(contentLeft, startY, contentWidth, 20).fill('#e0e0e0');
+      doc.strokeColor('#000000').lineWidth(0.5);
+      let borderX = contentLeft;
+      for (const width of summaryColumns) {
+        doc.rect(borderX, startY, width, 20).stroke();
+        borderX += width;
+      }
+      doc.fillColor('#000000').fontSize(8).font('Helvetica-Bold');
+      labels.forEach((label, index) => {
+        doc.text(label, x + 4, startY + 6, {
+          width: summaryColumns[index] - 8,
+          align: index === 0 ? 'left' : 'right',
+        });
+        x += summaryColumns[index];
+      });
+    }
+
+    let summaryY = doc.y;
+    if (summaryY + 20 + summaryRowHeight > pageBottom) {
+      doc.addPage();
+      addWatermark();
+      summaryY = 40;
+    }
+    drawCarSummaryHeader(summaryY);
+    summaryY += 20;
+
+    for (const summary of carSummaries) {
+      if (summaryY + summaryRowHeight > pageBottom) {
+        doc.addPage();
+        addWatermark();
+        summaryY = 40;
+        drawCarSummaryHeader(summaryY);
+        summaryY += 20;
+      }
+
+      doc.strokeColor('#000000').lineWidth(0.5);
+      let borderX = contentLeft;
+      for (const width of summaryColumns) {
+        doc.rect(borderX, summaryY, width, summaryRowHeight).stroke();
+        borderX += width;
+      }
+      const carName = `${summary.name}${summary.licensePlate ? ` (${summary.licensePlate})` : ''}`;
+      doc.font('Helvetica').fontSize(8).fillColor('#000000');
+      doc.text(truncateText(carName, 56), contentLeft + 4, summaryY + 5, {
+        width: summaryColumns[0] - 8,
+      });
+      doc.text(`${summary.count} kali`, contentLeft + summaryColumns[0] + 4, summaryY + 5, {
+        width: summaryColumns[1] - 8,
+        align: 'right',
+      });
+      summaryY += summaryRowHeight;
+    }
+    doc.fillColor('#000000');
+    doc.y = summaryY + 10;
+  }
+
+  // Put detailed usage records on a separate page, following the fuel report layout.
+  doc.addPage();
+  addWatermark();
+  doc
+    .fontSize(11)
+    .font('Helvetica-Bold')
+    .fillColor('#000000')
+    .text('Daftar Perjalanan Armada', 40, 40);
+
+  const tableTop = 62;
+  const baseColWidths = [70, 140, 90, 125, 90];
+  const baseTableWidth = baseColWidths.reduce((a, b) => a + b, 0);
+  const colWidths = baseColWidths.map(
+    (width) => (width / baseTableWidth) * contentWidth,
+  );
   const headers = ['Tanggal', 'Kendaraan', 'Driver', 'Tujuan', 'Keperluan'];
   const tableWidth = colWidths.reduce((a, b) => a + b, 0);
 
@@ -198,10 +301,15 @@ export async function generateCarsPdf(
   doc.font('Helvetica').fontSize(8);
 
   for (const record of records) {
-    if (y + rowHeight > 780) {
+    if (y + rowHeight > pageBottom) {
       doc.addPage();
       addWatermark();
-      y = 40;
+      doc
+        .fontSize(11)
+        .font('Helvetica-Bold')
+        .fillColor('#000000')
+        .text('Daftar Perjalanan Armada (Lanjutan)', 40, 40);
+      y = 62;
       drawTableHeader(y);
       y += 18;
       doc.font('Helvetica').fontSize(8);
