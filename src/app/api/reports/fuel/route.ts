@@ -225,7 +225,10 @@ export async function generateFuelPdf(
   const closingBalance = openingBalance + balance;
   const uniqueCars = new Set(purchases.map((p) => p.carId)).size;
 
-  const doc = new PDFDocument({ size: 'A4', margin: 40 });
+  const doc = new PDFDocument({ size: [612, 936], margin: 40 });
+  const contentLeft = 40;
+  const contentWidth = doc.page.width - contentLeft * 2;
+  const pageBottom = doc.page.height - 40;
   const chunks: Buffer[] = [];
 
   doc.on('data', (chunk: Buffer) => chunks.push(chunk));
@@ -266,7 +269,7 @@ export async function generateFuelPdf(
     const headerImagePath = path.join(process.cwd(), 'public', 'header.jpg');
     if (fs.existsSync(headerImagePath)) {
       const headerImage = fs.readFileSync(headerImagePath);
-      doc.image(headerImage, 40, 40, { width: 515, align: 'center' });
+      doc.image(headerImage, contentLeft, 40, { width: contentWidth, align: 'center' });
       const headerImageHeight = 90;
       doc.y = 40 + headerImageHeight + 20;
     }
@@ -371,8 +374,129 @@ export async function generateFuelPdf(
   );
   doc.fillColor('#000000').moveDown(0.8);
 
-  const tableTop = doc.y;
-  const colWidths = [70, 150, 80, 60, 70, 85];
+  const purchasesByCar = new Map<
+    string,
+    { name: string; licensePlate: string | null; count: number; amount: number }
+  >();
+  for (const purchase of purchases) {
+    const current = purchasesByCar.get(purchase.carId);
+    if (current) {
+      current.count += 1;
+      current.amount += purchase.totalAmount;
+    } else {
+      purchasesByCar.set(purchase.carId, {
+        name: purchase.car.name,
+        licensePlate: purchase.car.licensePlate,
+        count: 1,
+        amount: purchase.totalAmount,
+      });
+    }
+  }
+  const carSummaries = Array.from(purchasesByCar.values()).sort(
+    (a, b) => b.amount - a.amount,
+  );
+
+  doc.fontSize(10).font('Helvetica-Bold').text('Pembelian BBM per Armada', 40);
+  doc.moveDown(0.4);
+
+  if (carSummaries.length === 0) {
+    doc.fontSize(8).font('Helvetica').fillColor('#64748b').text(
+      'Tidak ada pembelian BBM pada periode ini.',
+      40,
+    );
+    doc.fillColor('#000000').moveDown(0.8);
+  } else {
+    const summaryTableWidth = contentWidth;
+    const summaryRowHeight = 18;
+    const summaryColumns = [
+      summaryTableWidth * (315 / 515),
+      summaryTableWidth * (90 / 515),
+      summaryTableWidth * (110 / 515),
+    ];
+
+    function drawCarSummaryHeader(startY: number) {
+      const labels = ['Armada', 'Frekuensi', 'Total Pembelian'];
+      let x = 40;
+      doc.rect(40, startY, summaryTableWidth, 20).fill('#e0e0e0');
+      doc.strokeColor('#000000').lineWidth(0.5);
+      let borderX = 40;
+      for (const width of summaryColumns) {
+        doc.rect(borderX, startY, width, 20).stroke();
+        borderX += width;
+      }
+      doc.fillColor('#000000').fontSize(8).font('Helvetica-Bold');
+      labels.forEach((label, index) => {
+        doc.text(label, x + 4, startY + 6, {
+          width: summaryColumns[index] - 8,
+          align: index === 0 ? 'left' : 'right',
+        });
+        x += summaryColumns[index];
+      });
+    }
+
+    let summaryY = doc.y;
+    if (summaryY + 20 + summaryRowHeight > pageBottom) {
+      doc.addPage();
+      addWatermark();
+      summaryY = 40;
+    }
+    drawCarSummaryHeader(summaryY);
+    summaryY += 20;
+
+    for (const summary of carSummaries) {
+      if (summaryY + summaryRowHeight > pageBottom) {
+        doc.addPage();
+        addWatermark();
+        summaryY = 40;
+        drawCarSummaryHeader(summaryY);
+        summaryY += 20;
+      }
+
+      let x = 40;
+      doc.strokeColor('#000000').lineWidth(0.5);
+      let borderX = 40;
+      for (const width of summaryColumns) {
+        doc.rect(borderX, summaryY, width, summaryRowHeight).stroke();
+        borderX += width;
+      }
+      const carName = `${summary.name}${summary.licensePlate ? ` (${summary.licensePlate})` : ''}`;
+      doc.font('Helvetica').fontSize(8).fillColor('#000000');
+      doc.text(truncateText(carName, 48), x + 4, summaryY + 5, {
+        width: summaryColumns[0] - 8,
+      });
+      x += summaryColumns[0];
+      doc.text(`${summary.count} kali`, x + 4, summaryY + 5, {
+        width: summaryColumns[1] - 8,
+        align: 'right',
+      });
+      x += summaryColumns[1];
+      doc.text(`Rp ${formatRupiah(summary.amount)}`, x + 4, summaryY + 5, {
+        width: summaryColumns[2] - 8,
+        align: 'right',
+      });
+      summaryY += summaryRowHeight;
+    }
+    doc.fillColor('#000000');
+    doc.y = summaryY + 10;
+  }
+
+  // Keep the detailed transaction table separate from the per-car summary.
+  doc.addPage();
+  addWatermark();
+
+  doc
+    .fontSize(11)
+    .font('Helvetica-Bold')
+    .fillColor('#000000')
+    .text('Daftar Transaksi BBM', 40, 40);
+  doc.fillColor('#000000');
+
+  const tableTop = 62;
+  const baseColWidths = [70, 150, 80, 60, 70, 85];
+  const baseTableWidth = baseColWidths.reduce((a, b) => a + b, 0);
+  const colWidths = baseColWidths.map(
+    (width) => (width / baseTableWidth) * contentWidth,
+  );
   const headers = ['Tanggal', 'Kendaraan', 'User', 'Liter', 'Total', 'Catatan'];
   const tableWidth = colWidths.reduce((a, b) => a + b, 0);
 
@@ -421,10 +545,15 @@ export async function generateFuelPdf(
       });
     }
 
-    if (y + rowHeight > 780) {
+    if (y + rowHeight > pageBottom) {
       doc.addPage();
       addWatermark();
-      y = 40;
+      doc
+        .fontSize(11)
+        .font('Helvetica-Bold')
+        .fillColor('#000000')
+        .text('Daftar Transaksi BBM (Lanjutan)', 40, 40);
+      y = 62;
       drawTableHeader(y);
       y += 18;
       doc.font('Helvetica').fontSize(8);
