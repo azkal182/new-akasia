@@ -410,40 +410,45 @@ export async function getFuelTransactions(options?: {
   /** Return latest transactions without restricting the date range. */
   allTime?: boolean;
   limit?: number;
-  type?: TransactionType.INCOME | TransactionType.FUEL_PURCHASE;
+  type?: "INCOME" | "FUEL_PURCHASE";
 }) {
   const { year, month, hijriYear, hijriMonth, allTime, limit, type } = options ?? {};
 
-  let startDate: Date;
-  let endDate: Date;
+  let dateFilter: { gte: Date; lte: Date } | undefined;
 
-  if (allTime) {
-    // No date restriction; used by the latest-transactions dashboard list.
-  } else if (hijriYear && hijriMonth) {
-    // Convert Hijri to Gregorian for date range
-    const hijriStart = moment(`${hijriYear}/${hijriMonth}/1`, "iYYYY/iM/iD");
-    const hijriEnd = moment(
-      `${hijriYear}/${hijriMonth}/1`,
-      "iYYYY/iM/iD",
-    ).endOf("iMonth");
-    startDate = hijriStart.toDate();
-    endDate = hijriEnd.toDate();
-  } else if (year && month) {
-    startDate = new Date(year, month - 1, 1);
-    endDate = new Date(year, month, 0, 23, 59, 59);
-  } else {
-    // Default to current month
-    const now = new Date();
-    startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+  if (!allTime) {
+    let startDate: Date;
+    let endDate: Date;
+
+    if (hijriYear && hijriMonth) {
+      // Convert Hijri to Gregorian for date range
+      const hijriStart = moment(`${hijriYear}/${hijriMonth}/1`, "iYYYY/iM/iD");
+      const hijriEnd = moment(
+        `${hijriYear}/${hijriMonth}/1`,
+        "iYYYY/iM/iD",
+      ).endOf("iMonth");
+      startDate = hijriStart.toDate();
+      endDate = hijriEnd.toDate();
+    } else if (year && month) {
+      startDate = new Date(year, month - 1, 1);
+      endDate = new Date(year, month, 0, 23, 59, 59);
+    } else {
+      // Default to current month
+      const now = new Date();
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    }
+
+    dateFilter = {
+      gte: clampFuelStartDate(startDate),
+      lte: endDate,
+    };
   }
-
-  if (!allTime) startDate = clampFuelStartDate(startDate);
 
   const transactions = await prisma.transaction.findMany({
     where: {
       ...fuelTransactionWhere(),
-      ...(allTime ? {} : { date: { gte: startDate, lte: endDate } }),
+      ...(dateFilter ? { date: dateFilter } : {}),
       ...(type ? { type } : {}),
       deletedAt: null,
     },
