@@ -128,7 +128,7 @@ export async function generateFinancePdf(
           },
         },
       },
-      orderBy: { date: "asc" },
+      orderBy: [{ date: "asc" }, { createdAt: "asc" }, { id: "asc" }],
       include: {
         income: true,
         expense: {
@@ -159,12 +159,14 @@ export async function generateFinancePdf(
         ...financeTransactionWhere(),
         date: { gte: startDate, lte: endDate },
       },
-      orderBy: { date: "asc" },
+      orderBy: [{ date: "asc" }, { createdAt: "asc" }, { id: "asc" }],
       include: {
         income: true,
         expense: {
           include: {
-            items: { include: { car: true } },
+            items: {
+              include: { car: true },
+            },
           },
         },
       },
@@ -501,10 +503,10 @@ export async function generateFinancePdf(
       for (let i = 0; i < trx.expense.items.length; i++) {
         const item = trx.expense.items[i];
 
-        // Only update running balance on first item of transaction
-        if (i === 0) {
-          runningBalance -= trx.amount;
-        }
+        // Each item is rendered as its own ledger row, so advance the running
+        // balance by that row's debit rather than repeating the transaction's
+        // final balance on every item row.
+        runningBalance -= item.total;
 
         // Check page break
         if (y + rowHeight > 780) {

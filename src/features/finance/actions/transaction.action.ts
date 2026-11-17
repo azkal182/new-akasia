@@ -386,7 +386,7 @@ export async function getTransactionsByHijriMonth(
           },
         },
       },
-      orderBy: { date: "asc" },
+      orderBy: [{ date: "asc" }, { createdAt: "asc" }, { id: "asc" }],
       include: {
         income: true,
         expense: {
@@ -466,12 +466,14 @@ export async function getTransactionsByHijriMonth(
       ...financeTransactionWhere(),
       date: { gte: startDate, lte: endDate },
     },
-    orderBy: { date: "asc" },
+    orderBy: [{ date: "asc" }, { createdAt: "asc" }, { id: "asc" }],
     include: {
       income: true,
       expense: {
         include: {
-          items: { include: { car: true } },
+          items: {
+            include: { car: true },
+          },
         },
       },
       fuelPurchase: {
