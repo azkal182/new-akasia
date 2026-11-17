@@ -11,6 +11,7 @@ import {
   Filter,
   Fuel,
   Car,
+  ArrowUpRight,
   Download,
   Loader2,
 } from "lucide-react";
@@ -33,7 +34,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatRupiah, formatDateOnly } from "@/lib/utils";
-import { getFuelPurchasesByHijriMonth } from "@/features/fuel/actions";
+import {
+  getFuelPurchasesByHijriMonth,
+  getFuelTransactions,
+} from "@/features/fuel/actions";
 import { getCars } from "@/features/cars/actions";
 
 const hijriMonths = [
@@ -54,6 +58,7 @@ const hijriMonths = [
 type FuelPurchase = Awaited<
   ReturnType<typeof getFuelPurchasesByHijriMonth>
 >["purchases"][number];
+type FuelIncome = Awaited<ReturnType<typeof getFuelTransactions>>[number];
 type FuelByCar = Awaited<
   ReturnType<typeof getFuelPurchasesByHijriMonth>
 >["fuelByCar"][number];
@@ -76,6 +81,7 @@ export default function FuelReportPage() {
   const [hijriMonth, setHijriMonth] = useState(currentHijriMonth);
   const [selectedCarId, setSelectedCarId] = useState<string>("all");
   const [purchases, setPurchases] = useState<FuelPurchase[]>([]);
+  const [incomeTransactions, setIncomeTransactions] = useState<FuelIncome[]>([]);
   const [fuelByCar, setFuelByCar] = useState<FuelByCar[]>([]);
   const [cars, setCars] = useState<CarItem[]>([]);
   const [stats, setStats] = useState({
@@ -130,12 +136,16 @@ export default function FuelReportPage() {
     if (!canLoadData) return;
     setLoading(true);
     try {
-      const result = await getFuelPurchasesByHijriMonth(
-        hijriYear,
-        hijriMonth,
-        selectedCarId === "all" ? undefined : selectedCarId,
-      );
+      const [result, incomes] = await Promise.all([
+        getFuelPurchasesByHijriMonth(
+          hijriYear,
+          hijriMonth,
+          selectedCarId === "all" ? undefined : selectedCarId,
+        ),
+        getFuelTransactions({ hijriYear, hijriMonth, type: "INCOME" }),
+      ]);
       setPurchases(result.purchases);
+      setIncomeTransactions(incomes);
       setStats(result.stats);
       setFuelByCar(result.fuelByCar);
     } finally {
@@ -361,12 +371,12 @@ export default function FuelReportPage() {
         </Card>
       )}
 
-      {/* Purchases Table */}
+      {/* Fuel transactions table */}
       <Card className="border-border bg-card/60">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-foreground">
             <FileText className="h-5 w-5" />
-            Daftar Pembelian BBM
+            Daftar Transaksi BBM
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -374,9 +384,9 @@ export default function FuelReportPage() {
             <div className="flex h-32 items-center justify-center">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-blue-500" />
             </div>
-          ) : purchases.length === 0 ? (
+          ) : purchases.length === 0 && incomeTransactions.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
-              Tidak ada pembelian BBM pada bulan ini
+              Tidak ada transaksi BBM pada bulan ini
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -388,7 +398,10 @@ export default function FuelReportPage() {
                       Tanggal
                     </TableHead>
                     <TableHead className="text-muted-foreground">
-                      Kendaraan
+                      Jenis
+                    </TableHead>
+                    <TableHead className="text-muted-foreground">
+                      Kendaraan / Sumber
                     </TableHead>
                     <TableHead className="text-muted-foreground">
                       User
@@ -397,43 +410,98 @@ export default function FuelReportPage() {
                       Catatan
                     </TableHead>
                     <TableHead className="text-right text-muted-foreground">
-                      Total
+                      Jumlah
                     </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {purchases.map((purchase, index) => (
-                    <TableRow key={purchase.id} className="border-border">
-                      <TableCell className="text-muted-foreground">
-                        {index + 1}
-                      </TableCell>
-                      <TableCell className="text-foreground">
-                        {formatDateOnly(purchase.transaction?.date ?? purchase.createdAt)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Fuel className="h-4 w-4 text-amber-400" />
-                          <div>
-                            <p className="text-foreground">
-                              {purchase.car.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {purchase.car.licensePlate}
-                            </p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-foreground">
-                        {purchase.transaction?.user?.name || "-"}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground max-w-xs truncate">
-                        {purchase.notes || "-"}
-                      </TableCell>
-                      <TableCell className="text-right font-medium text-red-400">
-                        {formatRupiah(purchase.totalAmount)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {[
+                    ...purchases.map((purchase) => ({
+                      kind: "purchase" as const,
+                      date: purchase.transaction?.date ?? purchase.createdAt,
+                      purchase,
+                    })),
+                    ...incomeTransactions.map((transaction) => ({
+                      kind: "income" as const,
+                      date: transaction.date,
+                      transaction,
+                    })),
+                  ]
+                    .sort(
+                      (a, b) =>
+                        new Date(b.date).getTime() - new Date(a.date).getTime(),
+                    )
+                    .map((item, index) => (
+                      <TableRow
+                        key={
+                          item.kind === "purchase"
+                            ? item.purchase.id
+                            : item.transaction.id
+                        }
+                        className="border-border"
+                      >
+                        <TableCell className="text-muted-foreground">
+                          {index + 1}
+                        </TableCell>
+                        <TableCell className="text-foreground">
+                          {formatDateOnly(item.date)}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`inline-flex items-center gap-1 ${item.kind === "income" ? "text-emerald-500" : "text-amber-400"}`}
+                          >
+                            {item.kind === "income" ? (
+                              <ArrowUpRight className="h-4 w-4" />
+                            ) : (
+                              <Fuel className="h-4 w-4" />
+                            )}
+                            {item.kind === "income"
+                              ? "Pemasukan"
+                              : "Pembelian BBM"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {item.kind === "purchase" ? (
+                            <div className="flex items-center gap-2">
+                              <Car className="h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <p className="text-foreground">
+                                  {item.purchase.car.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {item.purchase.car.licensePlate}
+                                </p>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-foreground">
+                              {item.transaction.income?.source ??
+                                item.transaction.description}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-foreground">
+                          {item.kind === "purchase"
+                            ? item.purchase.transaction?.user?.name || "-"
+                            : item.transaction.user?.name || "-"}
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate text-muted-foreground">
+                          {(item.kind === "purchase"
+                            ? item.purchase.notes
+                            : item.transaction.income?.notes) || "-"}
+                        </TableCell>
+                        <TableCell
+                          className={`text-right font-medium ${item.kind === "income" ? "text-emerald-500" : "text-red-400"}`}
+                        >
+                          {item.kind === "income" ? "+" : "-"}
+                          {formatRupiah(
+                            item.kind === "purchase"
+                              ? item.purchase.totalAmount
+                              : item.transaction.amount,
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
             </div>
