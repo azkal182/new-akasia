@@ -407,13 +407,19 @@ export async function getFuelTransactions(options?: {
   month?: number;
   hijriYear?: number;
   hijriMonth?: number;
+  /** Return latest transactions without restricting the date range. */
+  allTime?: boolean;
+  limit?: number;
+  type?: TransactionType.INCOME | TransactionType.FUEL_PURCHASE;
 }) {
-  const { year, month, hijriYear, hijriMonth } = options ?? {};
+  const { year, month, hijriYear, hijriMonth, allTime, limit, type } = options ?? {};
 
   let startDate: Date;
   let endDate: Date;
 
-  if (hijriYear && hijriMonth) {
+  if (allTime) {
+    // No date restriction; used by the latest-transactions dashboard list.
+  } else if (hijriYear && hijriMonth) {
     // Convert Hijri to Gregorian for date range
     const hijriStart = moment(`${hijriYear}/${hijriMonth}/1`, "iYYYY/iM/iD");
     const hijriEnd = moment(
@@ -432,18 +438,17 @@ export async function getFuelTransactions(options?: {
     endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
   }
 
-  startDate = clampFuelStartDate(startDate);
+  if (!allTime) startDate = clampFuelStartDate(startDate);
 
   const transactions = await prisma.transaction.findMany({
     where: {
       ...fuelTransactionWhere(),
-      date: {
-        gte: startDate,
-        lte: endDate,
-      },
+      ...(allTime ? {} : { date: { gte: startDate, lte: endDate } }),
+      ...(type ? { type } : {}),
       deletedAt: null,
     },
     orderBy: { date: "desc" },
+    take: limit,
     include: {
       income: true,
       fuelPurchase: {

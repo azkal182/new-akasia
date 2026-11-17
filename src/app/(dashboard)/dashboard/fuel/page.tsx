@@ -89,19 +89,19 @@ async function FuelStats() {
 }
 
 async function FuelTransactionsList() {
-  const hijri = await getCurrentHijriDate();
   const [transactions, cars] = await Promise.all([
-    getFuelTransactions({
-      hijriYear: hijri.hijriYear,
-      hijriMonth: hijri.hijriMonth,
-    }),
+    getFuelTransactions({ allTime: true, limit: 20 }),
     getCars(),
+  ]);
+  const [incomeTransactions, purchaseTransactions] = await Promise.all([
+    getFuelTransactions({ allTime: true, type: 'INCOME', limit: 50 }),
+    getFuelTransactions({ allTime: true, type: 'FUEL_PURCHASE', limit: 50 }),
   ]);
 
   return (
     <Card className="border-border bg-card/60">
       <CardHeader>
-        <CardTitle className="text-foreground">Transaksi BBM Bulan Ini (Hijriah)</CardTitle>
+        <CardTitle className="text-foreground">Transaksi Terakhir</CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="recent" className="w-full">
@@ -114,21 +114,21 @@ async function FuelTransactionsList() {
             <FuelTransactionList
               transactions={transactions}
               cars={cars}
-              emptyLabel="Belum ada transaksi BBM bulan ini"
+              emptyLabel="Belum ada transaksi BBM"
             />
           </TabsContent>
           <TabsContent value="income">
             <FuelTransactionList
-              transactions={transactions.filter((trx) => trx.type === 'INCOME')}
+              transactions={incomeTransactions}
               cars={cars}
-              emptyLabel="Belum ada pemasukan BBM bulan ini"
+              emptyLabel="Belum ada pemasukan BBM"
             />
           </TabsContent>
           <TabsContent value="purchase">
             <FuelTransactionList
-              transactions={transactions.filter((trx) => trx.type === 'FUEL_PURCHASE')}
+              transactions={purchaseTransactions}
               cars={cars}
-              emptyLabel="Belum ada pembelian BBM bulan ini"
+              emptyLabel="Belum ada pembelian BBM"
             />
           </TabsContent>
         </Tabs>
